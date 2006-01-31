@@ -11,7 +11,7 @@ Rails::Initializer.run do |config|
   # Settings in config/environments/* take precedence those specified here
   
   # Skip frameworks you're not going to use
-  # config.frameworks -= [ :action_web_service, :action_mailer ]
+  config.frameworks -= [ :action_web_service, :action_mailer ]
 
   # Add additional load paths for your own custom dirs
   # config.load_paths += %W( #{RAILS_ROOT}/extras )
@@ -22,7 +22,7 @@ Rails::Initializer.run do |config|
 
   # Use the database for sessions instead of the file system
   # (create the session table with 'rake create_sessions_table')
-  # config.action_controller.session_store = :active_record_store
+  config.action_controller.session_store = :active_record_store
 
   # Enable page/fragment caching by setting a file-based store
   # (remember to create the caching directory and make it readable to the application)
@@ -32,11 +32,11 @@ Rails::Initializer.run do |config|
   # config.active_record.observers = :cacher, :garbage_collector
 
   # Make Active Record use UTC-base instead of local time
-  # config.active_record.default_timezone = :utc
+  config.active_record.default_timezone = :utc
   
   # Use Active Record's schema dumper instead of SQL when creating the test database
   # (enables use of different database adapters for development and test environments)
-  # config.active_record.schema_format = :ruby
+  config.active_record.schema_format = :ruby
 
   # See Rails::Configuration for more options
 end
@@ -51,3 +51,21 @@ end
 # end
 
 # Include your application configuration below
+Engines.create_logger
+
+module LoginEngine
+  case RAILS_ENV
+  when 'production'
+    config :salt, 'barzyncki-hilroy-beausoleil-19230dj9210u4kk1098yf'
+  else
+    config :salt, 'test-salt'
+  end
+
+  config :use_email_notification, false
+  config :app_name, 'Comptabilisation'
+  config :email_from, 'webmaster@teksol.info'
+  config :admin_email, 'webmaster@teksol.info'
+  config :app_url, 'http://localhost:4023/'
+end
+
+Engines.start
