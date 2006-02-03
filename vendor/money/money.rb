@@ -196,4 +196,8 @@ class Money
   def to_money
     self
   end  
+
+  def zero?
+    self.cents.zero?
+  end
 end

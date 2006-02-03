@@ -2,8 +2,8 @@
 #   100.to_money => #<Money @cents=10000>
 #   100.37.to_money => #<Money @cents=10037>
 class Numeric
-  def to_money
-    Money.new(self * 100)
+  def to_money(currency = Money.default_currency)
+    Money.new((self * 100).ceil, currency.to_s)
   end
 end
 
