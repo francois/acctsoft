@@ -1,13 +1,5 @@
 require File.dirname(__FILE__) + '/../test_helper'
 
-class TxnAccountTest < Test::Unit::TestCase
-  fixtures :txn_accounts
-
-  def test_truth
-    assert_kind_of TxnAccount, TxnAccount.find(:first)
-  end
-end
-
 class MoneyTransferTxnAccountTest < Test::Unit::TestCase
   def setup
     @txn = TxnAccount.new
