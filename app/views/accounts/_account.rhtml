@@ -1,0 +1,7 @@
+<% @old_account = @account; @account = account -%>
+<tr id="account_<%= @account.id %>">
+  <td><%= in_place_editor_field :account, :no %></td>
+  <td><%= in_place_editor_field :account, :name %></td>
+  <td><%= h(@account.account_type.name) %></td>
+</tr>
+<% @account = @old_account -%>

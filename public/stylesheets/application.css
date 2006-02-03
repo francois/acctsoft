@@ -20,3 +20,22 @@ form input[type=submit] { font-weight: bold; }
 #message  { }
 #notice   { color: #666; }
 #messages p { display: list-item; list-style-type: square; margin-left: 2em; }
+
+.list { border: 3px solid #c9cfff; empty-cells: show; border-collapse: collapse; }
+.list thead th { text-align: left; }
+.list th, .list td { padding: 0 2px; }
+.list .money,
+.list .date { text-align: right; }
+.list thead tr th, .list thead tr td,
+.list tbody tr th, .list tbody tr td { border-bottom: 1px solid #c9cfff; }
+.list thead tr th, .list thead tr td { border-bottom-width: 2px; }
+.list caption { font-size: 1.2em; font-weight: bold; color: #393fcf; text-align: left; }
+
+a { color: blue; }
+a:visited { color: purple; }
+a:hover { color: blue; background: white; }
+
+.in_place_editor_field { border-bottom: 1px dashed blue; cursor: pointer; }
+.in_place_editor_field[width=small] input[type=text] { width: 6em; }
+.in_place_editor_field[width=medium] input[type=text] { width: 12em; }
+.in_place_editor_field[width=large] input[type=text] { width: 40em; }

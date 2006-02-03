@@ -1,0 +1,18 @@
+<% @title = 'Charte des comptes' %>
+<div class="filters">
+  <%= link_to_remote 'Créer un compte', {:url => {:action => :new}}, {:id => 'new-link'} %>
+</div>
+<table class="list" cellspacing="0" cellpadding="0" width="100%">
+  <caption>Liste des comptes</caption>
+  <col width="*2"/><col width="*5"/><col width="*3"/>
+  <thead id="list-head">
+    <tr>
+      <th>No</th>
+      <th>Nom</th>
+      <th>Type</th>
+    </tr>
+  </thead>
+  <tbody id="list-body">
+<%= render :partial => 'account', :collection => @accounts %>
+  </tbody>
+</table>

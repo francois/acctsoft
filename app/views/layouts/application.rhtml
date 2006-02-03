@@ -1,9 +1,8 @@
 <html>
 <head>
-  <%= engine_stylesheet 'datebox_engine', 'calendar-blue', :media => 'all' %>
+  <title><%= [@title, 'Comptabilit&eacute;'].compact.join(' | ') %></title>
   <%= stylesheet_link_tag 'application', :media => 'all' %>
   <%= javascript_include_tag :defaults %>
-  <%= engine_javascript 'datebox_engine', 'calendar', 'lang/calendar-en', 'calendar-setup' %>
 </head>
 <body>
   <div id="header">
@@ -18,7 +17,10 @@
     </ul>
   </div>
   <div id="content">
-    <%= show_flash_messages :textilize => true %>
+<% unless @title.blank? -%>
+    <h1><%= @title %></h1>
+<% end -%>
+    <%= show_flash_messages :textilize => true, :always => true %>
     <%= javascript_tag visual_effect(:shake, 'messages') %>
     <%= @content_for_layout %>
   </div>
