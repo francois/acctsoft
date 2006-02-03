@@ -33,7 +33,8 @@ Rails::Initializer.run do |config|
 
   # Make Active Record use UTC-base instead of local time
   config.active_record.default_timezone = :utc
-  
+  config.active_record.colorize_logging = false
+
   # Use Active Record's schema dumper instead of SQL when creating the test database
   # (enables use of different database adapters for development and test environments)
   config.active_record.schema_format = :ruby
@@ -41,7 +42,7 @@ Rails::Initializer.run do |config|
   # See Rails::Configuration for more options
 end
 
-# Add new inflection rules using the following format 
+# Add new inflection rules using the following format
 # (all these examples are active by default):
 # Inflector.inflections do |inflect|
 #   inflect.plural /^(ox)$/i, '\1en'
@@ -51,21 +52,3 @@ end
 # end
 
 # Include your application configuration below
-Engines.create_logger
-
-module LoginEngine
-  case RAILS_ENV
-  when 'production'
-    config :salt, 'barzyncki-hilroy-beausoleil-19230dj9210u4kk1098yf'
-  else
-    config :salt, 'test-salt'
-  end
-
-  config :use_email_notification, false
-  config :app_name, 'Comptabilisation'
-  config :email_from, 'webmaster@teksol.info'
-  config :admin_email, 'webmaster@teksol.info'
-  config :app_url, 'http://localhost:4023/'
-end
-
-Engines.start
