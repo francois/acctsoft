@@ -1,0 +1,29 @@
+active:
+  id: 1
+  position: 1
+  name: Actif
+  designation: actif
+
+passive:
+  id: 2
+  position: 2
+  name: Passif
+  designation: passif
+
+ownership:
+  id: 3
+  position: 3
+  name: Avoir du proprio
+  designation: avoir
+
+product:
+  id: 4
+  position: 4
+  name: Produit
+  designation: produit
+
+charge:
+  id: 5
+  position: 5
+  name: Charge
+  designation: charge

@@ -1,0 +1,17 @@
+cash:
+  id: 1
+  'no': 100
+  name: Cash
+  type_id: 1
+
+owner:
+  id: 2
+  'no': 300
+  name: Owner Value
+  type_id: 3
+
+sales:
+  id: 3
+  'no': 400
+  name: Sales
+  type_id: 4
