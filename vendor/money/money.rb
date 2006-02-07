@@ -125,9 +125,11 @@ class Money
   #
   #  Money.ca_dollar(570).format(:html, :with_currency) =>  "$5.70 <span class=\"currency\">CAD</span>"
   def format(*rules)
-    return "free" if cents == 0
-
     rules = rules.flatten
+    rules = rules.first if Hash === rules.first
+    $stderr.puts
+    $stderr.puts rules.inspect
+    return rules[:zero] || 'free' if Hash === rules && self.zero? && rules[:zero] != :format
 
     if rules.include?(:no_cents)
       formatted = sprintf("$%d", cents.to_f / 100  )          
