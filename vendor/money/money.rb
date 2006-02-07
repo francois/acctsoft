@@ -127,22 +127,28 @@ class Money
   def format(*rules)
     rules = rules.flatten
     rules = rules.first if Hash === rules.first
-    $stderr.puts
-    $stderr.puts rules.inspect
     return rules[:zero] || 'free' if Hash === rules && self.zero? && rules[:zero] != :format
 
+    formatted = ''
+    formatted << '<span class="money">' if rules.include?(:html)
+    formatted << '<span class="symbol">' if rules.include?(:html)
+    formatted << '$'
+    formatted << '</span>' if rules.include?(:html)
+
     if rules.include?(:no_cents)
-      formatted = sprintf("$%d", cents.to_f / 100  )          
+      formatted << sprintf("%d", cents.to_f / 100  )
     else
-      formatted = sprintf("$%.2f", cents.to_f / 100  )      
+      formatted << sprintf("%.2f", cents.to_f / 100  )
     end
 
-    if rules.include?(:with_currency)
+    if rules.include?(:with_currency) && currency
       formatted << " "
       formatted << '<span class="currency">' if rules.include?(:html)
       formatted << currency
       formatted << '</span>' if rules.include?(:html)
     end
+
+    formatted << '</span>' if rules.include?(:html)
     formatted
   end
 
