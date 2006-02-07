@@ -12,6 +12,10 @@ class Txn < ActiveRecord::Base
     txn.errors.add_to_base(msg) unless txn.balanced?
   }
 
+  def after_initialize
+    self.posted_on = Date.today unless self.posted_on
+  end
+
   def balanced?
     self.volume_dt == self.volume_ct
   end

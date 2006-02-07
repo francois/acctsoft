@@ -1,0 +1,5 @@
+<ul>
+<% for account in @accounts -%>
+  <li><span class="no"><%= h(account.no) %></span> &mdash; <span class="name"><%= h(account.name) %></span></li>
+<% end -%>
+</ul>

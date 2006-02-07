@@ -1,0 +1,27 @@
+<% @txn_account = txn_account -%>
+<tr id="txn_account_<%= txn_account_counter %>">
+  <td>
+<% if @editable then -%>
+    <%= hidden_field(:txn_account, :no, :size => 10, :index => txn_account_counter) %>
+<% end -%>
+    <%= h(@txn_account.no) %>
+<% if @editable then -%>
+    <%= link_to_function 'X', %Q($('txn_account_#{txn_account_counter}').parentNode.removeChild($('txn_account_#{txn_account_counter}'))), :title => 'Retirer ligne' %>
+<% end -%>
+  </td>
+  <td><%= h(@txn_account.name) %></td>
+  <td class="money">
+<% if @editable then -%>
+    <%= text_field :txn_account, :debit, :size => 8, :class => 'money', :index => txn_account_counter, :value => @txn_account.debit.format(:zero => '') %>
+<% else -%>
+    <%= format_money(@txn_account.debit, '', '') %>
+<% end -%>
+  </td>
+  <td class="money">
+<% if @editable then -%>
+    <%= text_field :txn_account, :credit, :size => 8, :class => 'money', :index => txn_account_counter, :value => @txn_account.credit.format(:zero => '') %>
+<% else -%>
+    <%= format_money(@txn_account.credit, '', '') %>
+<% end -%>
+  </td>
+</tr>

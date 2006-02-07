@@ -53,3 +53,4 @@ end
 
 # Include your application configuration below
 require 'money' # To load core extensions
+Money.default_currency = 'CAD'

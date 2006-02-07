@@ -12,4 +12,19 @@ module ApplicationHelper
 
     super(*args)
   end
+
+  def format_date(date, blank=nil)
+    return blank if date.blank?
+    date.to_time.strftime('%d/%m/%Y')
+  end
+
+  def format_money(amount, blank='', zero=:format)
+    return blank if amount.blank?
+    case amount
+    when Money
+      amount.format(:zero => zero, :html => true)
+    else
+      number_to_currency(amount)
+    end
+  end
 end

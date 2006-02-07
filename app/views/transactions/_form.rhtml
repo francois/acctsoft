@@ -1,0 +1,58 @@
+<fieldset id="transaction">
+  <%= error_messages_for :transaction %>
+  <div class="row">
+    <%= label :transaction, :posted_on, 'Date effective' %>
+    <%= text_field :transaction, :posted_on, :size => 10, :value => format_date(@transaction.posted_on) %>
+  </div>
+  <div class="row">
+    <%= label :transaction, :description, 'Description' %>
+    <%= text_area :transaction, :description, :rows => 4, :cols => 40 %>
+  </div>
+</fieldset>
+
+<fieldset id="accounts">
+  <table class="list" cellspacing="0" cellpadding="0" width="100%">
+    <caption>Liste des comptes de la transaction</caption>
+    <col width="*2"/><col width="*5"/><col width="*3"/><col width="*3"/>
+    <thead id="list-head">
+      <tr>
+        <th>No compte</th>
+        <th>Nom</th>
+        <th class="money">Montant débit</th>
+        <th class="money">Montant crédit</th>
+      </tr>
+<% if @editable then -%>
+      <tr id="new-account">
+        <td>
+          <%= text_field_with_auto_complete(:account, :no, {:size => 10},
+              :skip_style => true, :select => 'no') %>
+          <input type="hidden" id="txn_line_count" name="txn[line_count]" value="<%= @transaction.lines.count %>"/>
+        </td>
+        <td>&nbsp;</td>
+        <td class="money"><%= text_field :account, :debit, :size => 8, :class => 'money' %></td>
+        <td class="money"><%= text_field :account, :credit, :size => 8, :class => 'money' %></td>
+      </tr>
+      <tr>
+        <td colspan="4" align="right">
+          <%= link_to_remote 'Ajouter', :url => {:action => :add_account}, :submit => 'new-account' %>
+        </td>
+      </tr>
+<% end -%>      
+    </thead>
+    <tfoot>
+      <tr id="txn-totals">
+        <th colspan="2" align="right" scope="row">Volume:</th>
+        <td class="money"><%= format_money(@transaction.volume_dt) %></td>
+        <td class="money"><%= format_money(@transaction.volume_ct) %></td>
+      </tr>
+    </tfoot>
+    <tbody id="list-body">
+<%= render :partial => 'txn_account', :collection => @transaction.lines %>
+    </tbody>
+  </table>
+</fieldset>
+
+<div class="actions">
+  <%= submit_tag 'Enregistrer' %>
+  <%= link_to 'Abandonner', :action => :index %>
+</div>
