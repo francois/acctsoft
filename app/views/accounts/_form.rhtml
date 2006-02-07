@@ -1,0 +1,23 @@
+<fieldset id="account">
+  <div class="row">
+    <%= label :account, :no, 'No compte' %>
+    <%= text_field :account, :no, :size => 6 %>
+  </div>
+  <div class="row">
+    <%= label :account, :name, 'Nom' %>
+    <%= text_field :account, :name, :size => 40 %>
+  </div>
+  <div class="row">
+    <%= label :account, :description, 'Description' %>
+    <%= text_field :account, :description, :size => 40 %>
+  </div>
+  <div class="row">
+    <%= label :account, :type_id, 'Type' %>
+    <%= collection_select :account, :type_id, AccountType.for_select, :id, :name %>
+  </div>
+</fieldset>
+
+<div class="actions">
+  <%= submit_tag 'Enregistrer' %>
+  <%= link_to 'Abandonner', :action => :index %>
+</div>

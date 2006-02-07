@@ -20,7 +20,7 @@
 <% unless @title.blank? -%>
     <h1><%= @title %></h1>
 <% end -%>
-    <%= show_flash_messages :textilize => true, :always => true %>
+    <%= show_flash_messages :textilize => true %>
     <%= javascript_tag visual_effect(:shake, 'messages') %>
     <%= @content_for_layout %>
   </div>

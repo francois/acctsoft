@@ -1,3 +1,0 @@
-page.insert_html :bottom, 'list-head', :partial => 'new_account'
-page.visual_effect :appear, 'new-row'
-page.hide 'new-link'

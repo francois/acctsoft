@@ -35,7 +35,8 @@ a { color: blue; }
 a:visited { color: purple; }
 a:hover { color: blue; background: white; }
 
-.in_place_editor_field { border-bottom: 1px dashed blue; cursor: pointer; }
-.in_place_editor_field[width=small] input[type=text] { width: 6em; }
-.in_place_editor_field[width=medium] input[type=text] { width: 12em; }
-.in_place_editor_field[width=large] input[type=text] { width: 40em; }
+form { width: 40em; }
+form fieldset { border: none; margin: 1em 0; padding: 0; }
+form fieldset .row { display: block; clear: left; margin: .25em 0; }
+form fieldset .row label { float: left; text-align: right; width: 12em; padding-right: 1em; font-weight: bold; }
+form .actions { margin: 1em 0; padding: .25em; text-align: right; }
