@@ -14,7 +14,12 @@
       <th>Solde</th>
     </tr>
   </thead>
+  <tfoot>
+    <th scope="row">Volume</th>
+    <td class="money total"><%= @account.total_dt_volume %></td>
+    <td class="money total"><%= @account.total_ct_volume %></td>
+  </tfoot>
   <tbody>
 <%= render :partial => 'line', :collection => @account.txn_parts %>
   </tbody>
-</div>
+</table>
