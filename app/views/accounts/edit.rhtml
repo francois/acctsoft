@@ -2,3 +2,19 @@
 <%= start_form_tag({:action => :update, :id => @account.id}, {:id => 'accnt'}) %>
   <%= render :partial => 'form' %>
 <%= end_form_tag %>
+
+<table class="list">
+  <caption>Journal</caption>
+  <col width="*1"/><col span="3" width="*1"/>
+  <thead>
+    <tr>
+      <th>Date</th>
+      <th>Débit</th>
+      <th>Crédit</th>
+      <th>Solde</th>
+    </tr>
+  </thead>
+  <tbody>
+<%= render :partial => 'line', :collection => @account.txn_parts %>
+  </tbody>
+</div>

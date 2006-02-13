@@ -1,4 +1,4 @@
 <span class="account <%= line.amount_ct.zero? ? 'debit' : 'credit' %>">
-  <span class="title"><%= line.name %></span>
+  <span class="title"><%= link_to(line.name, account_edit_url(:account => line.no)) %></span>
   <span class="amount"><%= line.amount_ct.zero? ? line.amount_dt : line.amount_ct %></span>
 </span>
