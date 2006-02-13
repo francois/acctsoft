@@ -1,3 +1,6 @@
 .navigation, .filters { display: none; }
 a, a:visited, a:hover { text-decoration: none; color: black; }
+input, select, textarea { border: none; }
+form .actions { display: none; }
+
 @page { margin: .5in; }
