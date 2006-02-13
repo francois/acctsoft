@@ -29,6 +29,14 @@ class Account < ActiveRecord::Base
     @total_ct_volume = ct_amount
   end
 
+  def normally_debitor?
+    !normally_creditor?
+  end
+
+  def normally_creditor?
+    (AccountType.passifs + AccountType.avoirs + AccountType.produits).flatten.include?(self.account_type)
+  end
+
   def to_param
     self.no
   end
