@@ -28,7 +28,7 @@ form input[type=submit] { font-weight: bold; }
 .list .money,
 .list .date { text-align: right; }
 .list thead tr th, .list thead tr td,
-.list tbody tr th, .list tbody tr td { border-bottom: 1px solid #c9cfff; }
+.list tbody tr th, .list tbody tr td { border-bottom: 1px solid #c9cfff; padding: .0625em .25em .125em 0; }
 .list thead tr th, .list thead tr td { border-bottom-width: 2px; }
 .list caption { font-size: 1.2em; font-weight: bold; color: #393fcf; text-align: left; }
 .list tfoot { background: #c9cfff; }
