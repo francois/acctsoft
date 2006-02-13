@@ -1,5 +1,5 @@
 class Account < ActiveRecord::Base
-  has_many :txn_parts, :class_name => 'TxnAccount'
+  has_many :txn_parts, :class_name => 'TxnAccount', :include => :txn, :order => 'txns.posted_on, txns.id'
 
   validates_presence_of :no, :name, :account_type
   validates_inclusion_of :no, :in => (1 .. 999999)
