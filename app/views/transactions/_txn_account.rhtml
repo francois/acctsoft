@@ -1,6 +1,6 @@
 <% @txn_account = txn_account
   index = @txn_account.new_record? ? txn_account_counter : @txn_account.id -%>
-<tr id="txn_account_<%= txn_account_counter %>">
+<tr id="txn_account_<%= index %>">
   <td>
     <%= hidden_field(:txn_account, :no, :size => 10, :index => index) %>
     <%= link_to(@txn_account.no, account_edit_url(:account => @txn_account.no)) %>
