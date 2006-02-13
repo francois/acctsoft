@@ -10,7 +10,11 @@ class AccountsController < ApplicationController
   def create
     @account = Account.new
     if @account.update_attributes(params[:account]) then
-      redirect_to :action => :index
+      if params[:commit] =~ /nouveau/i then
+        redirect_to :action => :new
+      else
+        redirect_to :action => :index
+      end
     else
       render 'new'
     end

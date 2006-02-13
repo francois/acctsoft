@@ -16,7 +16,11 @@ class TransactionsController < ApplicationController
     end
 
     if @transaction.save then
-      redirect_to :action => :index
+      if params[:commit] =~ /nouveau/i then
+        redirect_to :action => :new
+      else
+        redirect_to :action => :index
+      end
     else
       @editable = true
       render :action => 'new'
