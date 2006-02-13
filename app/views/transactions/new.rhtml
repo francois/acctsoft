@@ -1,4 +1,4 @@
 <% @title = 'Nouvelle transaction' %>
-<%= start_form_tag(:action => :create) %>
+<%= start_form_tag({:action => :create}, {:id => 'txn'}) %>
   <%= render :partial => 'form' %>
 <%= end_form_tag %>

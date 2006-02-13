@@ -1,4 +1,4 @@
 <% @title = 'Modifier une transaction' %>
-<%= start_form_tag(:action => :update, :id => @transaction.id) %>
+<%= start_form_tag({:action => :update, :id => @transaction.id}, {:id => 'txn'}) %>
   <%= render :partial => 'form' %>
 <%= end_form_tag %>

@@ -1,4 +1,4 @@
 <% @title = 'Nouveau Compte' %>
-<%= start_form_tag(:action => :create) %>
+<%= start_form_tag({:action => :create}, {:id => 'accnt'}) %>
   <%= render :partial => 'form' %>
 <%= end_form_tag %>

@@ -1,4 +1,4 @@
 <% @title = 'Modifier un Compte' %>
-<%= start_form_tag(:action => :update, :id => @account.id) %>
+<%= start_form_tag({:action => :update, :id => @account.id}, {:id => 'accnt'}) %>
   <%= render :partial => 'form' %>
 <%= end_form_tag %>
