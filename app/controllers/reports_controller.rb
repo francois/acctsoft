@@ -43,11 +43,16 @@ class ReportsController < ApplicationController
     self.avoir_proprietaire
 
     @actifs_accounts  = Account.find(:all, :conditions => ['type_id IN (?)', AccountType.actifs.map {|at| at.id}], :order => 'no')
+    @total_actifs = @actifs_accounts.inject(Money.empty) {|total, accnt| total + accnt.total_dt_volume - accnt.total_ct_volume }
+
     @passifs_accounts = Account.find(:all, :conditions => ['type_id IN (?)', AccountType.passifs.map {|at| at.id}], :order => 'no')
+    @total_passifs = @passifs_accounts.inject(Money.empty) {|total, accnt| total + accnt.total_ct_volume - accnt.total_dt_volume }
 
     @avoir = @avoir_accounts.first
     @avoir.readonly!
     @avoir.total_ct_volume = @end_amount
     @avoir.total_dt_volume = Money.empty
+
+    @total_avoirs = @avoir_accounts.inject(Money.empty) {|total, accnt| total + accnt.total_ct_volume - accnt.total_dt_volume }
   end
 end

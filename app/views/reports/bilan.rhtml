@@ -4,15 +4,31 @@
   <div class="section">
     <h3>Actifs</h3>
 <%= render :partial => 'account', :collection => @actifs_accounts, :locals => {:skip_empty => true} %>
+    <span class="account total outer">
+      <span class="title">Total de l'actif</span>
+      <span class="amount"><%= @total_actifs %></span>
+    </span>
   </div>
 
   <div class="section">
     <h3>Passifs</h3>
 <%= render :partial => 'account', :collection => @passifs_accounts, :locals => {:skip_empty => true} %>
+    <span class="account total">
+      <span class="title">Total du passif</span>
+      <span class="amount"><%= @total_passifs %></span>
+    </span>
   </div>
 
   <div class="section">
     <h3>Avoirs</h3>
 <%= render :partial => 'account', :collection => @avoir_accounts, :locals => {:skip_empty => false} %>
+    <span class="account total">
+      <span class="title">Total de l'avoir</span>
+      <span class="amount"><%= @total_avoirs %></span>
+    </span>
+    <span class="account total outer">
+      <span class="title">Total du passif et de l'avoir</span>
+      <span class="amount"><%= @total_passifs + @total_avoirs %></span>
+    </span>
   </div>
 </div>
