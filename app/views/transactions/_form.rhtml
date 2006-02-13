@@ -53,7 +53,7 @@
 </fieldset>
 
 <div class="actions">
-<% unless @transaction.new_record? then -%>
+<% if @transaction.new_record? then -%>
   <%= submit_tag 'Enregistrer & Nouveau' %>
 <% end -%>
   <%= submit_tag 'Enregistrer' %>
