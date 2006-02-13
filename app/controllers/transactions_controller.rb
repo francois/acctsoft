@@ -47,7 +47,8 @@ class TransactionsController < ApplicationController
 
   def auto_complete_for_account_no
     @accounts = Account.find(:all, :order => 'no', :limit => 20,
-        :conditions => ['no LIKE ?', "#{params[:account][:no]}%"])
+        :conditions => ['no LIKE :no OR name LIKE :no OR description LIKE :no',
+            {:no => "#{params[:account][:no]}%"}])
     render :layout => false
   end
 
