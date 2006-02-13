@@ -2,7 +2,7 @@ class TransactionsController < ApplicationController
   before_filter :parse_dates
 
   def index
-    @transaction_pages, @transactions = paginate(:txn, :per_page => 30, :order => 'posted_on DESC')
+    @transaction_pages, @transactions = paginate(:txn, :per_page => 30, :order => 'posted_on DESC, id DESC')
   end
 
   def new
