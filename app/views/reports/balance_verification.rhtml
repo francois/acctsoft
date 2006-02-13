@@ -27,8 +27,8 @@
   <tbody>
 <% for @account in @accounts do -%>
     <tr>
-      <td><%= @account.no %></td>
-      <td><%= @account.name %></td>
+      <td><%= link_to(@account.no, account_edit_url(:account => @account.no)) %></td>
+      <td><%= link_to(@account.name, account_edit_url(:account => @account.no)) %></td>
       <td class="money"><%= @account.total_dt_volume - @account.total_ct_volume if @account.total_dt_volume > @account.total_ct_volume %></td>
       <td class="money"><%= @account.total_ct_volume - @account.total_dt_volume if @account.total_ct_volume > @account.total_dt_volume %></td>
     </tr>
