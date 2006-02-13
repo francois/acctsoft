@@ -85,3 +85,15 @@ span.money .symbol { display: none; }
 .report .section .total { padding-left: .125in; }
 .report .section .title { width: 2.375in; }
 .report .outer .title { width: 3.5in; }
+
+.journal { display: block; }
+.journal .transaction { display: block; page-break-inside: avoid; margin: 2em 0; }
+.journal .date { display: block; width: 5em; text-align: right; }
+.journal .lines { display: table-row-group; }
+.journal .account { display: table-row; }
+.journal .title { display: table-cell; width: 20em; }
+.journal .amount { display: table-cell; width: 9em; text-align: right; }
+.journal .debit .amount { padding-right: 5em; }
+.journal .credit .title { padding-left: 1em; }
+.journal .description { clear: left; }
+.journal .description p { margin: .33em 1em; font-size: .8em; }

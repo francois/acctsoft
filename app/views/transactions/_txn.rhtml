@@ -1,0 +1,7 @@
+<div class="transaction">
+  <span class="date"><%= link_to(format_date(txn.posted_on), transaction_edit_url(:id => txn.id)) %></span>
+  <div class="lines">
+<%= render :partial => 'line', :collection => txn.lines %>
+  </div>
+  <span class="description"><%= textilize(txn.description) %></span>
+</div>
