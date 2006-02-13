@@ -37,6 +37,11 @@ class TransactionsController < ApplicationController
 
   def update
     @transaction = Txn.find(params[:id])
+
+    params[:txn_account].each do |id, attrs|
+      @transaction.lines.find(id).update_attributes(attrs)
+    end
+
     if @transaction.update_attributes(params[:transaction]) then
       @transaction.destroy unless params[:destroy].blank?
       redirect_to :action => :index

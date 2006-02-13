@@ -21,7 +21,6 @@
         <th class="money">Montant débit</th>
         <th class="money">Montant crédit</th>
       </tr>
-<% if @editable then -%>
       <tr id="new-account">
         <td>
           <%= text_field_with_auto_complete(:account, :no, {:size => 10},
@@ -37,7 +36,6 @@
           <%= link_to_remote 'Ajouter', :url => {:action => :add_account}, :submit => 'new-account' %>
         </td>
       </tr>
-<% end -%>      
     </thead>
     <tfoot>
       <tr id="txn-totals">
