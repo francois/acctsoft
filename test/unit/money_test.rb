@@ -24,4 +24,8 @@ class MoneyTest < Test::Unit::TestCase
   def test_zero_cents_is_zero
     assert 0.to_money.zero?
   end
+
+  def test_substract_from_zero
+    assert_equal -12.to_money, Money.empty - (12.to_money)
+  end
 end
