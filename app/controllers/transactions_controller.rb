@@ -34,6 +34,13 @@ class TransactionsController < ApplicationController
   end
 
   def update
+    @transaction = Txn.find(params[:id])
+    if @transaction.update_attributes(params[:transaction]) then
+      redirect_to :action => :index
+    else
+      @editable = false
+      render :action => 'edit'
+    end
   end
 
   def auto_complete_for_account_no
