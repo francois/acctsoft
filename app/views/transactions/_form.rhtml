@@ -53,8 +53,13 @@
 </fieldset>
 
 <div class="actions">
+<% unless @transaction.new_record? then -%>
   <%= submit_tag 'Enregistrer & Nouveau' %>
+<% end -%>
   <%= submit_tag 'Enregistrer' %>
+<% unless @transaction.new_record? then -%>
+  <%= submit_tag 'Détruire', :name => 'destroy' %>
+<% end -%>
   <%= link_to 'Abandonner', :action => :index %>
 </div>
 

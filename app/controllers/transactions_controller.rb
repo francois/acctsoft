@@ -38,6 +38,7 @@ class TransactionsController < ApplicationController
   def update
     @transaction = Txn.find(params[:id])
     if @transaction.update_attributes(params[:transaction]) then
+      @transaction.destroy unless params[:destroy].blank?
       redirect_to :action => :index
     else
       @editable = false
