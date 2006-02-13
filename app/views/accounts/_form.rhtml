@@ -18,7 +18,9 @@
 </fieldset>
 
 <div class="actions">
+<% unless @account.new_record? then -%>
   <%= submit_tag 'Enregistrer & Nouveau' %>
+<% end -%>
   <%= submit_tag 'Enregistrer' %>
   <%= link_to 'Abandonner', :action => :index %>
 </div>
