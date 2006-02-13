@@ -1,4 +1,6 @@
 class TransactionsController < ApplicationController
+  before_filter :parse_dates
+
   def index
     @transaction_pages, @transactions = paginate(:txn, :per_page => 30, :order => 'posted_on DESC')
   end
@@ -53,5 +55,16 @@ class TransactionsController < ApplicationController
     @txn_account = TxnAccount.new(params[:account])
     @txn_line_count = 1 + params[:txn][:line_count].to_i
     @editable = true
+  end
+
+  protected
+  def parse_dates
+    return unless params[:transaction]
+    params[:transaction][:posted_on] = parse_date(params[:transaction][:posted_on])
+  end
+
+  def parse_date(date)
+    return date unless date =~ /^(\d{4})-(\d{2})-(\d{2})$/
+    Date.new($1.to_i, $2.to_i, $3.to_i)
   end
 end

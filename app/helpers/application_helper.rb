@@ -15,7 +15,7 @@ module ApplicationHelper
 
   def format_date(date, blank=nil)
     return blank if date.blank?
-    date.to_time.strftime('%d/%m/%Y')
+    date.to_time.strftime('%Y-%m-%d')
   end
 
   def format_money(amount, blank='', zero=:format)
