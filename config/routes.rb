@@ -9,6 +9,8 @@ ActionController::Routing::Routes.draw do |map|
   map.account_edit '/comptes/:account', :controller => 'accounts', :action => 'edit', :account => /^\d+$/
   map.account_new '/comptes/nouveau', :controller => 'accounts', :action => 'new'
 
+  map.reports '/rapports', :controller => 'reports', :action => 'index'
+
   map.config '/compagnie', :controller => 'company', :action => 'edit'
 
   map.connect ':controller/:action/:id'

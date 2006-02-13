@@ -1,5 +1,5 @@
 class TxnAccount < ActiveRecord::Base
-  acts_as_list
+  acts_as_list :scope => 'txn_id'
 
   belongs_to :txn
   belongs_to :account

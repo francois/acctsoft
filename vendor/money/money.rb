@@ -208,4 +208,8 @@ class Money
   def zero?
     self.cents.zero?
   end
+
+  def abs
+    self.class.new(self.cents.abs, self.currency)
+  end
 end

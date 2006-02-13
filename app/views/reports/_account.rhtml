@@ -1,0 +1,6 @@
+<% unless skip_empty and (account.total_dt_volume - account.total_ct_volume).zero? then -%>
+<span class="account">
+  <span class="title"><%= account.name %></span>
+  <span class="amount"><%= (account.total_dt_volume - account.total_ct_volume).abs %></span>
+</span>
+<% end -%>

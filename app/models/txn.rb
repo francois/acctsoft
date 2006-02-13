@@ -2,6 +2,7 @@ class Txn < ActiveRecord::Base
   validates_presence_of :posted_on, :description
 
   has_many :lines, :class_name => 'TxnAccount', :order => 'position'
+  before_destroy :remove_lines
 
   composed_of :volume, :class_name => 'Money',
       :mapping => [%w(volume_cents cents), %w(volume_currency currency)]
@@ -33,5 +34,9 @@ class Txn < ActiveRecord::Base
   protected
   def update_posted_on
     self.posted_on = Date.today unless self.posted_on
+  end
+
+  def remove_lines
+    self.lines.each {|l| l.destroy}
   end
 end

@@ -1,0 +1,34 @@
+<%= render :partial => 'menu' %>
+<div class="report">
+  <h2>État des résultats</h2>
+  <div class="section">
+    <h3>Produits</h3>
+<%= render :partial => 'account', :collection => @product_accounts, :locals => {:skip_empty => true} %>
+    <span class="total">
+      <span class="title">Total:</span>
+      <span class="amount"><%= @total_products_amount %></span>
+    </span>
+  </div>
+
+  <div class="section">
+    <h3>Charges</h3>
+<%= render :partial => 'account', :collection => @charge_accounts, :locals => {:skip_empty => true} %>
+    <span class="total">
+      <span class="title">Total:</span>
+      <span class="amount"><%= @total_charges_amount %></span>
+    </span>
+  </div>
+
+  <div class="section">
+    <span class="outer total">
+      <span class="title">
+<% if @total_products_amount < @total_charges_amount then -%>
+        Perte nette
+<% else -%>
+        Bénéfice net
+<% end -%>
+      </span>
+      <span class="amount <%= 'loss' if @total_products_amount < @total_charges_amount %>"><%= (@total_products_amount - @total_charges_amount).abs %></span>
+    </span>
+  </div>
+</div>

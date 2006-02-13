@@ -5,6 +5,26 @@ class AccountType < ActiveRecord::Base
   validates_length_of :name, :minimum => 1
   validates_inclusion_of :designation, :in => %w(actif passif produit charge avoir)
 
+  def self.actifs
+    self.find_all_by_designation('actif')
+  end
+
+  def self.passifs
+    self.find_all_by_designation('passif')
+  end
+
+  def self.avoirs
+    self.find_all_by_designation('avoir')
+  end
+
+  def self.produits
+    self.find_all_by_designation('produit')
+  end
+
+  def self.charges
+    self.find_all_by_designation('charge')
+  end
+
   def self.for_select
     self.find(:all, :order => 'position')
   end

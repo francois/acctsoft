@@ -22,7 +22,8 @@ form input[type=submit] { font-weight: bold; }
 #notice   { color: #666; }
 #messages p { display: list-item; list-style-type: square; margin-left: 2em; }
 
-.list { border: 3px solid #c9cfff; empty-cells: show; border-collapse: collapse; }
+.list { border: 3px solid #c9cfff; empty-cells: show; border-collapse: collapse; clear: both; }
+.list .error { font-size: 110%; background: red; color: black; font-weight: bold; }
 .list thead th { text-align: left; }
 .list th, .list td { padding: 0 2px; }
 .list .money,
@@ -69,3 +70,18 @@ div.auto_complete ul strong.highlight {
 }
 
 span.money .symbol { display: none; }
+
+.report { clear: both; display: block; margin: 1em 0; }
+.report h3 { margin: 3em 0 .25em 0; }
+.report .section { margin: 2em 0; }
+.report .account, .report .subtotal, .report .total { display: block; clear: left; }
+.report .total { padding-top: .0625in; font-weight: bold; font-size: 1.1em; }
+.report .title { display: block; float: left; width: 2.5in; text-align: left; }
+.report .amount { display: block; float: left; width: 1in; text-align: right; }
+.report .total .amount { border-top: 1px solid black; border-bottom: 3px double black; }
+.report .subtotal .amount { margin-left: 2.5in; border-top: 1px solid black; font-weight: bold; }
+.report .loss { color: red; }
+.report .section .account,
+.report .section .total { padding-left: .125in; }
+.report .section .title { width: 2.375in; }
+.report .outer .title { width: 3.5in; }

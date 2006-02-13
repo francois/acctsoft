@@ -1,0 +1,37 @@
+<%= render :partial => 'menu' %>
+<table class="list" width="100%">
+  <caption>Balance de vérification</caption>
+  <col width="*1"/><col width="*4"/><col span="2" width="*1"/>
+  <thead>
+    <tr>
+      <th>No compte</th>
+      <th>Nom</th>
+      <th>Solde débiteur</th>
+      <th>Solde créditeur</th>
+    </tr>
+  </thead>
+  <tfoot>
+    <tr>
+      <th colspan="2" scope="row">Total:</th>
+      <td class="money total"><%= @total_dt_volume %></td>
+      <td class="money total"><%= @total_ct_volume %></td>
+    </tr>
+<% unless @total_dt_volume == @total_ct_volume -%>
+    <tr class="error">
+      <th colspan="2" scope="row">Imbalance:</th>
+      <td class="money total"><%= @total_ct_volume - @total_dt_volume if @total_dt_volume < @total_ct_volume %></td>
+      <td class="money total"><%= @total_dt_volume - @total_ct_volume if @total_ct_volume < @total_dt_volume %></td>
+    </tr>
+<% end -%>
+  </tfoot>
+  <tbody>
+<% for @account in @accounts do -%>
+    <tr>
+      <td><%= @account.no %></td>
+      <td><%= @account.name %></td>
+      <td class="money"><%= @account.total_dt_volume - @account.total_ct_volume if @account.total_dt_volume > @account.total_ct_volume %></td>
+      <td class="money"><%= @account.total_ct_volume - @account.total_dt_volume if @account.total_ct_volume > @account.total_dt_volume %></td>
+    </tr>
+<% end -%>
+  </tbody>
+</table>
