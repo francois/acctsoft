@@ -3,10 +3,11 @@
 <tr id="txn_account_<%= index %>">
   <td>
     <%= hidden_field(:txn_account, :no, :size => 10, :index => index) %>
-    <%= link_to(@txn_account.no, account_edit_url(:account => @txn_account.no)) %>
-    <%= link_to_function 'X', %Q($('txn_account_#{index}').parentNode.removeChild($('txn_account_#{index}'))), :title => 'Retirer ligne' %>
+    <%= @txn_account.no %>
+    <%= link_to_function 'X', %Q($('txn_account_#{index}').parentNode.removeChild($('txn_account_#{index}'))),
+            :title => 'Détruire cette ligne' %>
   </td>
-  <td><%= link_to(@txn_account.name, account_edit_url(:account => @txn_account.no)) %></td>
+  <td><%= @txn_account.name %></td>
   <td class="money">
     <%= text_field :txn_account, :debit, :size => 8, :class => 'money', :index => index, :value => @txn_account.debit.format(:zero => '') %>
   </td>
