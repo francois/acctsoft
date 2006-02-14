@@ -15,9 +15,18 @@
     </tr>
   </thead>
   <tfoot>
-    <th scope="row">Volume</th>
-    <td class="money total"><%= @account.total_dt_volume %></td>
-    <td class="money total"><%= @account.total_ct_volume %></td>
+    <tr>
+      <th scope="row">Volume</th>
+      <td class="money total"><%= @account.total_dt_volume %></td>
+      <td class="money total"><%= @account.total_ct_volume %></td>
+      <td>&nbsp;</td>
+    </tr>
+    <tr>
+      <th scope="row">Solde</th>
+      <td class="money total"><%= @account.total_dt_volume - @account.total_ct_volume if @account.total_dt_volume > @account.total_ct_volume %></td>
+      <td class="money total"><%= @account.total_ct_volume - @account.total_dt_volume if @account.total_ct_volume > @account.total_dt_volume %></td>
+      <td>&nbsp;</td>
+    </tr>
   </tfoot>
   <tbody>
 <%= render :partial => 'line', :collection => @account.txn_parts %>
