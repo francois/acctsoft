@@ -3,23 +3,23 @@
   <h2>État de l'avoir du propriétaire</h2>
   <span class="outer total">
     <span class="title">Avoir du propriétaire au début</span>
-    <span class="amount"><%= @initial_amount %></span>
+    <span class="amount"><%= format_money @initial_amount %></span>
   </span>
 
   <div class="section">
     <h3>Plus</h3>
     <span class="account">
       <span class="title">Mises de fonds</span>
-      <span class="amount"><%= @additions %></span>
+      <span class="amount"><%= format_money @additions %></span>
     </span>
 <% unless @benefit.zero? then -%>
     <span class="account">
       <span class="title">Bénéfice net</span>
-      <span class="amount"><%= @benefit %></span>
+      <span class="amount"><%= format_money @benefit %></span>
     </span>
 <% end -%>
     <span class="subtotal">
-      <span class="amount"><%= @additions + @benefit %></span>
+      <span class="amount"><%= format_money @additions + @benefit %></span>
     </span>
   </div>
 
@@ -27,21 +27,21 @@
     <h3>Moins</h3>
     <span class="account">
       <span class="title">Prélèvements</span>
-      <span class="amount"><%= @substractions %></span>
+      <span class="amount"><%= format_money @substractions %></span>
     </span>
 <% unless @loss.zero? then -%>
     <span class="account">
       <span class="title">Perte nette</span>
-      <span class="amount"><%= @loss %></span>
+      <span class="amount"><%= format_money @loss %></span>
     </span>
 <% end -%>
     <span class="subtotal">
-      <span class="amount"><%= @substractions + @loss %></span>
+      <span class="amount"><%= format_money @substractions + @loss %></span>
     </span>
   </div>
 
   <span class="outer total">
     <span class="title">Avoir du propriétaire à la fin</span>
-    <span class="amount"><%= @end_amount %></span>
+    <span class="amount"><%= format_money @end_amount %></span>
   </span>
 </div>

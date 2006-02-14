@@ -13,14 +13,14 @@
   <tfoot>
     <tr>
       <th colspan="2" scope="row">Total:</th>
-      <td class="money total"><%= @total_dt_volume %></td>
-      <td class="money total"><%= @total_ct_volume %></td>
+      <td class="money total"><%= format_money @total_dt_volume %></td>
+      <td class="money total"><%= format_money @total_ct_volume %></td>
     </tr>
 <% unless @total_dt_volume == @total_ct_volume -%>
     <tr class="error">
       <th colspan="2" scope="row">Imbalance:</th>
-      <td class="money total"><%= @total_ct_volume - @total_dt_volume if @total_dt_volume < @total_ct_volume %></td>
-      <td class="money total"><%= @total_dt_volume - @total_ct_volume if @total_ct_volume < @total_dt_volume %></td>
+      <td class="money total"><%= format_money(@total_ct_volume - @total_dt_volume) if @total_dt_volume < @total_ct_volume %></td>
+      <td class="money total"><%= format_money(@total_dt_volume - @total_ct_volume) if @total_ct_volume < @total_dt_volume %></td>
     </tr>
 <% end -%>
   </tfoot>
@@ -29,8 +29,8 @@
     <tr>
       <td><%= link_to(@account.no, account_edit_url(:account => @account.no)) %></td>
       <td><%= link_to(@account.name, account_edit_url(:account => @account.no)) %></td>
-      <td class="money"><%= @account.total_dt_volume - @account.total_ct_volume if @account.total_dt_volume > @account.total_ct_volume %></td>
-      <td class="money"><%= @account.total_ct_volume - @account.total_dt_volume if @account.total_ct_volume > @account.total_dt_volume %></td>
+      <td class="money"><%= format_money(@account.total_dt_volume - @account.total_ct_volume) if @account.total_dt_volume > @account.total_ct_volume %></td>
+      <td class="money"><%= format_money(@account.total_ct_volume - @account.total_dt_volume) if @account.total_ct_volume > @account.total_dt_volume %></td>
     </tr>
 <% end -%>
   </tbody>

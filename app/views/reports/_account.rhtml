@@ -1,6 +1,6 @@
 <% unless skip_empty and (account.total_dt_volume - account.total_ct_volume).zero? then -%>
 <span class="account">
   <span class="title"><%= link_to(account.name, account_edit_url(:account => account.no)) %></span>
-  <span class="amount"><%= account.normally_debitor? ? (account.total_dt_volume - account.total_ct_volume) : (account.total_ct_volume - account.total_dt_volume)%></span>
+  <span class="amount"><%= format_money(account.normally_debitor? ? (account.total_dt_volume - account.total_ct_volume) : (account.total_ct_volume - account.total_dt_volume)) %></span>
 </span>
 <% end -%>

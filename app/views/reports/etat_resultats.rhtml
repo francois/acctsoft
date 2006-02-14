@@ -6,7 +6,7 @@
 <%= render :partial => 'account', :collection => @product_accounts, :locals => {:skip_empty => true} %>
     <span class="total">
       <span class="title">Total:</span>
-      <span class="amount"><%= @total_products_amount %></span>
+      <span class="amount"><%= format_money @total_products_amount %></span>
     </span>
   </div>
 
@@ -15,7 +15,7 @@
 <%= render :partial => 'account', :collection => @charge_accounts, :locals => {:skip_empty => true} %>
     <span class="total">
       <span class="title">Total:</span>
-      <span class="amount"><%= @total_charges_amount %></span>
+      <span class="amount"><%= format_money @total_charges_amount %></span>
     </span>
   </div>
 
@@ -28,7 +28,7 @@
         Bénéfice net
 <% end -%>
       </span>
-      <span class="amount <%= 'loss' if @total_products_amount < @total_charges_amount %>"><%= (@total_products_amount - @total_charges_amount).abs %></span>
+      <span class="amount <%= 'loss' if @total_products_amount < @total_charges_amount %>"><%= format_money (@total_products_amount - @total_charges_amount).abs %></span>
     </span>
   </div>
 </div>
