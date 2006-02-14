@@ -22,7 +22,7 @@ form input[type=submit] { font-weight: bold; }
 #notice   { color: #666; }
 #messages p { display: list-item; list-style-type: square; margin-left: 2em; }
 
-.list { border: 3px solid #c9cfff; empty-cells: show; border-collapse: collapse; clear: both; }
+.list { border: 3px solid #c9cfff; empty-cells: show; border-collapse: collapse; clear: left; }
 .list .error { font-size: 110%; background: red; color: black; font-weight: bold; }
 .list thead th { text-align: left; }
 .list th, .list td { padding: 0 2px; }
@@ -97,3 +97,6 @@ span.money .symbol { display: none; }
 .journal .credit .title { padding-left: 1em; }
 .journal .description { clear: left; }
 .journal .description p { margin: .33em 1em; font-size: .8em; }
+
+#bilan { float: right; font-size: .8em; background: #f5f8ff; padding: .25em; border: #c9cfff double 3px; }
+#transactions { clear: none; margin-right: 35em; }

@@ -1,0 +1,7 @@
+<% @title = 'Gestion Comptabilité' %>
+<div id="bilan">
+  <%= render_component(:controller => 'reports', :action => 'bilan', :params => {:component => true}) %>
+</div>
+<div id="transactions">
+  <%= render :partial => 'transactions/list', :object => @transactions %>
+</div>

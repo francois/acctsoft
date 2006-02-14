@@ -1,7 +1,6 @@
 class ReportsController < ApplicationController
   def index
     self.bilan
-    render :action => 'bilan'
   end
 
   def balance_verification
@@ -54,5 +53,7 @@ class ReportsController < ApplicationController
     @avoir.total_dt_volume = Money.empty
 
     @total_avoirs = @avoir_accounts.inject(Money.empty) {|total, accnt| total + accnt.total_ct_volume - accnt.total_dt_volume }
+
+    render :layout => !params[:component], :action => 'bilan'
   end
 end

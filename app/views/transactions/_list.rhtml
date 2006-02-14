@@ -1,0 +1,14 @@
+<table class="list" cellspacing="0" cellpadding="0" width="100%">
+  <caption>Liste des transactions</caption>
+  <col width="*1"/><col/><col width="*1"/>
+  <thead id="list-head">
+    <tr>
+      <th>Date</th>
+      <th>Description</th>
+      <th>Volume</th>
+    </tr>
+  </thead>
+  <tbody id="list-body">
+<%= render :partial => 'transactions/transaction', :collection => list %>
+  </tbody>
+</table>
