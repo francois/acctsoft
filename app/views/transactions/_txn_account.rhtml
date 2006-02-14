@@ -9,9 +9,9 @@
   </td>
   <td><%= @txn_account.name %></td>
   <td class="money">
-    <%= text_field :txn_account, :debit, :size => 8, :class => 'money', :index => index, :value => @txn_account.debit.format(:zero => '') %>
+    <%= text_field :txn_account, :debit, :size => 8, :class => 'money debit', :index => index, :value => @txn_account.debit.format(:zero => '') %>
   </td>
   <td class="money">
-    <%= text_field :txn_account, :credit, :size => 8, :class => 'money', :index => index, :value => @txn_account.credit.format(:zero => '') %>
+    <%= text_field :txn_account, :credit, :size => 8, :class => 'money credit', :index => index, :value => @txn_account.credit.format(:zero => '') %>
   </td>
 </tr>

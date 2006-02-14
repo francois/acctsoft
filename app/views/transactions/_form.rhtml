@@ -40,8 +40,8 @@
     <tfoot>
       <tr id="txn-totals">
         <th colspan="2" align="right" scope="row">Volume:</th>
-        <td class="money"><%= format_money(@transaction.volume_dt) %></td>
-        <td class="money"><%= format_money(@transaction.volume_ct) %></td>
+        <td class="money" id="txn_dt_volume"><%= format_money(@transaction.volume_dt) %></td>
+        <td class="money" id="txn_ct_volume"><%= format_money(@transaction.volume_ct) %></td>
       </tr>
     </tfoot>
     <tbody id="list-body">
@@ -61,4 +61,8 @@
   <%= link_to 'Abandonner', :action => :index %>
 </div>
 
+<%= javascript_tag %q(new Form.Observer('txn', 0.25, function() {
+    updateTransactionVolume('list-body', 'debit', 'txn_dt_volume');
+    updateTransactionVolume('list-body', 'credit', 'txn_ct_volume');
+  })) %>
 <%= javascript_tag "Form.focusFirstElement('txn');" %>
