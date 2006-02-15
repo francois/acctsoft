@@ -13,6 +13,16 @@ module ApplicationHelper
     super(*args)
   end
 
+  def text_field_tag(*args)
+    if args.last.kind_of?(Hash) then
+      args.last[:autocomplete] = 'off' unless args.last.has_key?(:autocomplete)
+    else
+      args << {:autocomplete => 'off'}
+    end
+
+    super(*args)
+  end
+
   def format_date(date, blank=nil)
     return blank if date.blank?
     date.to_time.strftime('%Y-%m-%d')
