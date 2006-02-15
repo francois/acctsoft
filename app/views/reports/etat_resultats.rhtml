@@ -1,6 +1,7 @@
 <%= render :partial => 'menu' %>
 <div class="report">
   <h2>État des résultats</h2>
+  <%= render :partial => 'cutoff_date' %>
   <div class="section">
     <h3>Produits</h3>
 <%= render :partial => 'account', :collection => @product_accounts, :locals => {:skip_empty => true} %>

@@ -1,4 +1,6 @@
 class ReportsController < ApplicationController
+  before_filter :process_cutoff_date
+
   def index
     self.bilan
   end
@@ -6,27 +8,27 @@ class ReportsController < ApplicationController
   def balance_verification
     @accounts = Account.find(:all, :order => 'no')
 
-    @total_dt_volume = @accounts.inject(Money.empty) {|sum, account| sum + account.total_dt_volume}
-    @total_ct_volume = @accounts.inject(Money.empty) {|sum, account| sum + account.total_ct_volume}
+    @total_dt_volume = @accounts.inject(Money.empty) {|sum, account| sum + account.total_dt_volume(@cutoff_date) }
+    @total_ct_volume = @accounts.inject(Money.empty) {|sum, account| sum + account.total_ct_volume(@cutoff_date) }
   end
 
   def etat_resultats
     @product_accounts = Account.find(:all, :conditions => ['type_id IN (?)', AccountType.produits.map {|at| at.id}], :order => 'no')
     @charge_accounts  = Account.find(:all, :conditions => ['type_id IN (?)', AccountType.charges.map {|at| at.id}], :order => 'no')
 
-    @total_products_amount = @product_accounts.inject(Money.empty) {|sum, accnt| sum + accnt.total_ct_volume - accnt.total_dt_volume}
-    @total_charges_amount = @charge_accounts.inject(Money.empty) {|sum, accnt| sum + accnt.total_dt_volume - accnt.total_ct_volume}
+    @total_products_amount = @product_accounts.inject(Money.empty) {|sum, accnt| sum + accnt.total_ct_volume(@cutoff_date) - accnt.total_dt_volume(@cutoff_date) }
+    @total_charges_amount = @charge_accounts.inject(Money.empty) {|sum, accnt| sum + accnt.total_dt_volume(@cutoff_date) - accnt.total_ct_volume(@cutoff_date) }
   end
 
   def avoir_proprietaire
     @avoir_accounts = Account.find(:all, :conditions => ['type_id IN (?) AND no NOT IN (?)',
         AccountType.avoirs.map {|at| at.id}, [3100, 3200]], :order => 'no')
-    @initial_amount = @avoir_accounts.inject(Money.empty) {|sum, accnt| sum + accnt.total_ct_volume} - @avoir_accounts.inject(Money.empty) {|sum, accnt| sum + accnt.total_dt_volume}
+    @initial_amount = @avoir_accounts.inject(Money.empty) {|sum, accnt| sum + accnt.total_ct_volume(@cutoff_date) } - @avoir_accounts.inject(Money.empty) {|sum, accnt| sum + accnt.total_dt_volume(@cutoff_date) }
 
     self.etat_resultats
 
-    @additions      = Account.find_by_no(3200).total_ct_volume - Account.find_by_no(3200).total_dt_volume
-    @substractions  = Account.find_by_no(3100).total_dt_volume - Account.find_by_no(3100).total_ct_volume
+    @additions      = Account.find_by_no(3200).total_ct_volume(@cutoff_date) - Account.find_by_no(3200).total_dt_volume(@cutoff_date)
+    @substractions  = Account.find_by_no(3100).total_dt_volume(@cutoff_date) - Account.find_by_no(3100).total_ct_volume(@cutoff_date)
 
     @benefit = @loss = Money.empty
     if @total_products_amount > @total_charges_amount then
@@ -42,18 +44,28 @@ class ReportsController < ApplicationController
     self.avoir_proprietaire
 
     @actifs_accounts  = Account.find(:all, :conditions => ['type_id IN (?)', AccountType.actifs.map {|at| at.id}], :order => 'no')
-    @total_actifs = @actifs_accounts.inject(Money.empty) {|total, accnt| total + accnt.total_dt_volume - accnt.total_ct_volume }
+    @total_actifs = @actifs_accounts.inject(Money.empty) {|total, accnt| total + accnt.total_dt_volume(@cutoff_date) - accnt.total_ct_volume(@cutoff_date) }
 
     @passifs_accounts = Account.find(:all, :conditions => ['type_id IN (?)', AccountType.passifs.map {|at| at.id}], :order => 'no')
-    @total_passifs = @passifs_accounts.inject(Money.empty) {|total, accnt| total + accnt.total_ct_volume - accnt.total_dt_volume }
+    @total_passifs = @passifs_accounts.inject(Money.empty) {|total, accnt| total + accnt.total_ct_volume(@cutoff_date) - accnt.total_dt_volume(@cutoff_date) }
 
     @avoir = @avoir_accounts.first
     @avoir.readonly!
     @avoir.total_ct_volume = @end_amount
     @avoir.total_dt_volume = Money.empty
 
-    @total_avoirs = @avoir_accounts.inject(Money.empty) {|total, accnt| total + accnt.total_ct_volume - accnt.total_dt_volume }
+    @total_avoirs = @avoir_accounts.inject(Money.empty) {|total, accnt| total + accnt.total_ct_volume(@cutoff_date) - accnt.total_dt_volume(@cutoff_date) }
 
     render :layout => !params[:component], :action => 'bilan'
+  end
+
+  protected
+  def process_cutoff_date
+    session[:cutoff_date] = @cutoff_date =
+        if params[:cutoff_date].blank? then
+          session[:cutoff_date] || Date.today
+        else
+          parse_date(params[:cutoff_date])
+        end
   end
 end

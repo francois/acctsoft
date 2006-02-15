@@ -16,6 +16,8 @@ form input[type=submit] { font-weight: bold; }
 .navigation li a { padding: 0 .5em; }
 .navigation li:first-child { border-left-width: 0; }
 
+.filters { padding-top: 2em; margin: 1em 0 2em 0; }
+
 #messages { background: white; border: 2px ridge blue; margin: 1em auto; width: 67%; padding: 0 .5em; }
 #warning  { font-weight: bold; color: #f30; }
 #message  { }
@@ -72,7 +74,8 @@ div.auto_complete ul strong.highlight {
 span.money .symbol { display: none; }
 
 .report { clear: both; display: block; margin: 1em 0; }
-.report h3 { margin: 3em 0 .25em 0; }
+.report > h3 { margin-top: 1em; margin-bottom: 2em; font-size: .9em; }
+.report .section h3 { margin: 1em 0 .25em 0; }
 .report .section { margin: 2em 0; }
 .report .account, .report .subtotal, .report .total { display: block; clear: left; }
 .report .total { padding-top: .0625in; font-weight: bold; font-size: 1.1em; }

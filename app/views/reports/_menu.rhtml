@@ -4,3 +4,7 @@
   <li><%= link_to 'État de l\'avoir du propriétaire', :action => 'avoir_proprietaire' %></li>
   <li><%= link_to 'Bilan', :action => 'bilan' %></li>
 </ul>
+<%= start_form_tag({}, {:class => 'filters', :method => 'get'}) %>
+  <label>Transactions le ou avant le: <%= text_field_tag 'cutoff_date', format_date(@cutoff_date), :size => 8 %></label>
+  <%= submit_tag 'Filtrer', :name => nil %>
+<%= end_form_tag %>

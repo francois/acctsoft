@@ -1,6 +1,7 @@
 <%= render :partial => 'menu' %>
 <div class="report">
   <h2>État de l'avoir du propriétaire</h2>
+  <%= render :partial => 'cutoff_date' %>
   <span class="outer total">
     <span class="title">Avoir du propriétaire au début</span>
     <span class="amount"><%= format_money @initial_amount %></span>

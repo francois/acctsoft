@@ -7,16 +7,16 @@ class Account < ActiveRecord::Base
 
   belongs_to :account_type, :class_name => 'AccountType', :foreign_key => 'type_id'
 
-  def total_dt_volume
+  def total_dt_volume(cutoff_date=Date.today)
     return @total_dt_volume if @total_dt_volume
-    self.txn_parts.inject(Money.empty) {|sum, txn_account|
+    self.txn_parts.find(:all, :include => :txn, :conditions => ['txns.posted_on <= ?', cutoff_date]).inject(Money.empty) {|sum, txn_account|
       sum + txn_account.amount_dt
     }
   end
 
-  def total_ct_volume
+  def total_ct_volume(cutoff_date=Date.today)
     return @total_ct_volume if @total_ct_volume
-    self.txn_parts.inject(Money.empty) {|sum, txn_account|
+    self.txn_parts.find(:all, :include => :txn, :conditions => ['txns.posted_on <= ?', cutoff_date]).inject(Money.empty) {|sum, txn_account|
       sum + txn_account.amount_ct
     }
   end
