@@ -8,17 +8,13 @@ class Account < ActiveRecord::Base
   belongs_to :account_type, :class_name => 'AccountType', :foreign_key => 'type_id'
 
   def total_dt_volume(cutoff_date=Date.today)
-    return @total_dt_volume if @total_dt_volume
-    self.txn_parts.find(:all, :include => :txn, :conditions => ['txns.posted_on <= ?', cutoff_date]).inject(Money.empty) {|sum, txn_account|
-      sum + txn_account.amount_dt
-    }
+    load_total_from_cache(cutoff_date)
+    @total_dt_volume
   end
 
   def total_ct_volume(cutoff_date=Date.today)
-    return @total_ct_volume if @total_ct_volume
-    self.txn_parts.find(:all, :include => :txn, :conditions => ['txns.posted_on <= ?', cutoff_date]).inject(Money.empty) {|sum, txn_account|
-      sum + txn_account.amount_ct
-    }
+    load_total_from_cache(cutoff_date)
+    @total_ct_volume
   end
 
   def total_dt_volume=(dt_amount)
@@ -39,5 +35,18 @@ class Account < ActiveRecord::Base
 
   def to_param
     self.no
+  end
+
+  protected
+  def load_total_from_cache(cutoff_date)
+    return if cutoff_date == @total_volume_cutoff_date
+    results = self.class.connection.select_one("
+      SELECT SUM(amount_dt_cents) / 100 AS total_dt_volume, SUM(amount_ct_cents) / 100 AS total_ct_volume
+      FROM txn_accounts INNER JOIN txns ON txns.id = txn_accounts.txn_id
+      WHERE txns.posted_on <= '#{cutoff_date.to_time.strftime('%Y-%m-%d')}' AND txn_accounts.account_id = #{self.id} ")
+
+    @total_dt_volume = results['total_dt_volume'].to_money
+    @total_ct_volume = results['total_ct_volume'].to_money
+    @total_volume_cutoff_date = cutoff_date
   end
 end
