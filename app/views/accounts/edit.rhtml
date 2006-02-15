@@ -5,10 +5,11 @@
 
 <table class="list">
   <caption>Journal</caption>
-  <col width="*1"/><col span="3" width="*1"/>
+  <col width="*1"/><col width="*4"/><col span="3" width="*1"/>
   <thead>
     <tr>
       <th>Date</th>
+      <th>Description</th>
       <th>Débit</th>
       <th>Crédit</th>
       <th>Solde</th>
@@ -16,13 +17,13 @@
   </thead>
   <tfoot>
     <tr>
-      <th scope="row">Volume</th>
+      <th scope="row" colspan="2">Volume</th>
       <td class="money total"><%= @account.total_dt_volume %></td>
       <td class="money total"><%= @account.total_ct_volume %></td>
       <td>&nbsp;</td>
     </tr>
     <tr>
-      <th scope="row">Solde</th>
+      <th scope="row" colspan="2">Solde</th>
       <td class="money total"><%= @account.total_dt_volume - @account.total_ct_volume if @account.total_dt_volume > @account.total_ct_volume %></td>
       <td class="money total"><%= @account.total_ct_volume - @account.total_dt_volume if @account.total_ct_volume > @account.total_dt_volume %></td>
       <td>&nbsp;</td>
