@@ -4,3 +4,10 @@ input, select, textarea { border: none; }
 form .actions { display: none; }
 
 @page { margin: .5in; }
+
+#cutoff-date { display: block; }
+
+.report .list { page-break-before: avoid; }
+.report .list,
+.report .list table { font-size: .9em; page-break-inside: avoid; }
+.list th, .list td { padding: 0 .4em !important; }

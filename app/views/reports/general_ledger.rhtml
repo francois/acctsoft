@@ -5,8 +5,7 @@
 
 <%= render :partial => 'menu' %>
 <div class="report">
-  <h2>Grand Livre</h2>
-  <%= render :partial => 'cutoff_date' %>
+<%= render :partial => 'cutoff_date' %>
 <% for @account in @accounts do -%>
   <div class="section">
     <%= render_component(:controller => 'accounts', :action => 'txn_list',

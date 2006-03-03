@@ -24,6 +24,8 @@ form input[type=submit] { font-weight: bold; }
 #notice   { color: #666; }
 #messages p { display: list-item; list-style-type: square; margin-left: 2em; }
 
+#cutoff-date { display: none; }
+
 .list { border: 3px solid #c9cfff; empty-cells: show; border-collapse: collapse; clear: left; }
 .list .error { font-size: 110%; background: red; color: black; font-weight: bold; }
 .list thead th { text-align: left; }
