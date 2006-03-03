@@ -35,6 +35,10 @@ class Account < ActiveRecord::Base
     (AccountType.passifs + AccountType.avoirs + AccountType.produits).flatten.include?(self.account_type)
   end
 
+  def transactions_on_or_before(cutoff_date)
+    self.txn_parts.find(:all, :conditions => ['txns.posted_on <= ?', cutoff_date || Date.today])
+  end
+
   def to_param
     self.no
   end

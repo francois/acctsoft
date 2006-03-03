@@ -7,6 +7,7 @@ class Txn < ActiveRecord::Base
 
   has_many :lines,  :class_name => 'TxnAccount', :order => 'position',
                     :dependent => true
+  before_save :format_description_html
 
   def after_initialize
     self.posted_on = Date.today unless self.posted_on
@@ -25,4 +26,9 @@ class Txn < ActiveRecord::Base
   end
 
   alias_method :volume, :volume_dt
+
+  protected
+  def format_description_html
+    self.description_html = RedCloth.new(self.description).to_html
+  end
 end

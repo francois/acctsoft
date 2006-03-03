@@ -5,6 +5,10 @@ class ReportsController < ApplicationController
     self.bilan
   end
 
+  def general_ledger
+    @accounts = Account.find(:all, :order => 'no')
+  end
+
   def balance_verification
     @accounts = Account.find(:all, :order => 'no')
 

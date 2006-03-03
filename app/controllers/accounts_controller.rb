@@ -23,14 +23,6 @@ class AccountsController < ApplicationController
   def edit
     @account = Account.find_by_no(params[:account])
     raise ActiveRecord::RecordNotFound unless @account
-
-    @total = Money.empty
-    @calculator =   case
-                    when AccountType.actifs.include?(@account.account_type), AccountType.produits.include?(@account.account_type)
-                      Proc.new {|total, line| total + line.amount_dt - line.amount_ct }
-                    else
-                      Proc.new {|total, line| total + line.amount_ct - line.amount_dt }
-                    end
   end
 
   def update
@@ -40,5 +32,27 @@ class AccountsController < ApplicationController
     else
       render 'edit'
     end
+  end
+
+  def txn_list
+    @account = Account.find_by_no(params[:account])
+    @txns = @account.transactions_on_or_before(parse_date(params[:cutoff_date]))
+    @force = params[:force]
+
+    @total = Money.empty
+    @calculator =   case
+                    when AccountType.actifs.include?(@account.account_type), AccountType.produits.include?(@account.account_type)
+                      Proc.new {|total, line| total + line.amount_dt - line.amount_ct }
+                    else
+                      Proc.new {|total, line| total + line.amount_ct - line.amount_dt }
+                    end
+
+    @text_renderer  = if params[:full_text] then
+                        Proc.new {|txn| txn.description_html}
+                      else
+                        Proc.new {|txn| txn.description}
+                      end
+
+    render :layout => false
   end
 end

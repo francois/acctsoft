@@ -1,0 +1,17 @@
+<% @title = 'Grand Livre' -%>
+<style type="text/css">
+.report .list { width: 100%; }
+</style>
+
+<%= render :partial => 'menu' %>
+<div class="report">
+  <h2>Grand Livre</h2>
+  <%= render :partial => 'cutoff_date' %>
+<% for @account in @accounts do -%>
+  <div class="section">
+    <%= render_component(:controller => 'accounts', :action => 'txn_list',
+        :params => {:account => @account.no, :full_text => true,
+        :cutoff_date => @cutoff_date}) %>
+  </div>
+<% end -%>
+</div>
