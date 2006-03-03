@@ -1,16 +1,13 @@
 <% @title = 'Grand Livre' -%>
 <style type="text/css">
-.report .list { width: 100%; }
+.list { width: 100%; }
 </style>
 
 <%= render :partial => 'menu' %>
-<div class="report">
 <%= render :partial => 'cutoff_date' %>
 <% for @account in @accounts do -%>
   <div class="section">
     <%= render_component(:controller => 'accounts', :action => 'txn_list',
-        :params => {:account => @account.no, :full_text => true,
-        :cutoff_date => @cutoff_date}) %>
+        :params => {:account => @account.no, :cutoff_date => @cutoff_date}) %>
   </div>
 <% end -%>
-</div>

@@ -46,13 +46,6 @@ class AccountsController < ApplicationController
                     else
                       Proc.new {|total, line| total + line.amount_ct - line.amount_dt }
                     end
-
-    @text_renderer  = if params[:full_text] then
-                        Proc.new {|txn| txn.description_html}
-                      else
-                        Proc.new {|txn| txn.description}
-                      end
-
     render :layout => false
   end
 end
