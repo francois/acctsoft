@@ -5,6 +5,11 @@ class ReportsController < ApplicationController
     self.bilan
   end
 
+  def txn_list
+    @transactions = Txn.find(:all, :conditions => ['posted_on <= ?', @cutoff_date],
+        :order => 'posted_on, updated_at')
+  end
+
   def general_ledger
     @accounts = Account.find(:all, :order => 'no')
   end

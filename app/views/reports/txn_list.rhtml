@@ -1,0 +1,35 @@
+<% @title = 'Grand livre' -%>
+<style type="text/css">
+  .list { width: 40em; margin: .5em 0; }
+  .list .description { font-size: .9em; }
+</style>
+
+<%= render :partial => 'menu' %>
+<%= render :partial => 'cutoff_date' %>
+<% for @transaction in @transactions do -%>
+<table class="list">
+  <col width="*1"/><col width="*4"/><col span="2" width="*1"/>
+  <tfoot>
+    <tr>
+      <th colspan="2" scope="row" align="right">Volume</th>
+      <td class="money"><%= format_money(@transaction.volume_dt) %></td>
+      <td class="money"><%= format_money(@transaction.volume_ct) %></td>
+    </tr>
+    <tr>
+      <td class="description" colspan="4"><%= @transaction.description_html %></td>
+    </tr>
+  </tfoot>
+  <tbody>
+<% @transaction.lines.each_with_index do |line, index| -%>
+    <tr>
+<% if 0 == index then -%>
+      <th scope="row" rowspan="<%= @transaction.lines.count %>"><%= link_to(format_date(@transaction.posted_on), transaction_edit_url(:id => @transaction)) %></th>
+<% end -%>
+      <td><%= line.no %> <%= line.name %></td>
+      <td class="money"><%= format_money(line.amount_dt) unless line.amount_dt.zero? %></td>
+      <td class="money"><%= format_money(line.amount_ct) unless line.amount_ct.zero? %></td>
+    </tr>
+<% end -%>
+  </tbody>
+</table>
+<% end -%>
