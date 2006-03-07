@@ -31,6 +31,7 @@ form input[type=submit] { font-weight: bold; }
 .list thead th { text-align: left; }
 .list th, .list td { padding: 0 2px; }
 .list .money,
+.list .number,
 .list .date { text-align: right; }
 .list .description { margin: 0; }
 .list thead tr th, .list thead tr td,
@@ -47,6 +48,7 @@ a:hover { color: blue; background: white; }
 form { width: 40em; }
 form fieldset { border: none; margin: 1em 0; padding: 0; }
 form fieldset .row { display: block; clear: left; margin: .25em 0; }
+form fieldset label.row { margin-left: 13em; }
 form fieldset .row label { float: left; text-align: right; width: 12em; padding-right: 1em; font-weight: bold; }
 form .actions { margin: 1em 0; padding: .25em; text-align: right; }
 
@@ -106,3 +108,5 @@ span.money .symbol { display: none; }
 
 #bilan { float: right; font-size: .8em; background: #f5f8ff; padding: .25em; border: #c9cfff double 3px; }
 #transactions { clear: none; margin-right: 35em; }
+
+.amount { font-weight: bold; }

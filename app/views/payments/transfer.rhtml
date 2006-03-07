@@ -1,0 +1,10 @@
+<% @title = 'Transfert de paiement' -%>
+<%= start_form_tag %>
+  <p>Enregistrer le paiement de <span class="amount"><%= format_money(@payment.amount) %></span> répartit comme suit:</p>
+  <ol>
+<% for @invoice in @payment.invoices do -%>
+    <li><span class="amount"><%= format_money(@invoice.amount) %></span> pour la facture <%= link_to @invoice.no, invoice_edit_url(:no => @invoice.no) %></li>
+<% end -%>
+  </ol>
+  <%= submit_tag 'Transférer' %>
+<%= end_form_tag %>

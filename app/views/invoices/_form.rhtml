@@ -1,0 +1,91 @@
+<fieldset id="invoice-form">
+  <%= error_messages_for 'invoice' %>
+  <div class="row">
+    <%= label :invoice, :no, 'No facture' %>
+    <%= text_field :invoice, :no, :size => 6 %>
+  </div>
+  <div class="row">
+    <%= label :invoice, :invoiced_on, 'Date de facturation' %>
+    <%= text_field :invoice, :invoiced_on, :size => 10, :value => format_date(@invoice.invoiced_on) %>
+  </div>
+  <div class="row">
+    <%= label :invoice, :customer, 'Client' %>
+    <%= text_field_with_auto_complete :invoice, :customer, {:value => (@invoice.customer.abbreviation rescue nil)}, {:skip_style => true, :select => 'abbreviation'} %>
+  </div>
+</fieldset>
+
+<fieldset id="lines">
+  <table class="list" cellspacing="0" cellpadding="0" width="100%">
+    <caption>Items facturés</caption>
+    <col width="*2"/><col width="*5"/><col span="3" width="*1"/>
+    <thead id="list-head">
+      <tr>
+        <th>Code</th>
+        <th>Description</th>
+        <th class="number">Quantité</th>
+        <th class="money">Prix unitaire</th>
+        <th class="money">Extension</th>
+      </tr>
+      <tr id="new-line">
+        <td>
+          <%= text_field :nline, :item_no, :size => 6 %>
+          <input type="hidden" id="inv_line_count" name="inv[line_count]" value="<%= @invoice.lines.count %>"/>
+        </td>
+        <td><%= text_field :nline, :description, :size => 30 %></td>
+        <td class="number"><%= text_field :nline, :quantity, :size => 6 %></td>
+        <td class="money"><%= text_field :nline, :unit_price, :size => 6 %></td>
+        <td class="money">&nbsp;</td>
+      </tr>
+      <tr>
+        <td colspan="5" align="right">
+          <%= link_to_remote 'Ajouter', :submit => 'new-line', :url => {:action => :add_line} %>
+        </td>
+      </tr>
+    </thead>
+    <tfoot>
+      <tr id="invoice-total">
+        <th colspan="4" align="right" scope="row">Total:</th>
+        <td class="money" id="invoice_total"><%= format_money(@invoice.total) %></td>
+      </tr>
+    </tfoot>
+    <tbody id="list-body">
+<%= render :partial => 'line', :collection => @invoice.lines %>
+    </tbody>
+  </table>
+</fieldset>
+
+<fieldset id="payments">
+  <table class="list" cellspacing="0" cellpadding="0">
+    <caption>Paiements effectués</caption>
+    <col width="*1"/><col width="*1"/><col width="*1"/>
+    <thead>
+      <tr>
+        <th class="date">Date</th>
+        <th class="money">Montant</th>
+      </tr>
+    </thead>
+    <tfoot>
+      <tr>
+        <th align="right" scope="row">Payé:</th>
+        <td class="money"><%= format_money(@invoice.paid) %></td>
+      </tr>
+      <tr>
+        <th align="right" scope="row">Solde:</th>
+        <td class="money"><%= format_money(@invoice.balance) %></td>
+      </tr>
+    </tfoot>
+    <tbody>
+<%= render :partial => 'payment', :collection => @invoice.payments %>
+    </tbody>
+  </table>
+</fieldset>
+
+<div class="actions">
+<% if @invoice.new_record? then -%>
+  <%= submit_tag 'Enregistrer & Nouveau' %>
+<% end -%>
+  <%= submit_tag 'Enregistrer' %>
+  <%= link_to 'Abandonner', :action => :index %>
+</div>
+
+<%= javascript_tag "Form.focusFirstElement('invoice');" %>

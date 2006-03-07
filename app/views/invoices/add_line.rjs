@@ -1,0 +1,8 @@
+page << "$('inv_line_count').value = #{@invoice_line_count}"
+page.insert_html :bottom, 'list-body', :partial => 'line', :object => @line,
+    :locals => {:line_counter => @invoice_line_count}
+page << "$('nline_item_no').value = ''"
+page << "$('nline_description').value = ''"
+page << "$('nline_quantity').value = ''"
+page << "$('nline_unit_price').value = ''"
+page << "Field.focus('nline_item_no')"

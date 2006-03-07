@@ -1,0 +1,13 @@
+<% @line = line
+  index = @line.new_record? ? line_counter : @line.id -%>
+<tr>
+  <td>
+    <%= text_field 'line[]', :item_no, :size => 6, :index => index %>
+    <%= link_to_function 'X', %Q($('txn_account_#{index}').parentNode.removeChild($('txn_account_#{index}'))),
+            :title => 'Détruire cette ligne' %>
+  </td>
+  <td><%= text_field 'line[]', :description, :size => 30, :value => @line.description, :index => index %></td>
+  <td class="number"><%= text_field 'line[]', :quantity, :size => 6, :value => @line.quantity, :index => index %></td>
+  <td class="money"><%= text_field 'line[]', :unit_price, :size => 6, :value => @line.unit_price.to_s, :index => index %></td>
+  <td class="money"><%= line.extension_price %></td>
+</tr>

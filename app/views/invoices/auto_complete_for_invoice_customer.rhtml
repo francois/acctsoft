@@ -1,0 +1,5 @@
+<ul>
+<% for @customer in @customers do -%>
+  <li><span class="abbreviation"><%= @customer.abbreviation %></span> &mdash; <%= @customer.name %></li>
+<% end -%>
+</ul>

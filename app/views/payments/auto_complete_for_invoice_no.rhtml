@@ -1,0 +1,5 @@
+<ul>
+<% for @invoice in @invoices do -%>
+  <li total="<%= @invoice.total %>"><span class="no"><%= @invoice.no %></span> <span class="total"><%= format_money(@invoice.total) %></span> :: <%= format_date(@invoice.invoiced_on) %></li>
+<% end -%>
+</ul>

@@ -1,0 +1,20 @@
+<% @title = 'Gestion des paiements' -%>
+<div class="filters">
+  <%= link_to 'Nouveau paiement', :action => 'new' %>
+</div>
+<table class="list" cellspacing="0" cellpadding="0">
+  <caption>Liste des paiements</caption>
+  <col/><col width="*1"/>
+  <thead id="list-head">
+    <tr>
+      <th class="date">Date émis</th>
+      <th class="date">Date reçu</th>
+      <th>Client</th>
+      <th class="money">Montant</th>
+      <th>Tâches</th>
+    </tr>
+  </thead>
+  <tbody id="list-body">
+<%= render :partial => 'payment', :collection => @payments %>
+  </tbody>
+</table>

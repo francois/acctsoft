@@ -16,7 +16,7 @@ class AccountsController < ApplicationController
         redirect_to :action => :index
       end
     else
-      render 'new'
+      render :action => 'new'
     end
   end
 
@@ -30,7 +30,7 @@ class AccountsController < ApplicationController
     if @account.update_attributes(params[:account]) then
       redirect_to :action => :index
     else
-      render 'edit'
+      render :action => 'edit'
     end
   end
 

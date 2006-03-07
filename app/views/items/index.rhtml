@@ -1,0 +1,18 @@
+<% @title = 'Gestion des items' %>
+<div class="filters">
+  <%= link_to 'Nouvel item', :action => 'new' %>
+</div>
+<table class="list" cellspacing="0" cellpadding="0">
+  <caption>Liste des items</caption>
+  <col width="*1"/><col/><col width="*2"/>
+  <thead id="list-head">
+    <tr>
+      <th>No</th>
+      <th>Description</th>
+      <th>Compte</th>
+    </tr>
+  </thead>
+  <tbody id="list-body">
+<%= render :partial => 'item', :collection => @items %>
+  </tbody>
+</table>

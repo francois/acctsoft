@@ -1,0 +1,70 @@
+<fieldset id="payment-form">
+  <%= error_messages_for 'payment' %>
+
+  <div class="row">
+    <%= label :payment, :customer, 'Client' %>
+    <%= text_field_with_auto_complete :payment, :customer, {:value => (@payment.customer.abbreviation rescue nil)}, {:skip_style => true, :select => 'abbreviation', :url => customer_lookup_url, :with => %q('invoice[customer]=' + $F(element);)} %>
+  </div>
+  <div class="row">
+    <%= label :payment, :paid_on, 'Émis le' %>
+    <%= text_field 'payment', 'paid_on', :value => format_date(@payment.paid_on), :size => 10 %>
+  </div>
+  <div class="row">
+    <%= label :payment, :received_on, 'Reçu le' %>
+    <%= text_field 'payment', 'received_on', :value => format_date(@payment.received_on), :size => 10 %>
+  </div>
+  <div class="row">
+    <%= label :payment, :reference, 'Référence' %>
+    <%= text_field 'payment', 'reference', :size => 16 %>
+  </div>
+  <div class="row">
+    <%= label :payment, :amount, 'Montant' %>
+    <%= text_field 'payment', 'amount', :value => @payment.amount, :size => 6 %>
+  </div>
+</fieldset>
+
+<fieldset id="payments">
+  <table class="list" cellspacing="0" cellpadding="0">
+    <caption>Factures concernées</caption>
+    <col width="*1"/><col width="*1"/>
+    <thead id="list-head">
+      <tr>
+        <th>No facture</th>
+        <th class="money">Montant</th>
+      </tr>
+      <tr id="new-line">
+        <td>
+          <%= text_field(:nline, :no, :size => 8) %>
+          <div id="nline_no_auto_complete" class="auto_complete"></div>
+          <%= javascript_tag %q(var nline_no_auto_completer = new Ajax.Autocompleter('nline_no', 'nline_no_auto_complete', '/paiements/auto_complete_for_invoice_no', {afterUpdateElement:function(element,selected){$('nline_amount').value = selected.getAttribute('total')}, callback:function(element, value) { return 'invoice[no]=' + $F(element) + '&customer=' + encodeURI($F('payment_customer')) }, select:'no'})) %>
+          <input type="hidden" id="invoice_line_count" name="invoice[line_count]" value="<%= @payment.invoices.count %>"/>
+        </td>
+        <td class="money"><%= text_field :nline, :amount, :size => 10, :class => 'money' %></td>
+      </tr>
+      <tr>
+        <td colspan="2" align="right">
+          <%= link_to_remote 'Ajouter', :submit => 'new-line', :url => {:action => :add_line} %>
+        </td>
+      </tr>
+    </thead>
+    <tfoot>
+      <tr id="payment-total">
+        <th align="right" scope="row">Total:</th>
+        <td class="money" id="payment_total"><%= format_money(@payment.amount) %></td>
+      </tr>
+    </tfoot>
+    <tbody id="list-body">
+<%= render :partial => 'line', :collection => @payment.invoices %>
+    </tbody>
+  </table>
+</fieldset>
+
+<div class="actions">
+<% if @payment.new_record? then -%>
+  <%= submit_tag 'Enregistrer & Nouveau' %>
+<% end -%>
+  <%= submit_tag 'Enregistrer' %>
+  <%= link_to 'Abandonner', :action => :index %>
+</div>
+
+<%= javascript_tag "Form.focusFirstElement('payment');" %>

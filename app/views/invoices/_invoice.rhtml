@@ -1,0 +1,14 @@
+<tr>
+  <td><%= link_to invoice.no, :action => 'edit', :id => invoice.id %></td>
+  <td class="date"><%= format_date(invoice.invoiced_on) %></td>
+  <td><%= link_to invoice.customer.name, customer_edit_url(:id => invoice.customer) %></td>
+  <td class="money"><%= invoice.total %></td>
+  <td class="money"><%= invoice.balance %></td>
+  <td class="date">
+<% if invoice.posted_on then -%>
+    <%= format_date(invoice.posted_on) %>
+<% else -%>
+    <%= link_to 'Enregistrer' %>
+<% end -%>
+  </td>
+</tr>

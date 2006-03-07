@@ -1,0 +1,57 @@
+<fieldset id="customer">
+  <%= error_messages_for :customer %>
+  <div class="row">
+    <%= label :customer, :name, 'Nom' %>
+    <%= text_field :customer, :name %>
+  </div>
+  <div class="row">
+    <%= label :customer, :abbreviation, 'Abbréviation' %>
+    <%= text_field :customer, :abbreviation %>
+  </div>
+  <div class="row">
+    <%= label :customer, :phone, 'Téléphone' %>
+    <%= text_field :customer, :phone %>
+  </div>
+  <label class="row"><%= check_box :customer, :charge_federal_tax %> Facturer la TPS ?</label>
+  <label class="row"><%= check_box :customer, :charge_provincial_tax %> Facturer la TVQ ?</label>
+</fieldset>
+
+<fieldset id="address">
+  <h2>Adresse</h2>
+  <div class="row">
+    <%= label :customer, :address_line1, 'Ligne 1' %>
+    <%= text_field :customer, :address_line1 %>
+  </div>
+  <div class="row">
+    <%= label :customer, :address_line2, 'Ligne 2' %>
+    <%= text_field :customer, :address_line2 %>
+  </div>
+  <div class="row">
+    <%= label :customer, :address_line3, 'Ligne 3' %>
+    <%= text_field :customer, :address_line3 %>
+  </div>
+  <div class="row">
+    <%= label :customer, :address_city, 'Ville' %>
+    <%= text_field :customer, :address_city %>
+  </div>
+  <div class="row">
+    <%= label :customer, :address_state, 'Province/État' %>
+    <%= text_field :customer, :address_state %>
+  </div>
+  <div class="row">
+    <%= label :customer, :address_zip, 'Code postal/Zip' %>
+    <%= text_field :customer, :address_zip %>
+  </div>
+  <div class="row">
+    <%= label :customer, :address_country, 'Pays' %>
+    <%= text_field :customer, :address_country %>
+  </div>
+</fieldset>
+
+<div class="actions">
+<% if @customer.new_record? then -%>
+  <%= submit_tag 'Enregistrer & Nouveau' %>
+<% end -%>
+  <%= submit_tag 'Enregistrer' %>
+  <%= link_to 'Abandonner', :action => :index %>
+</div>

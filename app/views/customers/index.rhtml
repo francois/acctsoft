@@ -1,0 +1,17 @@
+<% @title = 'Gestion clients' -%>
+<div class="filters">
+  <%= link_to 'Nouveau client', :action => 'new' %>
+</div>
+<table class="list" cellspacing="0" cellpadding="0">
+  <caption>Liste des clients</caption>
+  <col/><col width="*1"/>
+  <thead id="list-head">
+    <tr>
+      <th>Nom</th>
+      <th>Téléphone</th>
+    </tr>
+  </thead>
+  <tbody id="list-body">
+<%= render :partial => 'customer', :collection => @customers %>
+  </tbody>
+</table>
