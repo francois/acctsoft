@@ -29,6 +29,8 @@ ActionController::Routing::Routes.draw do |map|
 
   map.reports '/rapports', :controller => 'reports', :action => 'index'
 
+  map.config '/compagnie/comptes', :controller => 'account_configurations', :action => 'index'
+  map.config '/compagnie/comptes/:id', :controller => 'account_configurations', :action => 'edit'
   map.config '/compagnie', :controller => 'company', :action => 'edit'
 
   map.connect ':controller/:action/:id'
