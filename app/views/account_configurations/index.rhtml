@@ -1,0 +1,17 @@
+<% @title = 'Gestion des configuration de comptes' -%>
+<div class="filters">
+  <%= link_to 'Créer une configuration', :action => :new %>
+</div>
+<table class="list" cellspacing="0" cellpadding="0" width="100%">
+  <caption>Liste des configurations</caption>
+  <col width="*2"/><col width="*1"/>
+  <thead id="list-head">
+    <tr>
+      <th>Nom</th>
+      <th>Compte</th>
+    </tr>
+  </thead>
+  <tbody id="list-body">
+<%= render :partial => 'account_configuration', :collection => @account_configurations %>
+  </tbody>
+</table>

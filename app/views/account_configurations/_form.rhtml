@@ -1,0 +1,21 @@
+<fieldset id="account-configuration-form">
+  <div class="row">
+    <%= label :account_configuration, :account_no, 'Compte' %>
+    <%= text_field_with_auto_complete :account_configuration, :account_no, {:size => 6},
+        {:url => account_lookup_url, :with => %q('account[no]=' + $F(element)), :select => 'no'} %>
+  </div>
+  <div class="row">
+    <%= label :account_configuration, :name, 'Nom' %>
+    <%= text_field :account_configuration, :name, :size => 20, :readonly => !@account_configuration.new_record? %>
+  </div>
+</fieldset>
+
+<div class="actions">
+<% if @account_configuration.new_record? then -%>
+  <%= submit_tag 'Enregistrer & Nouveau' %>
+<% end -%>
+  <%= submit_tag 'Enregistrer' %>
+  <%= link_to 'Abandonner', :action => :index %>
+</div>
+
+<%= javascript_tag "Form.focusFirstElement('account-configuration');" %>
