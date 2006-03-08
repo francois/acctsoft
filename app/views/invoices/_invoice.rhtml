@@ -6,7 +6,8 @@
   <td class="money"><%= invoice.balance %></td>
   <td>
 <% if invoice.posted_at then -%>
-    <%= link_to(format_date(invoice.posted_at), transaction_edit_url(:id => invoice.txn)) %>
+    <%= link_to("#{format_date(invoice.txn.posted_on)} (#{format_date(invoice.posted_at)})",
+            transaction_edit_url(:id => invoice.txn)) %>
 <% else -%>
     <%= link_to 'Créer', invoice_post_url(:invoice => invoice) %>
 <% end -%>
