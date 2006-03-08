@@ -1,16 +1,16 @@
 <fieldset id="invoice-form">
   <%= error_messages_for 'invoice' %>
   <div class="row">
-    <%= label :invoice, :no, 'No facture' %>
-    <%= text_field :invoice, :no, :size => 6 %>
+    <%= label :inv, :no, 'No facture' %>
+    <%= text_field :inv, :no, :size => 6 %>
   </div>
   <div class="row">
-    <%= label :invoice, :invoiced_on, 'Date de facturation' %>
-    <%= text_field :invoice, :invoiced_on, :size => 10, :value => format_date(@invoice.invoiced_on) %>
+    <%= label :inv, :invoiced_on, 'Date de facturation' %>
+    <%= text_field :inv, :invoiced_on, :size => 10, :value => format_date(@inv.invoiced_on) %>
   </div>
   <div class="row">
-    <%= label :invoice, :customer, 'Client' %>
-    <%= text_field_with_auto_complete :invoice, :customer, {:value => (@invoice.customer.abbreviation rescue nil)}, {:skip_style => true, :select => 'abbreviation'} %>
+    <%= label :inv, :customer, 'Client' %>
+    <%= text_field_with_auto_complete :inv, :customer, {:value => (@inv.customer.abbreviation rescue nil)}, {:skip_style => true, :select => 'abbreviation'} %>
   </div>
 </fieldset>
 
@@ -29,11 +29,11 @@
       <tr id="new-line">
         <td>
           <%= text_field :nline, :item_no, :size => 6 %>
-          <input type="hidden" id="inv_line_count" name="inv[line_count]" value="<%= @invoice.lines.count %>"/>
+          <input type="hidden" id="line_count" name="line_count" value="<%= @inv.lines.count %>"/>
         </td>
         <td><%= text_field :nline, :description, :size => 30 %></td>
         <td class="number"><%= text_field :nline, :quantity, :size => 6 %></td>
-        <td class="money"><%= text_field :nline, :unit_price, :size => 6 %></td>
+        <td class="money"><%= text_field :nline, :unit_price, :size => 6, :class => 'money' %></td>
         <td class="money">&nbsp;</td>
       </tr>
       <tr>
@@ -45,11 +45,11 @@
     <tfoot>
       <tr id="invoice-total">
         <th colspan="4" align="right" scope="row">Total:</th>
-        <td class="money" id="invoice_total"><%= format_money(@invoice.total) %></td>
+        <td class="money" id="invoice_total"><%= format_money(@inv.total) %></td>
       </tr>
     </tfoot>
     <tbody id="list-body">
-<%= render :partial => 'line', :collection => @invoice.lines %>
+<%= render :partial => 'line', :collection => @inv.lines %>
     </tbody>
   </table>
 </fieldset>
@@ -67,21 +67,21 @@
     <tfoot>
       <tr>
         <th align="right" scope="row">Payé:</th>
-        <td class="money"><%= format_money(@invoice.paid) %></td>
+        <td class="money"><%= format_money(@inv.paid) %></td>
       </tr>
       <tr>
         <th align="right" scope="row">Solde:</th>
-        <td class="money"><%= format_money(@invoice.balance) %></td>
+        <td class="money"><%= format_money(@inv.balance) %></td>
       </tr>
     </tfoot>
     <tbody>
-<%= render :partial => 'payment', :collection => @invoice.payments %>
+<%= render :partial => 'payment', :collection => @inv.payments %>
     </tbody>
   </table>
 </fieldset>
 
 <div class="actions">
-<% if @invoice.new_record? then -%>
+<% if @inv.new_record? then -%>
   <%= submit_tag 'Enregistrer & Nouveau' %>
 <% end -%>
   <%= submit_tag 'Enregistrer' %>

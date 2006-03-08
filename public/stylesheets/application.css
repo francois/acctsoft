@@ -51,6 +51,7 @@ form fieldset .row { display: block; clear: left; margin: .25em 0; }
 form fieldset label.row { margin-left: 13em; }
 form fieldset .row label { float: left; text-align: right; width: 12em; padding-right: 1em; font-weight: bold; }
 form .actions { margin: 1em 0; padding: .25em; text-align: right; }
+form input[readonly] { background: transparent; border: none; }
 
 div.auto_complete {
   width: 350px;

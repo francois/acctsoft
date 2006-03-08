@@ -3,5 +3,5 @@
   <td class="date"><%= format_date(payment.received_on) %></td>
   <td><%= link_to payment.customer.name, customer_edit_url(:id => payment.customer) %></td>
   <td class="money"><%= format_money(payment.amount) %></td>
-  <td><%= link_to_if payment.can_upload?, 'Enregistrer', payment_transfer_url(:id => payment) %></td>
+  <td><%= payment.can_upload? ? link_to('Enregistrer', payment_transfer_url(:id => payment)) : link_to(format_date(payment.posted_at), transaction_edit_url(:id => payment.txn)) %></td>
 </tr>

@@ -45,7 +45,12 @@ class PaymentsController < ApplicationController
     @payment = Payment.find(params[:id])
     return unless request.post?
 
-    raise "Not implemented"
+    @payment.post!
+    redirect_to :action => :index
+
+    rescue
+      flash_failure :now, "#{$!.class.name}: #{$!.message}"
+      @payment.reload
   end
 
   protected

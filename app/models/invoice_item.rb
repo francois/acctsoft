@@ -14,6 +14,18 @@ class InvoiceItem < ActiveRecord::Base
     self.item = Item.find_by_no(no)
   end
 
+  def account
+    self.item.charge_account
+  end
+
+  alias_method :original_quantity=, :quantity=
+  def quantity=(qty)
+    logger.debug "Quantity: #{qty.inspect}"
+    self.original_quantity = qty.blank? ? 1 : qty
+    logger.debug "New quantity: #{self.quantity.inspect}"
+    self.quantity
+  end
+
   def description
     read_attribute(:description) || self.item.description
   end

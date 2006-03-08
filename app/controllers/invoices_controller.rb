@@ -1,28 +1,19 @@
 class InvoicesController < ApplicationController
-  before_filter :parse_dates
+  before_filter :parse_dates, :only => [:new, :edit]
 
   def index
-    @invoices = Invoice.find(:all, :order => 'no')
+    @invoices = Invoice.find(:all, :order => 'no DESC')
   end
 
   def new
-    @invoice = Invoice.new
-  end
-
-  def create
-    @invoice = Invoice.new
-    update_and_redirect('new')
+    @inv = Invoice.new
+    update_and_redirect('new') if request.post?
   end
 
   def edit
-    @invoice = Invoice.find_by_no(params[:no])
-    raise ActiveRecord::RecordNotFound unless @invoice
-  end
-
-  def update
-    @invoice = Invoice.find_by_no(params[:no])
-    raise ActiveRecord::RecordNotFound unless @invoice
-    update_and_redirect('edit')
+    @inv = Invoice.find_by_no(params[:invoice])
+    raise ActiveRecord::RecordNotFound unless @inv
+    update_and_redirect('edit') if request.post?
   end
 
   def auto_complete_for_invoice_customer
@@ -33,20 +24,42 @@ class InvoicesController < ApplicationController
 
   def add_line
     @line = InvoiceItem.new(params[:nline])
-    @invoice_line_count = 1 + params[:inv][:line_count].to_i
+    @line_count = 1 + params[:line_count].to_i
+  end
+
+  def transfer
+    @inv = Invoice.find_by_no(params[:invoice])
+    raise ActiveRecord::RecordNotFound unless @inv
+
+    @lines = Hash.new
+    @inv.lines.each do |line|
+      @lines[line.account] ||= 0.to_money
+      @lines[line.account] += line.extension_price
+    end
+
+    @lines = @lines.to_a.sort_by {|line| line.first.no}
+    return unless request.post?
+
+    @inv.post!
+    redirect_to :action => :index
+
+    rescue
+      logger.warn $!
+      flash_failure :now, "#{$!.class.name}: #{$!.message}"
+      @inv.reload
   end
 
   protected
   def update_and_redirect(form)
-    @invoice.customer = Customer.find_by_abbreviation(params[:invoice][:customer])
-    params[:invoice].delete(:customer)
-    params[:invoice].delete('customer')
+    @inv.customer = Customer.find_by_abbreviation(params[:inv][:customer])
+    params[:inv].delete(:customer)
+    params[:inv].delete('customer')
 
-    new_record = @invoice.new_record?
+    new_record = @inv.new_record?
 
-    if @invoice.update_attributes(params[:invoice]) then
+    if @inv.update_attributes(params[:inv]) then
       params[:line].each do |id, values|
-        @line = new_record ? @invoice.lines.build : @invoice.lines.find(id)
+        @line = new_record ? @inv.lines.build : @inv.lines.find(id)
         unless @line.update_attributes(values) then
           flash_failure :now, "Erreur de mise à jour ligne #{id}: #{@line.errors.full_messages.join(', ')}"
         end
@@ -63,7 +76,7 @@ class InvoicesController < ApplicationController
   end
 
   def parse_dates
-    return unless params[:invoice]
-    params[:invoice][:invoiced_on] = parse_date(params[:invoice][:invoiced_on])
+    return unless params[:inv]
+    params[:inv][:invoiced_on] = parse_date(params[:inv][:invoiced_on])
   end
 end

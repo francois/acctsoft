@@ -1,0 +1,10 @@
+<% @title = 'Transfert de facture' -%>
+<%= start_form_tag %>
+  <p>Enregistrer la facture de <span class="amount"><%= format_money(@inv.total) %></span> répartit comme suit:</p>
+  <ol>
+<% @lines.each do |account, total| -%>
+    <li><span class="amount"><%= format_money(total) %></span> vers <%= link_to("#{account.no} #{account.name}", account_edit_url(:account => account)) %></li>
+<% end -%>
+  </ol>
+  <%= submit_tag 'Transférer' %>
+<%= end_form_tag %>
