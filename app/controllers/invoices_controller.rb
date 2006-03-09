@@ -55,16 +55,14 @@ class InvoicesController < ApplicationController
     params[:inv].delete(:customer)
     params[:inv].delete('customer')
 
-    new_record = @inv.new_record?
+    params[:line].each do |id, values|
+      @line = @inv.new_record? ? @inv.lines.build : @inv.lines.find(id)
+      unless @line.update_attributes(values) then
+        flash_failure :now, "Erreur de mise à jour ligne #{id}: #{@line.errors.full_messages.join(', ')}"
+      end
+    end
 
     if @inv.update_attributes(params[:inv]) then
-      params[:line].each do |id, values|
-        @line = new_record ? @inv.lines.build : @inv.lines.find(id)
-        unless @line.update_attributes(values) then
-          flash_failure :now, "Erreur de mise à jour ligne #{id}: #{@line.errors.full_messages.join(', ')}"
-        end
-      end
-
       if params[:commit] =~ /nouveau/i then
         redirect_to :action => :new
       else
