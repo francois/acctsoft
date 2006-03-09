@@ -3,7 +3,7 @@ class TxnAccount < ActiveRecord::Base
 
   belongs_to :txn
   belongs_to :account
-  validates_presence_of :txn_id, :account_id
+  validates_presence_of :account_id
 
   composed_of :amount_dt, :class_name => 'Money',
       :mapping => [%w(amount_dt_cents cents), %w(amount_dt_currency currency)]
