@@ -3,6 +3,7 @@ class TxnAccount < ActiveRecord::Base
 
   belongs_to :txn
   belongs_to :account
+  validates_presence_of :txn_id, :account_id
 
   composed_of :amount_dt, :class_name => 'Money',
       :mapping => [%w(amount_dt_cents cents), %w(amount_dt_currency currency)]
@@ -10,6 +11,7 @@ class TxnAccount < ActiveRecord::Base
       :mapping => [%w(amount_ct_cents cents), %w(amount_ct_currency currency)]
 
   before_validation :normalize_amounts
+  validate :non_nil_volume
 
   def no
     self.account.no
@@ -49,5 +51,10 @@ class TxnAccount < ActiveRecord::Base
       self.amount_ct -= self.amount_dt
       self.amount_dt = Money.empty
     end
+  end
+
+  def non_nil_volume
+    return unless (self.amount_dt - self.amount_ct).zero?
+    self.errors.add_to_base('Le volume ne doit pas être nul')
   end
 end

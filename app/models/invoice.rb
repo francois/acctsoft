@@ -3,7 +3,7 @@ class Invoice < ActiveRecord::Base
   belongs_to :txn
   has_many :payments, :class_name => 'InvoicePayment'
   has_many :lines, :class_name => 'InvoiceItem'
-  validates_presence_of :no, :customer, :invoiced_on
+  validates_presence_of :no, :customer_id, :invoiced_on
   validates_numericality_of :no
 
   def after_initialize

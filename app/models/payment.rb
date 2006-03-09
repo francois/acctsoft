@@ -2,7 +2,7 @@ class Payment < ActiveRecord::Base
   belongs_to :customer
   belongs_to :txn
   has_many :invoices, :class_name => 'InvoicePayment'
-  validates_presence_of :customer, :amount, :reference, :paid_on, :received_on
+  validates_presence_of :customer_id, :amount, :reference, :received_on
   composed_of :amount_cents, :class_name => 'Money', :mapping => %w(amount_cents cents)
 
   def after_initialize

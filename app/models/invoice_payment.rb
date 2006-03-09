@@ -2,7 +2,7 @@ class InvoicePayment < ActiveRecord::Base
   set_table_name :invoices_payments
   belongs_to :invoice
   belongs_to :payment
-  validates_presence_of :invoice, :payment, :amount
+  validates_presence_of :invoice_id, :payment_id, :amount
   composed_of :amount_cents, :class_name => 'Money', :mapping => %w(amount_cents cents)
 
   def no=(no)

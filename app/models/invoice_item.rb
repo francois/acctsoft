@@ -2,7 +2,7 @@ class InvoiceItem < ActiveRecord::Base
   acts_as_list
   belongs_to :invoice
   belongs_to :item
-  validates_presence_of :invoice, :item, :quantity, :unit_price
+  validates_presence_of :invoice_id, :item_id, :quantity, :unit_price
   acts_as_decimal :quantity, :decimals => 3, :rounding => :ceil
   composed_of :unit_amount, :class_name => 'Money', :mapping => %w(unit_price cents)
 
