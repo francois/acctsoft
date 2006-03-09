@@ -1,5 +1,5 @@
-function updateTransactionVolume(root, className, target) {
-  var volume = 0.0;
+function updateGroupTotal(root, className, target) {
+  var total = 0.0;
 
   var fields = document.getElementsByClassName(className, root);
   for (var i = 0; i < fields.length; i++) {
@@ -7,10 +7,11 @@ function updateTransactionVolume(root, className, target) {
     if (null == match) continue;
 
     amount = match[1];
-    volume += parseFloat(amount);
+    if ('.' == amount.substring(0,1)) amount = '0' + amount;
+    total += parseFloat(amount);
   }
 
-  var value = (Math.round(volume * 100.0) / 100.0).toString();
+  var value = (Math.round(total * 100.0) / 100.0).toString();
   if (-1 == value.indexOf('.')) value += '.';
   value += '00';
   value = value.substr(0, value.indexOf('.') + 3);

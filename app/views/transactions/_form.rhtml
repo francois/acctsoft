@@ -65,7 +65,7 @@
 </div>
 
 <%= javascript_tag %q(new Form.Observer('txn', 0.25, function() {
-    updateTransactionVolume('list-body', 'debit', 'txn_dt_volume');
-    updateTransactionVolume('list-body', 'credit', 'txn_ct_volume');
+    updateGroupTotal('list-body', 'debit', 'txn_dt_volume');
+    updateGroupTotal('list-body', 'credit', 'txn_ct_volume');
   })) %>
 <%= javascript_tag "Form.focusFirstElement('txn');" %>

@@ -9,5 +9,5 @@
           :locals => {:line => @line, :index => index, :fields => %w(no amount),
                       :url => delete_payment_line_url(:payment => payment, :line => line)} %>
   </td>
-  <td class="money"><%= text_field(:line, :amount, :size => 10, :value => line.amount, :index => index, :class => 'money') %></td>
+  <td class="money"><%= text_field(:line, :amount, :size => 10, :value => line.amount, :index => index, :class => 'money invoice') %></td>
 </tr>
