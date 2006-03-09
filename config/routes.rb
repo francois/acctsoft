@@ -20,16 +20,16 @@ ActionController::Routing::Routes.draw do |map|
   map.invoice_new '/factures/nouvelle', :controller => 'invoices', :action => 'new'
   map.invoices '/factures', :controller => 'invoices', :action => 'index'
 
-  map.payments '/paiements', :controller => 'payments', :action => 'index'
+  map.payment_post '/paiements/transfert/:id', :controller => 'payments', :action => 'transfer'
+  map.payment_edit '/paiements/:payment', :controller => 'payments', :action => 'edit', :payment => NumericRegexp
   map.payment_new '/paiements/nouveau/:invoice', :controller => 'payments', :action => 'new', :invoice => nil, :requirements => {:invoice => NumericRegexp}
-  map.payment_edit '/paiements/:id', :controller => 'payments', :action => 'edit', :id => NumericRegexp
-  map.payment_transfer '/paiements/transfert/:id', :controller => 'payments', :action => 'transfer'
-  map.payments '/paiements/:action/:id', :controller => 'payments'
+  map.payments '/paiements', :controller => 'payments', :action => 'index'
 
   map.items '/items/:action/:id', :controller => 'items'
 
   map.account_lookup '/transactions/auto_complete_for_account_no', :controller => 'transactions', :action => 'auto_complete_for_account_no'
   map.customer_lookup '/invoices/auto_complete_for_invoice_customer', :controller => 'invoices', :action => 'auto_complete_for_invoice_customer'
+  map.invoice_lookup '/paiements/auto_complete_for_invoice_no', :controller => 'payments', :action => 'auto_complete_for_invoice_no'
 
   map.reports '/rapports', :controller => 'reports', :action => 'index'
 

@@ -32,7 +32,7 @@
         <td>
           <%= text_field(:nline, :no, :size => 8) %>
           <div id="nline_no_auto_complete" class="auto_complete"></div>
-          <%= javascript_tag %q(var nline_no_auto_completer = new Ajax.Autocompleter('nline_no', 'nline_no_auto_complete', '/paiements/auto_complete_for_invoice_no', {afterUpdateElement:function(element,selected){$('nline_amount').value = selected.getAttribute('total')}, callback:function(element, value) { return 'invoice[no]=' + $F(element) + '&customer=' + encodeURI($F('payment_customer')) }, select:'no'})) %>
+          <%= javascript_tag %Q(var nline_no_auto_completer = new Ajax.Autocompleter('nline_no', 'nline_no_auto_complete', '#{invoice_lookup_url}', {afterUpdateElement:function(element,selected){$('nline_amount').value = selected.getAttribute('total')}, callback:function(element, value) { return 'invoice[no]=' + $F(element) + '&customer=' + encodeURI($F('payment_customer')) }, select:'no'})) %>
           <input type="hidden" id="line_count" name="line_count" value="<%= @payment.invoices.count %>"/>
         </td>
         <td class="money"><%= text_field :nline, :amount, :size => 10, :class => 'money' %></td>

@@ -12,23 +12,26 @@ class PaymentsController < ApplicationController
     @invoice = Invoice.find_by_no(params[:invoice])
     raise ActiveRecord::RecordNotFound, "No invoice #{params[:invoice].inspect}" unless @invoice
 
-    @payment.customer = @invoice.customer
-    @payment.amount = @invoice.balance
-    @payment.invoices.build(:invoice => @invoice, :amount => @payment.amount)
-  end
+    case request.method
+    when :get
+      @payment.customer = @invoice.customer
+      @payment.amount = @invoice.balance
+      @payment.invoices.build(:invoice => @invoice, :amount => @payment.amount)
 
-  def create
-    @payment = Payment.new
-    update_and_redirect('new')
+    when :post
+      update_and_redirect('new')
+
+    else
+      response.headers['Content-Type'] = 'text/plain'
+      render :inline => '405 Method Not Allowed',
+          :status => '405 Method Not Allowed',
+          :layout => false
+    end
   end
 
   def edit
     @payment = Payment.find(params[:id])
-  end
-
-  def update
-    @payment = Payment.find(params[:id])
-    update_and_redirect('edit')
+    update_and_redirect('edit') if request.post?
   end
 
   def auto_complete_for_invoice_no
