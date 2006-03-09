@@ -1,6 +1,6 @@
 <% @total = @calculator.call(@total, line) %>
 <tr>
-  <td class="date"><%= link_to(format_date(line.txn.posted_on), transaction_edit_url(:id => line.txn.id)) %>
+  <td class="date"><%= link_to(format_date(line.txn.posted_on), transaction_edit_url(:txn => line.txn)) %>
   <td class="description"><%= line.txn.description_html %>
   <td class="money"><%= format_money(line.amount_dt) unless line.amount_dt.zero? %></td>
   <td class="money"><%= format_money(line.amount_ct) unless line.amount_ct.zero? %></td>

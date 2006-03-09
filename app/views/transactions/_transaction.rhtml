@@ -1,5 +1,5 @@
 <tr>
-  <td><%= link_to(format_date(transaction.posted_on), transaction_edit_url(:id => transaction.id)) %></td>
-  <td><%= link_to(transaction.description, transaction_edit_url(:id => transaction.id)) %></td>
+  <td><%= link_to(format_date(transaction.posted_on), transaction_edit_url(:txn => transaction)) %></td>
+  <td><%= link_to(transaction.description, transaction_edit_url(:txn => transaction)) %></td>
   <td class="money"><%= format_money(transaction.volume) %></td>
 </tr>

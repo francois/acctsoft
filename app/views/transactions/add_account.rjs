@@ -1,7 +1,0 @@
-page << "$('txn_line_count').value = #{@txn_line_count}"
-page.insert_html :bottom, 'list-body', :partial => 'txn_account',
-    :locals => {:txn_account_counter => @txn_line_count}
-page << "$('account_no').value = ''"
-page << "$('account_debit').value = ''"
-page << "$('account_credit').value = ''"
-page << "Field.focus('account_no')"

@@ -1,6 +1,4 @@
 class PaymentsController < ApplicationController
-  before_filter :parse_dates
-
   def index
     @payments = Payment.find(:all, :order => 'received_on DESC')
   end
@@ -77,6 +75,7 @@ class PaymentsController < ApplicationController
 
   protected
   def update_and_redirect(form)
+    self.parse_dates
     params[:payment][:customer] = Customer.find_by_abbreviation(params[:payment][:customer])
     if params[:line] then
       params[:line].each do |id, values|

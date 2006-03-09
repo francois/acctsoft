@@ -12,7 +12,7 @@
   <td>
 <% if invoice.txn then -%>
     <%= link_to("#{format_date(invoice.txn.posted_on)} (#{format_date(invoice.posted_at)})",
-            transaction_edit_url(:id => invoice.txn)) %>
+            transaction_edit_url(:txn => invoice.txn)) %>
 <% else -%>
     <%= link_to 'Créer', invoice_post_url(:invoice => invoice) %>
 <% end -%>

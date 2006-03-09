@@ -1,17 +1,13 @@
 <% @line = line
-  payment = payment rescue nil        
+  payment = payment rescue nil
   index = @line.new_record? ? line_counter : @line.id -%>
 <tr id="line_<%= index %>">
   <td>
     <%= link_to line.no, invoice_edit_url(:invoice => line.invoice) %>
     <%= hidden_field :line, :no, :index => index %>
-<% if line.new_record? then -%>
-    <%= link_to_function 'X', visual_effect(:fade, "line_#{index}") +
-            %Q(setTimeout(function() {#{%w(no amount).map {|field| "Element.remove('line_#{index}_#{field}')"}.join(';')}}, 1000)),
-            :title => 'Détruire cette ligne' %>
-<% else -%>
-    <%= link_to_remote 'X', :url => delete_payment_line_url(:payment => payment, :line => line), :html => {:title => 'Détruire cette ligne'} %>
-<% end -%>
+    <%= render :partial => 'shared/delete_line',
+          :locals => {:line => @line, :index => index, :fields => %w(no amount),
+                      :url => delete_payment_line_url(:payment => payment, :line => line)} %>
   </td>
   <td class="money"><%= text_field(:line, :amount, :size => 10, :value => line.amount, :index => index, :class => 'money') %></td>
 </tr>

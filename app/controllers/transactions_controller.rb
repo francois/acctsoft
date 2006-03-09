@@ -1,54 +1,18 @@
 class TransactionsController < ApplicationController
-  before_filter :parse_dates
-
   def index
     @transaction_pages, @transactions = paginate(:txn, :per_page => 30, :order => 'posted_on DESC, id DESC')
   end
 
   def new
     @transaction = Txn.new
-    @txn_line_count = @transaction.lines.count
-    @editable = true
-  end
-
-  def create
-    @transaction = Txn.new(params[:transaction])
-    params[:txn_account].sort.each do |k, v|
-      @transaction.lines.build(v)
-    end
-
-    if @transaction.save then
-      if params[:commit] =~ /nouveau/i then
-        redirect_to :action => :new
-      else
-        redirect_to :action => :index
-      end
-    else
-      @editable = true
-      render :action => 'new'
-    end
+    self.count_lines! if request.get?
+    update_and_redirect('new') if request.post?
   end
 
   def edit
-    @transaction = Txn.find(params[:id])
-    @txn_line_count = @transaction.lines.count
-    @editable = false
-  end
-
-  def update
-    @transaction = Txn.find(params[:id])
-
-    params[:txn_account].each do |id, attrs|
-      @transaction.lines.find(id).update_attributes(attrs)
-    end
-
-    if @transaction.update_attributes(params[:transaction]) then
-      @transaction.destroy unless params[:destroy].blank?
-      redirect_to :action => :index
-    else
-      @editable = false
-      render :action => 'edit'
-    end
+    @transaction = Txn.find(params[:txn])
+    self.count_lines! if request.get?
+    update_and_redirect('edit') if request.post?
   end
 
   def auto_complete_for_account_no
@@ -58,13 +22,54 @@ class TransactionsController < ApplicationController
     render :layout => false
   end
 
-  def add_account
-    @txn_account = TxnAccount.new(params[:account])
-    @txn_line_count = 1 + params[:txn][:line_count].to_i
-    @editable = true
+  def add_line
+    render(:nothing => true) if params[:nline][:no].blank?
+    @line = TxnAccount.new(params[:nline])
+    @line_count = 1 + params[:line_count].to_i
+    render :layout => false
+  end
+
+  def delete_line
+    @transaction = Txn.find(params[:transaction])
+    @line = @transaction.lines.find(params[:line])
+    @line.destroy
+    self.count_lines!
+    @index = params[:index]
   end
 
   protected
+  def update_and_redirect(form)
+    self.parse_dates
+    if params[:line] then
+      params[:line].each do |id, values|
+        @line = @transaction.lines.find(id) rescue @transaction.lines.build
+        if @line.new_record? then
+          @line.attributes = values
+        else
+          unless @line.update_attributes(values) then
+            flash_failure :now, "Compte #{values[:no]}: #{@line.errors.full_messages.join(', ')}"
+          end
+        end
+      end
+    end
+
+    if @transaction.update_attributes(params[:transaction]) then
+      if params[:commit] =~ /nouveau/i then
+        redirect_to :action => :new
+      else
+        redirect_to :action => :index
+      end
+    else
+      render :action => form
+    end
+  end
+
+  def count_lines!
+    return @transaction.lines.count if @transaction.new_record?
+    count = TxnAccount.connection.select_value("SELECT MAX(id) FROM #{TxnAccount.table_name} WHERE txn_id = #{@transaction.id}")
+    @line_count = count.to_i rescue 0
+  end
+
   def parse_dates
     return unless params[:transaction]
     params[:transaction][:posted_on] = parse_date(params[:transaction][:posted_on])

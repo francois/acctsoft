@@ -1,6 +1,4 @@
 class InvoicesController < ApplicationController
-  before_filter :parse_dates, :only => [:new, :edit]
-
   def index
     @invoices = Invoice.find(:all, :order => 'no DESC')
   end
@@ -64,6 +62,7 @@ class InvoicesController < ApplicationController
 
   protected
   def update_and_redirect(form)
+    self.parse_dates
     @inv.customer = Customer.find_by_abbreviation(params[:inv][:customer])
     params[:inv].delete(:customer)
     params[:inv].delete('customer')
