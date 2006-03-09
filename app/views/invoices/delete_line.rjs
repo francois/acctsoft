@@ -1,0 +1,6 @@
+page << "$('line_count').value = #{@line_count}"
+page.visual_effect :fade, "line_#{@line.id}"
+page.delay(1) do
+  elements = %w(item_no description quantity unit_price).map {|field| "line_#{@line.id}_#{field}"}
+  page.remove(*elements)
+end

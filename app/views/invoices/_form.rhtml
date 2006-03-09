@@ -5,12 +5,12 @@
     <%= text_field :inv, :no, :size => 6 %>
   </div>
   <div class="row">
-    <%= label :inv, :invoiced_on, 'Date de facturation' %>
-    <%= text_field :inv, :invoiced_on, :size => 10, :value => format_date(@inv.invoiced_on) %>
-  </div>
-  <div class="row">
     <%= label :inv, :customer, 'Client' %>
     <%= text_field_with_auto_complete :inv, :customer, {:value => (@inv.customer.abbreviation rescue nil)}, {:skip_style => true, :select => 'abbreviation'} %>
+  </div>
+  <div class="row">
+    <%= label :inv, :invoiced_on, 'Date de facturation' %>
+    <%= text_field :inv, :invoiced_on, :size => 10, :value => format_date(@inv.invoiced_on) %>
   </div>
 </fieldset>
 
@@ -29,7 +29,7 @@
       <tr id="new-line">
         <td>
           <%= text_field :nline, :item_no, :size => 6 %>
-          <input type="hidden" id="line_count" name="line_count" value="<%= @inv.lines.count %>"/>
+          <%= hidden_field_tag :line_count, @line_count %>
         </td>
         <td><%= text_field :nline, :description, :size => 30 %></td>
         <td class="number"><%= text_field :nline, :quantity, :size => 6 %></td>
@@ -49,7 +49,7 @@
       </tr>
     </tfoot>
     <tbody id="list-body">
-<%= render :partial => 'line', :collection => @inv.lines %>
+<%= render :partial => 'line', :collection => @inv.lines, :locals => {:invoice => @inv} %>
     </tbody>
   </table>
 </fieldset>

@@ -7,12 +7,14 @@ class InvoicesController < ApplicationController
 
   def new
     @inv = Invoice.new
+    self.count_lines! if request.get?
     update_and_redirect('new') if request.post?
   end
 
   def edit
     @inv = Invoice.find_by_no(params[:invoice])
     raise ActiveRecord::RecordNotFound unless @inv
+    self.count_lines! if request.get?
     update_and_redirect('edit') if request.post?
   end
 
@@ -23,8 +25,18 @@ class InvoicesController < ApplicationController
   end
 
   def add_line
+    render(:nothing => true) if params[:nline][:item_no].blank?
     @line = InvoiceItem.new(params[:nline])
     @line_count = 1 + params[:line_count].to_i
+  end
+
+  def delete_line
+    @inv = Invoice.find_by_no(params[:invoice])
+    raise ActiveRecord::RecordNotFound unless @inv
+    @line = @inv.lines.find(params[:line])
+    @line.destroy
+    self.count_lines!
+    @index = params[:index]
   end
 
   def transfer
@@ -55,10 +67,12 @@ class InvoicesController < ApplicationController
     params[:inv].delete(:customer)
     params[:inv].delete('customer')
 
-    params[:line].each do |id, values|
-      @line = @inv.new_record? ? @inv.lines.build : @inv.lines.find(id)
-      unless @line.update_attributes(values) then
-        flash_failure :now, "Erreur de mise à jour ligne #{id}: #{@line.errors.full_messages.join(', ')}"
+    if params[:line] then
+      params[:line].each do |id, values|
+        @line = @inv.lines.find(id) rescue @inv.lines.build
+        unless @line.update_attributes(values) then
+          flash_failure :now, "Erreur de mise à jour ligne #{id}: #{@line.errors.full_messages.join(', ')}"
+        end
       end
     end
 
@@ -71,6 +85,12 @@ class InvoicesController < ApplicationController
     else
       render :action => form
     end
+  end
+
+  def count_lines!
+    return @inv.lines.count if @inv.new_record?
+    count = InvoiceItem.connection.select_value("SELECT MAX(id) FROM #{InvoiceItem.table_name} WHERE invoice_id = #{@inv.id}")
+    @line_count = count.to_i rescue 0
   end
 
   def parse_dates

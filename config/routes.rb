@@ -14,8 +14,9 @@ ActionController::Routing::Routes.draw do |map|
   map.customers '/clients/:action/:id', :controller => 'customers'
   map.customer_edit '/clients/edit/:id', :controller => 'customers', :action => 'edit'
 
-  map.invoice_edit '/factures/:invoice', :controller => 'invoices', :action => 'edit', :invoice => NumericRegexp
+  map.delete_invoice_line '/factures/:invoice/delete/:line', :controller => 'invoices', :action => 'delete_line', :invoice => NumericRegexp, :line => NumericRegexp
   map.invoice_post '/factures/transfert/:invoice', :controller => 'invoices', :action => 'transfer', :invoice => NumericRegexp
+  map.invoice_edit '/factures/:invoice', :controller => 'invoices', :action => 'edit', :invoice => NumericRegexp
   map.invoice_new '/factures/nouvelle', :controller => 'invoices', :action => 'new'
   map.invoices '/factures', :controller => 'invoices', :action => 'index'
 
