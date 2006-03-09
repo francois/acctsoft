@@ -38,7 +38,7 @@ class TransactionsController < ApplicationController
   end
 
   protected
-  def update_and_redirect(form)
+  def update_and_redirect
     self.parse_dates
     if params[:line] then
       params[:line].each do |id, values|
@@ -59,8 +59,6 @@ class TransactionsController < ApplicationController
       else
         redirect_to :action => :index
       end
-    else
-      render :action => form
     end
   end
 

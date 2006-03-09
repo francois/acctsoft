@@ -61,7 +61,7 @@ class InvoicesController < ApplicationController
   end
 
   protected
-  def update_and_redirect(form)
+  def update_and_redirect
     self.parse_dates
     @inv.customer = Customer.find_by_abbreviation(params[:inv][:customer])
     params[:inv].delete(:customer)
@@ -82,8 +82,6 @@ class InvoicesController < ApplicationController
       else
         redirect_to :action => :index
       end
-    else
-      render :action => form
     end
   end
 
