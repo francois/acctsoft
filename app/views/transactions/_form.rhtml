@@ -2,7 +2,10 @@
   <%= error_messages_for :transaction %>
   <div class="row">
     <%= label :transaction, :posted_on, 'Date effective' %>
-    <%= text_field :transaction, :posted_on, :size => 10, :value => format_date(@transaction.posted_on) %> (<%= format_date(@transaction.created_at) %>)
+    <%= text_field :transaction, :posted_on, :size => 10, :value => format_date(@transaction.posted_on) %>
+<% unless @transaction.new_record? then -%>
+    (<%= format_date(@transaction.created_at) %>)
+<% end -%>
   </div>
   <div class="row">
     <%= label :transaction, :description, 'Description' %>
