@@ -64,10 +64,6 @@ class TransactionsController < ApplicationController
     @editable = true
   end
 
-  def detailed
-    @transactions = Txn.find(:all, :order => 'posted_on, id')
-  end
-
   protected
   def parse_dates
     return unless params[:transaction]
