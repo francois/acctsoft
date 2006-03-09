@@ -21,24 +21,4 @@ class CustomerTest < Test::Unit::TestCase
     assert_equal 'J1G 3N4', customer.address.zip
     assert_equal 'CA', customer.address.country
   end
-
-  def test_store_pst_string_rate_as_float
-    customer = Customer.new(:pst_rate => '7')
-    assert_equal 7.0, customer.pst_rate
-  end
-
-  def test_store_pst_float_string_rate_as_float
-    customer = Customer.new(:pst_rate => '7.3')
-    assert_equal 7.3, customer.pst_rate
-  end
-
-  def test_store_pst_float_rate_as_float
-    customer = Customer.new(:pst_rate => 7.25)
-    assert_equal 7.25, customer.pst_rate
-  end
-
-  def test_rounds_pst_rate_at_thousands
-    customer = Customer.new(:pst_rate => 7.2525)
-    assert_equal 7.253, customer.pst_rate
-  end
 end
