@@ -25,10 +25,18 @@ class Test::Unit::TestCase
   self.use_instantiated_fixtures  = false
 
   # Add more helper methods to be used by all tests here...
+  def assert_model_valid(model, message=nil)
+    return if model.valid?
+    msg = "<#{model.class.name}> should be valid: "
+    msg << "#{message}: " if message
+    msg << model.errors.full_messages.inspect
+    raise Test::Unit::AssertionFailedError, msg
+  end
+
   def assert_model_saved(model, message=nil)
     return if model.save
-    msg = "<#{model.class.name}> should have saved"
-    msg << ": #{message}" if message
+    msg = "<#{model.class.name}> should have saved: "
+    msg << "#{message}: " if message
     msg << model.errors.full_messages.inspect
     raise Test::Unit::AssertionFailedError, msg
   end
