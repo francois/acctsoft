@@ -20,6 +20,7 @@ ActionController::Routing::Routes.draw do |map|
   map.invoice_new '/factures/nouvelle', :controller => 'invoices', :action => 'new'
   map.invoices '/factures', :controller => 'invoices', :action => 'index'
 
+  map.delete_payment_line '/paiements/:payment/delete/:line', :controller => 'payments', :action => 'delete_line', :payment => NumericRegexp, :line => NumericRegexp
   map.payment_post '/paiements/transfert/:id', :controller => 'payments', :action => 'transfer'
   map.payment_edit '/paiements/:payment', :controller => 'payments', :action => 'edit', :payment => NumericRegexp
   map.payment_new '/paiements/nouveau/:invoice', :controller => 'payments', :action => 'new', :invoice => nil, :requirements => {:invoice => NumericRegexp}

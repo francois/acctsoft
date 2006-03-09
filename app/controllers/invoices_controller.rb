@@ -28,6 +28,7 @@ class InvoicesController < ApplicationController
     render(:nothing => true) if params[:nline][:item_no].blank?
     @line = InvoiceItem.new(params[:nline])
     @line_count = 1 + params[:line_count].to_i
+    render :layout => false
   end
 
   def delete_line
