@@ -64,16 +64,16 @@ class PaymentsController < ApplicationController
   protected
   def update_and_redirect(form)
     params[:payment][:customer] = Customer.find_by_abbreviation(params[:payment][:customer])
-    new_record = @payment.new_record?
-    if @payment.update_attributes(params[:payment]) then
-      params[:line].each do |id, values|
-        @line = new_record ? @payment.invoices.build : @payment.invoices.find(id)
-        unless @line.update_attributes(values) then
-          flash_failure :now, "Erreur de mise à jour ligne #{id}: #{@line.errors.full_messages.join(', ')}"
-        end
+    params[:line].each do |id, values|
+      @line = @payment.new_record? ? @payment.invoices.build : @payment.invoices.find(id)
+      unless @line.update_attributes(values) then
+        flash_failure :now, "Erreur de mise à jour ligne #{id}: #{@line.errors.full_messages.join(', ')}"
       end
+    end
 
-      flash_notice 'Total payé ne correspond pas aux montants enregistrés' unless @payment.can_upload?
+    if @payment.update_attributes(params[:payment]) then
+      flash_notice 'Le total payé ne correspond pas aux montants enregistrés' \
+          unless @payment.can_upload?
       if params[:commit] =~ /nouveau/i then
         redirect_to :action => :new
       else
