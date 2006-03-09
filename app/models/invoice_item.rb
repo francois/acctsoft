@@ -1,5 +1,5 @@
 class InvoiceItem < ActiveRecord::Base
-  acts_as_list
+  acts_as_list :scope => 'invoice_id'
   belongs_to :invoice
   belongs_to :item
   validates_presence_of :invoice_id, :item_id, :quantity, :unit_price
