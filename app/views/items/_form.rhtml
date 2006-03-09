@@ -1,4 +1,4 @@
-<fieldset id="item">
+<fieldset id="item-form">
   <%= error_messages_for 'item' %>
   <div class="row">
     <%= label :item, :no, 'No' %>
@@ -23,3 +23,5 @@
   <%= submit_tag 'Enregistrer' %>
   <%= link_to 'Abandonner', :action => :index %>
 </div>
+
+<%= javascript_tag "Form.focusFirstElement('item');" %>

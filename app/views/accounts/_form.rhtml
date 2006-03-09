@@ -1,4 +1,4 @@
-<fieldset id="account">
+<fieldset id="account-form">
   <%= error_messages_for 'account' %>
   <div class="row">
     <%= label :account, :no, 'No compte' %>
@@ -26,4 +26,4 @@
   <%= link_to 'Abandonner', :action => :index %>
 </div>
 
-<%= javascript_tag "Form.focusFirstElement('accnt');" %>
+<%= javascript_tag "Form.focusFirstElement('account');" %>
