@@ -1,8 +1,8 @@
 <% if @force || !@txns.empty? then -%>
 <table class="list">
   <caption>
-    <%= link_to @account.no, account_edit_url(:account => @account.no) %>&nbsp;
-    <%= link_to @account.name, account_edit_url(:account => @account.no) %>
+    <%= link_to @account.no, account_edit_url(:account => @account) %>&nbsp;
+    <%= link_to @account.name, account_edit_url(:account => @account) %>
   </caption>
   <col width="*1"/><col width="*4"/><col span="3" width="*1"/>
   <thead>
