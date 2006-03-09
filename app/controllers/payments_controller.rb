@@ -45,7 +45,7 @@ class PaymentsController < ApplicationController
 
   def add_line
     @line = InvoicePayment.new(params[:nline])
-    @invoice_line_count = 1 + params[:invoice_line_count].to_i
+    @line_count = 1 + params[:line_count].to_i
     render :layout => false
   end
 
@@ -64,10 +64,12 @@ class PaymentsController < ApplicationController
   protected
   def update_and_redirect(form)
     params[:payment][:customer] = Customer.find_by_abbreviation(params[:payment][:customer])
-    params[:line].each do |id, values|
-      @line = @payment.new_record? ? @payment.invoices.build : @payment.invoices.find(id)
-      unless @line.update_attributes(values) then
-        flash_failure :now, "Erreur de mise à jour ligne #{id}: #{@line.errors.full_messages.join(', ')}"
+    if params[:line] then
+      params[:line].each do |id, values|
+        @line = @payment.new_record? ? @payment.invoices.build : @payment.invoices.find(id)
+        unless @line.update_attributes(values) then
+          flash_failure :now, "Erreur de mise à jour ligne #{id}: #{@line.errors.full_messages.join(', ')}"
+        end
       end
     end
 

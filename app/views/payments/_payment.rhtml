@@ -2,5 +2,11 @@
   <td class="date"><%= link_to format_date(payment.received_on), :action => :edit, :id => payment %></td>
   <td><%= link_to payment.customer.name, customer_edit_url(:id => payment.customer) %></td>
   <td class="money"><%= format_money(payment.amount) %></td>
-  <td><%= payment.can_upload? ? link_to('Transfert', payment_transfer_url(:id => payment)) : link_to("#{format_date(payment.txn.posted_on)} (#{format_date(payment.posted_at)})", transaction_edit_url(:id => payment.txn)) %></td>
+  <td>
+<% if payment.can_upload? then -%>
+    <%= link_to('Transfert', payment_transfer_url(:id => payment)) %>
+<% elsif payment.txn then -%>
+    <%= link_to("#{format_date(payment.txn.posted_on)} (#{format_date(payment.posted_at)})", transaction_edit_url(:id => payment.txn)) %>
+<% end -%>
+  </td>
 </tr>

@@ -17,10 +17,6 @@
     <%= label :payment, :received_on, 'Reçu le' %>
     <%= text_field 'payment', 'received_on', :value => format_date(@payment.received_on), :size => 10 %>
   </div>
-  <div class="row">
-    <%= label :payment, :paid_on, 'Émis le' %>
-    <%= text_field 'payment', 'paid_on', :value => format_date(@payment.paid_on), :size => 10 %>
-  </div>
 </fieldset>
 
 <fieldset id="payments">
@@ -37,7 +33,7 @@
           <%= text_field(:nline, :no, :size => 8) %>
           <div id="nline_no_auto_complete" class="auto_complete"></div>
           <%= javascript_tag %q(var nline_no_auto_completer = new Ajax.Autocompleter('nline_no', 'nline_no_auto_complete', '/paiements/auto_complete_for_invoice_no', {afterUpdateElement:function(element,selected){$('nline_amount').value = selected.getAttribute('total')}, callback:function(element, value) { return 'invoice[no]=' + $F(element) + '&customer=' + encodeURI($F('payment_customer')) }, select:'no'})) %>
-          <input type="hidden" id="invoice_line_count" name="invoice[line_count]" value="<%= @payment.invoices.count %>"/>
+          <input type="hidden" id="line_count" name="line_count" value="<%= @payment.invoices.count %>"/>
         </td>
         <td class="money"><%= text_field :nline, :amount, :size => 10, :class => 'money' %></td>
       </tr>

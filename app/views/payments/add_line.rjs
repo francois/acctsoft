@@ -1,6 +1,6 @@
-page << "$('invoice_line_count').value = #{@invoice_line_count}"
+page << "$('line_count').value = #{@line_count}"
 page.insert_html :bottom, 'list-body', :partial => 'line', :object => @line,
-    :locals => {:line_counter => @invoice_line_count}
+    :locals => {:line_counter => @line_count}
 page << "$('nline_no').value = ''"
 page << "$('nline_amount').value = ''"
 page << "Field.focus('nline_no')"
