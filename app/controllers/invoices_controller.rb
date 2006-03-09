@@ -16,12 +16,6 @@ class InvoicesController < ApplicationController
     update_and_redirect('edit') if request.post?
   end
 
-  def auto_complete_for_invoice_customer
-    @customers = Customer.find(:all, :limit => 20, :order => 'name',
-        :conditions => ['abbreviation LIKE ?', "%#{params[:invoice][:customer]}%"])
-    render :layout => false
-  end
-
   def add_line
     render(:nothing => true) if params[:nline][:item_no].blank?
     @line = InvoiceItem.new(params[:nline])

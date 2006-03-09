@@ -6,7 +6,9 @@
   </div>
   <div class="row">
     <%= label :inv, :customer, 'Client' %>
-    <%= text_field_with_auto_complete :inv, :customer, {:value => (@inv.customer.abbreviation rescue nil)}, {:skip_style => true, :select => 'abbreviation'} %>
+    <%= text_field_with_auto_complete :inv, :customer,
+            {:value => (@inv.customer.abbreviation rescue nil)},
+            {:url => customer_lookup_url, :with => %q('customer=' + $F(element)), :skip_style => true, :select => 'abbreviation'} %>
   </div>
   <div class="row">
     <%= label :inv, :invoiced_on, 'Date de facturation' %>

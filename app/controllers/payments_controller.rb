@@ -34,18 +34,6 @@ class PaymentsController < ApplicationController
     update_and_redirect('edit') if request.post?
   end
 
-  def auto_complete_for_invoice_no
-    @invoices = unless params[:customer].blank? then
-                  customer = Customer.find_by_abbreviation(params[:customer])
-                  customer.invoices.find(:all, :order => 'no DESC',
-                      :conditions => ['no LIKE ?', "#{params[:invoice][:no]}%"])
-                else
-                  Invoice.find(:all, :order => 'no DESC',
-                      :conditions => ['no LIKE ?', "#{params[:invoice][:no]}%"])
-                end
-    render :layout => false
-  end
-
   def add_line
     render(:nothing => true) if params[:nline][:no].blank?
     @line = InvoicePayment.new(params[:nline])

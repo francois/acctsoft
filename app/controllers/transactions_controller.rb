@@ -15,13 +15,6 @@ class TransactionsController < ApplicationController
     update_and_redirect('edit') if request.post?
   end
 
-  def auto_complete_for_account_no
-    @accounts = Account.find(:all, :order => 'no', :limit => 20,
-        :conditions => ['no LIKE :no OR name LIKE :no OR description LIKE :no',
-            {:no => "#{params[:account][:no]}%"}])
-    render :layout => false
-  end
-
   def add_line
     render(:nothing => true) if params[:nline][:no].blank?
     @line = TxnAccount.new(params[:nline])

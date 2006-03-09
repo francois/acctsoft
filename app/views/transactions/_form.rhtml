@@ -27,7 +27,7 @@
       <tr id="new-account">
         <td>
           <%= text_field_with_auto_complete(:nline, :no, {:size => 10},
-              {:url => account_lookup_url, :with => %q('account[no]=' + $F(element)), :skip_style => true, :select => 'no'}) %>
+              {:url => account_lookup_url, :with => %q('account=' + $F(element)), :skip_style => true, :select => 'no'}) %>
           <%= hidden_field_tag 'line_count', @line_count %>
         </td>
         <td>&nbsp;</td>

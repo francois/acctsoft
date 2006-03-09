@@ -12,7 +12,9 @@
 
   <div class="row">
     <%= label :item, :description, 'Charger le compte' %>
-    <%= text_field_with_auto_complete 'item', 'charge_account_no', {:size => 6}, {:select => 'no', :with => %q('account[no]=' + $F(element)), :url => account_lookup_url, :skip_style => true}  %>
+    <%= text_field_with_auto_complete 'item', 'charge_account_no',
+        {:size => 6},
+        {:url => account_lookup_url, :with => %q('account=' + $F(element)), :select => 'no', :skip_style => true}  %>
   </div>
 </fieldset>
 

@@ -29,9 +29,9 @@ ActionController::Routing::Routes.draw do |map|
 
   map.items '/items/:action/:id', :controller => 'items'
 
-  map.account_lookup '/transactions/auto_complete_for_account_no', :controller => 'transactions', :action => 'auto_complete_for_account_no'
-  map.customer_lookup '/invoices/auto_complete_for_invoice_customer', :controller => 'invoices', :action => 'auto_complete_for_invoice_customer'
-  map.invoice_lookup '/paiements/auto_complete_for_invoice_no', :controller => 'payments', :action => 'auto_complete_for_invoice_no'
+  map.account_lookup '/recherche/compte', :controller => 'lookup', :action => 'auto_complete_for_account'
+  map.customer_lookup '/recherche/client', :controller => 'lookup', :action => 'auto_complete_for_customer'
+  map.invoice_lookup '/recherche/facture', :controller => 'lookup', :action => 'auto_complete_for_invoice'
 
   map.reports '/rapports', :controller => 'reports', :action => 'index'
 

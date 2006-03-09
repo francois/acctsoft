@@ -2,7 +2,7 @@
   <div class="row">
     <%= label :account_configuration, :account_no, 'Compte' %>
     <%= text_field_with_auto_complete :account_configuration, :account_no, {:size => 6},
-        {:url => account_lookup_url, :with => %q('account[no]=' + $F(element)), :select => 'no'} %>
+        {:url => account_lookup_url, :with => %q('account=' + $F(element)), :select => 'no'} %>
   </div>
   <div class="row">
     <%= label :account_configuration, :name, 'Nom' %>
