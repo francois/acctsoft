@@ -1,6 +1,9 @@
 <% @line = line
   index = @line.new_record? ? line_counter : @line.id -%>
 <tr>
-  <td><%= text_field :line, :no, :size => 8, :index => index %></td>
+  <td>
+    <%= link_to line.no, invoice_edit_url(:invoice => line.invoice) %>
+    <%= hidden_field :line, :no, :index => index %>
+  </td>
   <td class="money"><%= text_field(:line, :amount, :size => 10, :value => line.amount, :index => index, :class => 'money') %></td>
 </tr>

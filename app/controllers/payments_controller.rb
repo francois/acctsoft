@@ -7,6 +7,14 @@ class PaymentsController < ApplicationController
 
   def new
     @payment = Payment.new
+    return if params[:invoice].blank?
+
+    @invoice = Invoice.find_by_no(params[:invoice])
+    raise ActiveRecord::RecordNotFound, "No invoice #{params[:invoice].inspect}" unless @invoice
+
+    @payment.customer = @invoice.customer
+    @payment.amount = @invoice.balance
+    @payment.invoices.build(:invoice => @invoice, :amount => @payment.amount)
   end
 
   def create

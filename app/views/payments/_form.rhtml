@@ -2,24 +2,24 @@
   <%= error_messages_for 'payment' %>
 
   <div class="row">
-    <%= label :payment, :customer, 'Client' %>
-    <%= text_field_with_auto_complete :payment, :customer, {:value => (@payment.customer.abbreviation rescue nil)}, {:skip_style => true, :select => 'abbreviation', :url => customer_lookup_url, :with => %q('invoice[customer]=' + $F(element);)} %>
-  </div>
-  <div class="row">
-    <%= label :payment, :paid_on, 'Émis le' %>
-    <%= text_field 'payment', 'paid_on', :value => format_date(@payment.paid_on), :size => 10 %>
-  </div>
-  <div class="row">
-    <%= label :payment, :received_on, 'Reçu le' %>
-    <%= text_field 'payment', 'received_on', :value => format_date(@payment.received_on), :size => 10 %>
-  </div>
-  <div class="row">
     <%= label :payment, :reference, 'Référence' %>
     <%= text_field 'payment', 'reference', :size => 16 %>
   </div>
   <div class="row">
     <%= label :payment, :amount, 'Montant' %>
     <%= text_field 'payment', 'amount', :value => @payment.amount, :size => 6 %>
+  </div>
+  <div class="row">
+    <%= label :payment, :customer, 'Client' %>
+    <%= text_field_with_auto_complete :payment, :customer, {:value => (@payment.customer.abbreviation rescue nil)}, {:skip_style => true, :select => 'abbreviation', :url => customer_lookup_url, :with => %q('invoice[customer]=' + $F(element);)} %>
+  </div>
+  <div class="row">
+    <%= label :payment, :received_on, 'Reçu le' %>
+    <%= text_field 'payment', 'received_on', :value => format_date(@payment.received_on), :size => 10 %>
+  </div>
+  <div class="row">
+    <%= label :payment, :paid_on, 'Émis le' %>
+    <%= text_field 'payment', 'paid_on', :value => format_date(@payment.paid_on), :size => 10 %>
   </div>
 </fieldset>
 

@@ -3,7 +3,12 @@
   <td class="date"><%= format_date(invoice.invoiced_on) %></td>
   <td><%= link_to invoice.customer.name, customer_edit_url(:id => invoice.customer) %></td>
   <td class="money"><%= invoice.total %></td>
-  <td class="money"><%= invoice.balance %></td>
+  <td class="money">
+    <%= invoice.balance %>
+<% unless invoice.balance.zero? then -%>
+    <%= link_to 'Payer', payment_new_url(:invoice => invoice) %>
+<% end -%>
+  </td>
   <td>
 <% if invoice.posted_at then -%>
     <%= link_to("#{format_date(invoice.txn.posted_on)} (#{format_date(invoice.posted_at)})",

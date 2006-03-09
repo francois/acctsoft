@@ -1,0 +1,4 @@
+<tr>
+  <td class="date"><%= link_to(format_date(payment_line.received_on), payment_edit_url(:id => payment_line.payment)) %></td>
+  <td class="money"><%= format_money(payment_line.amount) %></td>
+</tr>

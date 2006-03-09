@@ -19,8 +19,11 @@ ActionController::Routing::Routes.draw do |map|
   map.invoice_new '/factures/nouvelle', :controller => 'invoices', :action => 'new'
   map.invoices '/factures', :controller => 'invoices', :action => 'index'
 
-  map.payments '/paiements/:action/:id', :controller => 'payments'
+  map.payments '/paiements', :controller => 'payments', :action => 'index'
+  map.payment_new '/paiements/nouveau/:invoice', :controller => 'payments', :action => 'new', :invoice => nil, :requirements => {:invoice => NumericRegexp}
+  map.payment_edit '/paiements/:id', :controller => 'payments', :action => 'edit', :id => NumericRegexp
   map.payment_transfer '/paiements/transfert/:id', :controller => 'payments', :action => 'transfer'
+  map.payments '/paiements/:action/:id', :controller => 'payments'
 
   map.items '/items/:action/:id', :controller => 'items'
 
