@@ -6,7 +6,7 @@ class Txn < ActiveRecord::Base
   end
 
   has_many :lines,  :class_name => 'TxnAccount', :order => 'position',
-                    :dependent => true
+                    :dependent => :destroy
   before_save :format_description_html
 
   def after_initialize

@@ -1,7 +1,7 @@
 class Payment < ActiveRecord::Base
   belongs_to :customer
   belongs_to :txn
-  has_many :invoices, :class_name => 'InvoicePayment'
+  has_many :invoices, :class_name => 'InvoicePayment', :dependent => :destroy
   validates_presence_of :customer_id, :amount, :reference, :received_on
   composed_of :amount_cents, :class_name => 'Money', :mapping => %w(amount_cents cents)
 
@@ -22,7 +22,7 @@ class Payment < ActiveRecord::Base
   end
 
   def can_upload?
-    self.total_paid == self.amount && self.posted_at.nil?
+    self.total_paid == self.amount && !self.txn
   end
 
   def post!(now=Time.now)

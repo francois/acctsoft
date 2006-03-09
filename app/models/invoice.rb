@@ -2,7 +2,7 @@ class Invoice < ActiveRecord::Base
   belongs_to :customer
   belongs_to :txn
   has_many :payments, :class_name => 'InvoicePayment'
-  has_many :lines, :class_name => 'InvoiceItem'
+  has_many :lines, :class_name => 'InvoiceItem', :dependent => :destroy
   validates_presence_of :no, :customer_id, :invoiced_on
   validates_numericality_of :no
 
@@ -23,7 +23,7 @@ class Invoice < ActiveRecord::Base
   end
 
   def to_param
-    self.no
+    self.no.to_s
   end
 
   def post!(now=Time.now)

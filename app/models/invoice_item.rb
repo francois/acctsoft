@@ -4,7 +4,7 @@ class InvoiceItem < ActiveRecord::Base
   belongs_to :item
   validates_presence_of :invoice_id, :item_id, :quantity, :unit_price
   acts_as_decimal :quantity, :decimals => 3, :rounding => :ceil
-  composed_of :unit_amount, :class_name => 'Money', :mapping => %w(unit_price cents)
+  composed_of :unit_amount, :class_name => 'Money', :mapping => %w(unit_price_cents cents)
 
   def item_no
     self.item.no
@@ -20,10 +20,7 @@ class InvoiceItem < ActiveRecord::Base
 
   alias_method :original_quantity=, :quantity=
   def quantity=(qty)
-    logger.debug "Quantity: #{qty.inspect}"
     self.original_quantity = qty.blank? ? 1 : qty
-    logger.debug "New quantity: #{self.quantity.inspect}"
-    self.quantity
   end
 
   def description
