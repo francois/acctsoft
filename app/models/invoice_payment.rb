@@ -1,5 +1,4 @@
 class InvoicePayment < ActiveRecord::Base
-  set_table_name :invoices_payments
   belongs_to :invoice
   belongs_to :payment
   validates_presence_of :invoice_id, :payment_id, :amount

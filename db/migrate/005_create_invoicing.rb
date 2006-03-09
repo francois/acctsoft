@@ -27,7 +27,7 @@ class CreateInvoicing < ActiveRecord::Migration
       t.column :updated_at, :datetime, :null => false
     end
 
-    create_table :invoices_payments do |t|
+    create_table :invoice_payments do |t|
       t.column :payment_id, :integer, :null => false
       t.column :invoice_id, :integer, :null => false
       t.column :amount_cents, :integer, :null => false
@@ -68,7 +68,7 @@ class CreateInvoicing < ActiveRecord::Migration
     drop_table :items
     drop_table :invoice_items
     drop_table :invoices
-    drop_table :invoices_payments
+    drop_table :invoice_payments
     drop_table :payments
     drop_table :customers
   end
