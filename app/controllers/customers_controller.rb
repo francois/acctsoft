@@ -8,12 +8,8 @@ class CustomersController < ApplicationController
   end
 
   def create
-    @customer = Customer.new(params[:customer])
-    if @customer.save
-      redirect_to :action => 'index'
-    else
-      render :action => 'new'
-    end
+    @customer = Customer.new
+    update_and_redirect('new')
   end
 
   def edit
@@ -22,10 +18,19 @@ class CustomersController < ApplicationController
 
   def update
     @customer = Customer.find(params[:id])
+    update_and_redirect('edit')
+  end
+
+  protected
+  def update_and_redirect(form)
     if @customer.update_attributes(params[:customer])
-      redirect_to :action => 'index'
+      if params[:commit] =~ /nouveau/i then
+        redirect_to :action => :new
+      else
+        redirect_to :action => :index
+      end
     else
-      render :action => 'edit'
+      render :action => form
     end
   end
 end

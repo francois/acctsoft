@@ -1,4 +1,4 @@
-<fieldset id="customer">
+<fieldset id="customer-form">
   <%= error_messages_for :customer %>
   <div class="row">
     <%= label :customer, :name, 'Nom' %>
@@ -55,3 +55,5 @@
   <%= submit_tag 'Enregistrer' %>
   <%= link_to 'Abandonner', :action => :index %>
 </div>
+
+<%= javascript_tag "Form.focusFirstElement('customer');" %>
