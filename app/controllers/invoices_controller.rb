@@ -6,14 +6,14 @@ class InvoicesController < ApplicationController
   def new
     @inv = Invoice.new
     self.count_lines! if request.get?
-    update_and_redirect('new') if request.post?
+    update_and_redirect if request.post?
   end
 
   def edit
     @inv = Invoice.find_by_no(params[:invoice])
     raise ActiveRecord::RecordNotFound unless @inv
     self.count_lines! if request.get?
-    update_and_redirect('edit') if request.post?
+    update_and_redirect if request.post?
   end
 
   def add_line

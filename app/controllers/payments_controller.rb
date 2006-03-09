@@ -18,7 +18,7 @@ class PaymentsController < ApplicationController
       @payment.invoices.build(:invoice => @invoice, :amount => @payment.amount)
 
     when :post
-      update_and_redirect('new')
+      update_and_redirect
 
     else
       response.headers['Content-Type'] = 'text/plain'
@@ -31,7 +31,7 @@ class PaymentsController < ApplicationController
   def edit
     @payment = Payment.find(params[:id])
     self.count_lines! if request.get?
-    update_and_redirect('edit') if request.post?
+    update_and_redirect if request.post?
   end
 
   def add_line

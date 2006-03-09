@@ -6,13 +6,13 @@ class TransactionsController < ApplicationController
   def new
     @transaction = Txn.new
     self.count_lines! if request.get?
-    update_and_redirect('new') if request.post?
+    update_and_redirect if request.post?
   end
 
   def edit
     @transaction = Txn.find(params[:txn])
     self.count_lines! if request.get?
-    update_and_redirect('edit') if request.post?
+    update_and_redirect if request.post?
   end
 
   def add_line
