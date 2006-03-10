@@ -14,6 +14,12 @@ class Customer < ActiveRecord::Base
 
   before_validation :normalize_abbreviation
 
+  def self.get(abbreviation)
+    customer = self.find_by_abbreviation(abbreviation)
+    raise ActiveRecord::RecordNotFound, "No customer with abbreviation #{abbreviation.inspect}" unless customer
+    customer
+  end
+
   protected
   def normalize_abbreviation
     self.abbreviation = self.abbreviation.upcase unless self.abbreviation.blank?
