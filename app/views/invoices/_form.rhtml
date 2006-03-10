@@ -34,9 +34,15 @@
           <%= hidden_field_tag :line_count, @line_count %>
         </td>
         <td><%= text_field :nline, :description, :size => 30 %></td>
-        <td class="number"><%= text_field :nline, :quantity, :size => 6 %></td>
+        <td class="number"><%= text_field :nline, :quantity, :size => 6, :class => 'number' %></td>
         <td class="money"><%= text_field :nline, :unit_price, :size => 6, :class => 'money' %></td>
-        <td class="money">&nbsp;</td>
+        <td class="money">
+          <%= text_field_tag :nline_extension, 0.to_money, :readonly => true, :class => 'money', :size => 6, :tabindex => 50000 %>
+          <%= javascript_tag %q(
+            new Form.Element.Observer('nline_quantity', 0.25, function() {updateLinePrice('nline')});
+            new Form.Element.Observer('nline_unit_price', 0.25, function() {updateLinePrice('nline')});
+            ) %>
+        </td>
       </tr>
       <tr>
         <td colspan="5" align="right">
@@ -90,4 +96,7 @@
   <%= link_to 'Abandonner', :action => :index %>
 </div>
 
+<%= javascript_tag %q(new Form.Observer('invoice', 0.25, function() {
+    updateGroupTotal('list-body', 'extension', 'invoice_total')
+  })) %>
 <%= javascript_tag "Form.focusFirstElement('invoice');" %>

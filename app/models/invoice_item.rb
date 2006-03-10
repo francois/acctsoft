@@ -40,6 +40,6 @@ class InvoiceItem < ActiveRecord::Base
   end
 
   def extension_price
-    self.unit_price * self.quantity
+    (self.unit_price * self.quantity).ceil
   end
 end

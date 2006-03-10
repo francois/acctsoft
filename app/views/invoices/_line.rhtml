@@ -11,5 +11,11 @@
   <td><%= text_field 'line[]', :description, :size => 30, :value => @line.description, :index => index %></td>
   <td class="number"><%= text_field 'line[]', :quantity, :size => 6, :value => @line.quantity, :index => index, :class => 'number' %></td>
   <td class="money"><%= text_field 'line[]', :unit_price, :size => 6, :value => @line.unit_price.to_s, :class => 'money', :index => index %></td>
-  <td class="money"><%= line.extension_price %></td>
+  <td class="money">
+    <%= text_field_tag "line_#{index}_extension", line.extension_price, :readonly => true, :class => 'money extension', :size => 6, :tabindex => 50000 %>
+    <%= javascript_tag %Q(
+      new Form.Element.Observer('line_#{index}_quantity', 0.25, function() {updateLinePrice('line_#{index}')});
+      new Form.Element.Observer('line_#{index}_unit_price', 0.25, function() {updateLinePrice('line_#{index}')});
+    ) %>
+  </td>
 </tr>
