@@ -4,12 +4,12 @@
 <tr id="line_<%= index %>">
   <td>
     <%= hidden_field(:line, :no, :size => 10, :index => index) %>
-    <%= link_to(@line.no, account_edit_url(:account => @line.account)) %>
+    <%= link_to(@line.no, account_edit_url(:account_no => @line.account)) %>
     <%= render :partial => 'shared/delete_line',
           :locals => {:line => @line, :index => index, :fields => %w(no debit credit),
-                      :url => delete_transaction_line_url(:transaction => txn, :line => @line)} %>
+                      :url => delete_transaction_line_url(:txn_id => txn, :line => @line)} %>
   </td>
-  <td><%= link_to(@line.name, account_edit_url(:account => @line.account)) %></td>
+  <td><%= link_to(@line.name, account_edit_url(:account_no => @line.account)) %></td>
   <td class="money">
     <%= text_field :line, :debit, :size => 8, :class => 'money debit', :index => index, :value => @line.debit.format(:zero => '') %>
   </td>

@@ -21,13 +21,13 @@ class AccountsController < ApplicationController
   end
 
   def edit
-    @account = Account.find_by_no(params[:account])
+    @account = Account.find_by_no(params[:account_no])
     raise ActiveRecord::RecordNotFound unless @account
   end
 
   def update
     @account = Account.find(params[:id])
-    if @account.update_attributes(params[:account]) then
+    if @account.update_attributes(params[:account_no]) then
       redirect_to :action => :index
     else
       render :action => 'edit'
@@ -35,7 +35,7 @@ class AccountsController < ApplicationController
   end
 
   def txn_list
-    @account = Account.find_by_no(params[:account])
+    @account = Account.find_by_no(params[:account_no])
     @txns = @account.transactions_on_or_before(parse_date(params[:cutoff_date]))
     @force = params[:force]
 

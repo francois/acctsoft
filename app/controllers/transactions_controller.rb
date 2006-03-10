@@ -10,7 +10,7 @@ class TransactionsController < ApplicationController
   end
 
   def edit
-    @transaction = Txn.find(params[:txn])
+    @transaction = Txn.find(params[:txn_id])
     self.count_lines! if request.get?
     update_and_redirect if request.post?
   end
@@ -23,7 +23,7 @@ class TransactionsController < ApplicationController
   end
 
   def delete_line
-    @transaction = Txn.find(params[:transaction])
+    @transaction = Txn.find(params[:txn_id])
     @line = @transaction.lines.find(params[:line])
     @line.destroy
     self.count_lines!

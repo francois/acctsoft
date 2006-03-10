@@ -5,17 +5,18 @@ class PaymentsController < ApplicationController
 
   def new
     @payment = Payment.new
-    return if params[:invoice].blank?
-
-    @invoice = Invoice.find_by_no(params[:invoice])
-    raise ActiveRecord::RecordNotFound, "No invoice #{params[:invoice].inspect}" unless @invoice
 
     case request.method
     when :get
       self.count_lines!
-      @payment.customer = @invoice.customer
-      @payment.amount = @invoice.balance
-      @payment.invoices.build(:invoice => @invoice, :amount => @payment.amount)
+      unless params[:invoice].blank? then
+        @invoice = Invoice.find_by_no(params[:invoice])
+        raise ActiveRecord::RecordNotFound, "No invoice #{params[:invoice].inspect}" unless @invoice
+
+        @payment.customer = @invoice.customer
+        @payment.amount = @invoice.balance
+        @payment.invoices.build(:invoice => @invoice, :amount => @payment.amount)
+      end
 
     when :post
       update_and_redirect
@@ -29,7 +30,7 @@ class PaymentsController < ApplicationController
   end
 
   def edit
-    @payment = Payment.find(params[:payment])
+    @payment = Payment.find(params[:payment_id])
     self.count_lines! if request.get?
     update_and_redirect if request.post?
   end
@@ -42,7 +43,7 @@ class PaymentsController < ApplicationController
   end
 
   def delete_line
-    @payment = Payment.find(params[:payment])
+    @payment = Payment.find(params[:payment_id])
     @line = @payment.invoices.find(params[:line])
     @line.destroy
     self.count_lines!
@@ -50,7 +51,7 @@ class PaymentsController < ApplicationController
   end
 
   def transfer
-    @payment = Payment.find(params[:id])
+    @payment = Payment.find(params[:payment_id])
     return unless request.post?
 
     @payment.post!
@@ -76,7 +77,7 @@ class PaymentsController < ApplicationController
 
     if @payment.update_attributes(params[:payment]) then
       flash_notice 'Le total payé ne correspond pas aux montants enregistrés' \
-          unless @payment.can_upload?
+          unless @payment.balanced?
       if params[:commit] =~ /nouveau/i then
         redirect_to payment_new_url
       else
@@ -93,7 +94,6 @@ class PaymentsController < ApplicationController
 
   def parse_dates
     return unless params[:payment]
-    return unless params[:payment].kind_of?(Hash)
     params[:payment][:paid_on] = parse_date(params[:payment][:paid_on])
     params[:payment][:received_on] = parse_date(params[:payment][:received_on])
   end

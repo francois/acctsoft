@@ -3,11 +3,11 @@
 
   <div class="row">
     <%= label :payment, :reference, 'Référence' %>
-    <%= text_field 'payment', 'reference', :size => 16 %>
+    <%= text_field :payment, :reference, :size => 16 %>
   </div>
   <div class="row">
     <%= label :payment, :amount, 'Montant' %>
-    <%= text_field 'payment', 'amount', :value => @payment.amount, :size => 6 %>
+    <%= text_field :payment, :amount, :value => @payment.amount, :size => 6 %>
   </div>
   <div class="row">
     <%= label :payment, :customer, 'Client' %>
@@ -17,7 +17,7 @@
   </div>
   <div class="row">
     <%= label :payment, :received_on, 'Reçu le' %>
-    <%= text_field 'payment', 'received_on', :value => format_date(@payment.received_on), :size => 10 %>
+    <%= text_field :payment, :received_on, :value => format_date(@payment.received_on), :size => 10 %>
   </div>
 </fieldset>
 

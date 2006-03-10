@@ -10,7 +10,7 @@ class InvoicesController < ApplicationController
   end
 
   def edit
-    @inv = Invoice.find_by_no(params[:invoice])
+    @inv = Invoice.find_by_no(params[:invoice_no])
     raise ActiveRecord::RecordNotFound unless @inv
     self.count_lines! if request.get?
     update_and_redirect if request.post?
@@ -24,7 +24,7 @@ class InvoicesController < ApplicationController
   end
 
   def delete_line
-    @inv = Invoice.find_by_no(params[:invoice])
+    @inv = Invoice.find_by_no(params[:invoice_no])
     raise ActiveRecord::RecordNotFound unless @inv
     @line = @inv.lines.find(params[:line])
     @line.destroy
@@ -33,7 +33,7 @@ class InvoicesController < ApplicationController
   end
 
   def transfer
-    @inv = Invoice.find_by_no(params[:invoice])
+    @inv = Invoice.find_by_no(params[:invoice_no])
     raise ActiveRecord::RecordNotFound unless @inv
 
     @lines = Hash.new

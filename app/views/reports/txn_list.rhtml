@@ -23,7 +23,7 @@
 <% @transaction.lines.each_with_index do |line, index| -%>
     <tr>
 <% if 0 == index then -%>
-      <th scope="row" rowspan="<%= @transaction.lines.count %>"><%= link_to(format_date(@transaction.posted_on), transaction_edit_url(:txn => @transaction)) %></th>
+      <th scope="row" rowspan="<%= @transaction.lines.count %>"><%= link_to(format_date(@transaction.posted_on), transaction_edit_url(:txn_id => @transaction)) %></th>
 <% end -%>
       <td><%= line.no %> <%= line.name %></td>
       <td class="money"><%= format_money(line.amount_dt) unless line.amount_dt.zero? %></td>

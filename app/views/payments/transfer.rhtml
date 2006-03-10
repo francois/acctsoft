@@ -3,7 +3,7 @@
   <p>Enregistrer le paiement de <span class="amount"><%= format_money(@payment.amount) %></span> répartit comme suit:</p>
   <ol>
 <% for @invoice in @payment.invoices do -%>
-    <li><span class="amount"><%= format_money(@invoice.amount) %></span> pour la facture <%= link_to @invoice.no, invoice_edit_url(:invoice => @invoice) %></li>
+    <li><span class="amount"><%= format_money(@invoice.amount) %></span> pour la facture <%= link_to @invoice.no, invoice_edit_url(:invoice_no => @invoice) %></li>
 <% end -%>
   </ol>
   <%= submit_tag 'Transférer' %>

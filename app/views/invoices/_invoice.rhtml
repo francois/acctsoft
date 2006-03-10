@@ -1,20 +1,20 @@
 <tr>
-  <td><%= link_to invoice.no, invoice_edit_url(:invoice => invoice) %></td>
+  <td><%= link_to invoice.no, invoice_edit_url(:invoice_no => invoice) %></td>
   <td class="date"><%= format_date(invoice.invoiced_on) %></td>
   <td><%= link_to invoice.customer.name, customer_edit_url(:id => invoice.customer) %></td>
   <td class="money"><%= invoice.total %></td>
   <td class="money">
     <%= invoice.balance %>
 <% unless invoice.balance.zero? then -%>
-    <%= link_to 'Payer', payment_new_url(:invoice => invoice) %>
+    <%= link_to 'Payer', payment_new_url(:invoice_no => invoice) %>
 <% end -%>
   </td>
   <td>
 <% if invoice.txn then -%>
     <%= link_to("#{format_date(invoice.txn.posted_on)} (#{format_date(invoice.posted_at)})",
-            transaction_edit_url(:txn => invoice.txn)) %>
+            transaction_edit_url(:txn_id => invoice.txn)) %>
 <% else -%>
-    <%= link_to 'Créer', invoice_post_url(:invoice => invoice) %>
+    <%= link_to 'Créer', invoice_post_url(:invoice_no => invoice) %>
 <% end -%>
   </td>
 </tr>

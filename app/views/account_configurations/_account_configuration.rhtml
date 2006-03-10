@@ -1,4 +1,4 @@
 <tr>
   <td><%= link_to account_configuration.name, :action => :edit, :id => account_configuration.id %></td>
-  <td><%= link_to("#{account_configuration.account_no} #{account_configuration.account.name rescue nil}", account_edit_url(:account => account_configuration.account_no)) %></td>
+  <td><%= link_to("#{account_configuration.account_no} #{account_configuration.account.name rescue nil}", account_edit_url(:account_no => account_configuration.account_no)) %></td>
 </tr>

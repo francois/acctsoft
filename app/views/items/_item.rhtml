@@ -1,5 +1,5 @@
 <tr>
   <td><%= link_to item.no, :action => :edit, :id => item %></td>
   <td><%= item.description %></td>
-  <td><%= link_to "#{item.charge_account.no} #{item.charge_account.name}", account_edit_url(:account => item.charge_account) %></td>
+  <td><%= link_to "#{item.charge_account.no} #{item.charge_account.name}", account_edit_url(:account_no => item.charge_account) %></td>
 </tr>
