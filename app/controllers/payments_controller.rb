@@ -86,7 +86,7 @@ class PaymentsController < ApplicationController
   end
 
   def count_lines!
-    return @payment.lines.count if @payment.new_record?
+    return @payment.invoices.count if @payment.new_record?
     count = InvoicePayment.connection.select_value("SELECT MAX(id) FROM #{InvoicePayment.table_name} WHERE payment_id = #{@payment.id}")
     @line_count = count.to_i rescue 0
   end
