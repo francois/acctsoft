@@ -46,7 +46,10 @@ class TransactionsController < ApplicationController
       end
     end
 
-    if @transaction.update_attributes(params[:transaction]) then
+    if params[:destroy] then
+      @transaction.destroy
+      redirect_to transactions_url
+    elsif @transaction.update_attributes(params[:transaction]) then
       if params[:commit] =~ /nouveau/i then
         redirect_to transaction_new_url
       else
