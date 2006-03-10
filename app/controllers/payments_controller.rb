@@ -9,9 +9,9 @@ class PaymentsController < ApplicationController
     case request.method
     when :get
       self.count_lines!
-      unless params[:invoice].blank? then
-        @invoice = Invoice.find_by_no(params[:invoice])
-        raise ActiveRecord::RecordNotFound, "No invoice #{params[:invoice].inspect}" unless @invoice
+      unless params[:invoice_no].blank? then
+        @invoice = Invoice.find_by_no(params[:invoice_no])
+        raise ActiveRecord::RecordNotFound, "No invoice #{params[:invoice_no].inspect}" unless @invoice
 
         @payment.customer = @invoice.customer
         @payment.amount = @invoice.balance

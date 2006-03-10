@@ -24,7 +24,7 @@ ActionController::Routing::Routes.draw do |map|
   map.delete_payment_line '/paiements/:payment_id/delete/:line', :controller => 'payments', :action => 'delete_line', :payment_id => NumericRegexp, :line => NumericRegexp
   map.payment_post '/paiements/transfert/:payment_id', :controller => 'payments', :action => 'transfer', :payment_id => NumericRegexp
   map.payment_edit '/paiements/:payment_id', :controller => 'payments', :action => 'edit', :payment_id => NumericRegexp
-  map.payment_new '/paiements/nouveau/:invoice', :controller => 'payments', :action => 'new', :invoice => nil, :requirements => {:invoice => NumericRegexp}
+  map.payment_new '/paiements/nouveau/:invoice_no', :controller => 'payments', :action => 'new', :invoice_no => nil, :requirements => {:invoice => NumericRegexp}
   map.payments '/paiements', :controller => 'payments', :action => 'index'
 
   map.items '/items/:action/:id', :controller => 'items'
