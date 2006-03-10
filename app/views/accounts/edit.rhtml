@@ -3,4 +3,4 @@
   <%= render :partial => 'form' %>
 <%= end_form_tag %>
 
-<%= render_component(:action => 'txn_list', :params => {:account => @account.no, :force => true}) %>
+<%= render_component(:action => 'txn_list', :params => {:account_no => @account.no, :force => true}) %>

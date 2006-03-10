@@ -8,6 +8,6 @@
 <% for @account in @accounts do -%>
 <div class="section">
   <%= render_component(:controller => 'accounts', :action => 'txn_list',
-      :params => {:account => @account.no, :cutoff_date => @cutoff_date}) %>
+      :params => {:account_no => @account.no, :cutoff_date => @cutoff_date}) %>
 </div>
 <% end -%>
