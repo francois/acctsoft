@@ -72,9 +72,9 @@ class InvoicesController < ApplicationController
 
     if @inv.update_attributes(params[:inv]) then
       if params[:commit] =~ /nouveau/i then
-        redirect_to :action => :new
+        redirect_to invoice_new_url
       else
-        redirect_to :action => :index
+        redirect_to invoices_url
       end
     end
   end

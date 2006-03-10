@@ -78,9 +78,9 @@ class PaymentsController < ApplicationController
       flash_notice 'Le total payé ne correspond pas aux montants enregistrés' \
           unless @payment.can_upload?
       if params[:commit] =~ /nouveau/i then
-        redirect_to :action => :new
+        redirect_to payment_new_url
       else
-        redirect_to :action => :index
+        redirect_to payments_url
       end
     end
   end

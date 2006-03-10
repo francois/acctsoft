@@ -48,9 +48,9 @@ class TransactionsController < ApplicationController
 
     if @transaction.update_attributes(params[:transaction]) then
       if params[:commit] =~ /nouveau/i then
-        redirect_to :action => :new
+        redirect_to transaction_new_url
       else
-        redirect_to :action => :index
+        redirect_to transactions_url
       end
     end
   end
