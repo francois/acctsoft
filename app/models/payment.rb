@@ -21,8 +21,12 @@ class Payment < ActiveRecord::Base
     self.invoices.inject(0.to_money) {|sum, invoice| sum + invoice.amount}
   end
 
+  def balanced?
+    self.total_paid == self.amount
+  end
+
   def can_upload?
-    self.total_paid == self.amount && !self.txn
+    self.balanced? && !self.txn
   end
 
   def post!(now=Time.now)
