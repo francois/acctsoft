@@ -29,7 +29,7 @@ class PaymentsController < ApplicationController
   end
 
   def edit
-    @payment = Payment.find(params[:id])
+    @payment = Payment.find(params[:payment])
     self.count_lines! if request.get?
     update_and_redirect if request.post?
   end
