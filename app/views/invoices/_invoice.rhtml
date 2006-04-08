@@ -1,6 +1,9 @@
 <tr>
   <td><%= link_to invoice.no, invoice_edit_url(:invoice_no => invoice) %></td>
   <td class="date"><%= format_date(invoice.invoiced_on) %></td>
+  <td class="number">
+    <%= time_ago_in_words(invoice.invoiced_on) unless invoice.balance.zero? %>
+  </td>
   <td><%= link_to invoice.customer.name, customer_edit_url(:id => invoice.customer) %></td>
   <td class="money"><%= invoice.total %></td>
   <td class="money">
@@ -11,10 +14,17 @@
   </td>
   <td>
 <% if invoice.txn then -%>
-    <%= link_to("#{format_date(invoice.txn.posted_on)} (#{format_date(invoice.posted_at)})",
-            transaction_edit_url(:txn_id => invoice.txn)) %>
+    <%=
+    if invoice.txn.posted_on.to_date == invoice.posted_at.to_date then
+      link_text = format_date(invoice.txn.posted_on)
+    else
+      link_text = "#{format_date(invoice.txn.posted_on)} (#{format_date(invoice.posted_at)})"
+    end
+
+    link_to(link_text, transaction_edit_url(:txn_id => invoice.txn)) %>
 <% else -%>
     <%= link_to 'Créer', invoice_post_url(:invoice_no => invoice) %>
 <% end -%>
   </td>
+  <td class="number"><%= (invoice.payments.first.received_on.to_date - invoice.invoiced_on.to_date) unless invoice.payments.empty? %></td>
 </tr>

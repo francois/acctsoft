@@ -1,7 +1,7 @@
 class Invoice < ActiveRecord::Base
   belongs_to :customer
   belongs_to :txn
-  has_many :payments, :class_name => 'InvoicePayment'
+  has_many :payments, :class_name => 'InvoicePayment', :order => 'payments.received_on DESC', :include => :payment
   has_many :lines, :class_name => 'InvoiceItem', :dependent => :destroy
   validates_presence_of :no, :customer_id, :invoiced_on
   validates_numericality_of :no
