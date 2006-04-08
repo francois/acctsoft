@@ -6,7 +6,7 @@
 <% if payment.can_upload? then -%>
     <%= link_to('Transfert', payment_post_url(:payment_id => payment)) %>
 <% elsif payment.txn then -%>
-    <%= link_to("#{format_date(payment.txn.posted_on)} (#{format_date(payment.posted_at)})", transaction_edit_url(:txn_id => payment.txn)) %>
+    <%= link_to(format_date(payment.txn.posted_on), transaction_edit_url(:txn_id => payment.txn)) %>
 <% end -%>
   </td>
 </tr>

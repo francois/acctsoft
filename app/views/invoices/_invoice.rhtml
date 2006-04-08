@@ -14,14 +14,7 @@
   </td>
   <td>
 <% if invoice.txn then -%>
-    <%=
-    if invoice.txn.posted_on.to_date == invoice.posted_at.to_date then
-      link_text = format_date(invoice.txn.posted_on)
-    else
-      link_text = "#{format_date(invoice.txn.posted_on)} (#{format_date(invoice.posted_at)})"
-    end
-
-    link_to(link_text, transaction_edit_url(:txn_id => invoice.txn)) %>
+    <%= link_to(format_date(invoice.txn.posted_on), transaction_edit_url(:txn_id => invoice.txn)) %>
 <% else -%>
     <%= link_to 'Créer', invoice_post_url(:invoice_no => invoice) %>
 <% end -%>

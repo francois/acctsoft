@@ -14,6 +14,16 @@
     <%= label :inv, :invoiced_on, 'Date de facturation' %>
     <%= text_field :inv, :invoiced_on, :size => 10, :value => format_date(@inv.invoiced_on) %>
   </div>
+<% unless @inv.new_record? -%>
+  <div class="row">
+    <label>Transaction:</label>
+<% if @inv.txn then -%>
+    <%= link_to @inv.txn.posted_on, transaction_edit_url(:txn_id => @inv.txn) %>
+<% else -%>
+    <%= link_to 'Créer', invoice_post_url(:invoice_no => @inv) %>
+<% end -%>
+  </div>
+<% end -%>
 </fieldset>
 
 <fieldset id="lines">

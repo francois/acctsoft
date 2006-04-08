@@ -19,6 +19,16 @@
     <%= label :payment, :received_on, 'Reçu le' %>
     <%= text_field :payment, :received_on, :value => format_date(@payment.received_on), :size => 10 %>
   </div>
+<% unless @payment.new_record? -%>
+  <div class="row">
+    <label>Transaction:</label>
+<% if @payment.txn then -%>
+    <%= link_to format_date(@payment.txn.posted_on), transaction_edit_url(:txn_id => @payment.txn) %>
+<% else -%>
+    <%= link_to('Transfert', payment_post_url(:payment_id => @payment)) %>
+<% end -%>
+  </div>
+<% end -%>
 </fieldset>
 
 <fieldset id="payments">
