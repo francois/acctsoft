@@ -36,7 +36,8 @@ class Account < ActiveRecord::Base
   end
 
   def transactions_on_or_before(cutoff_date)
-    self.txn_parts.find(:all, :conditions => ['txns.posted_on <= ?', cutoff_date || Date.today])
+    conditions = ['txns.posted_on <= ?', cutoff_date] if cutoff_date
+    self.txn_parts.find(:all, :conditions => conditions)
   end
 
   def to_param
