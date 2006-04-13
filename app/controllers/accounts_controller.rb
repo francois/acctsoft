@@ -42,7 +42,9 @@ class AccountsController < ApplicationController
 
     @total = Money.empty
     @calculator =   case
-                    when AccountType.actifs.include?(@account.account_type), AccountType.produits.include?(@account.account_type)
+                    when  AccountType.actifs.include?(@account.account_type),
+                          AccountType.charges.include?(@account.account_type), 
+                          AccountType.avoirs.include?(@account.account_type)
                       Proc.new {|total, line| total + line.amount_dt - line.amount_ct }
                     else
                       Proc.new {|total, line| total + line.amount_ct - line.amount_dt }
