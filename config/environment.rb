@@ -54,4 +54,5 @@ end
 # Include your application configuration below
 require 'money' # To load core extensions
 require 'money_extensions' # To load core extensions
+require 'redcloth'
 Money.default_currency = 'CAD'
