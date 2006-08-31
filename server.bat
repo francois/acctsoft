@@ -1,1 +1,1 @@
-ruby script\server -e production -p 4023
+start mongrel_rails start -e production -p 4023
