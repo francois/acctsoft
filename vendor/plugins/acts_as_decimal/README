@@ -1,0 +1,21 @@
+= acts_as_decimal
+
+This plugin allows storage of float values as integers in the database.
+
+== Resources
+
+Install
+
+* gem install acts_as_decimal
+
+Rubyforge project
+
+* http://rubyforge.org/projects/acts-as-decimal
+
+RDocs
+
+* http://acts-as-decimal.rubyforge.org
+
+Subversion
+
+* http://oss.teksol.info/repos/acts_as_decimal/
