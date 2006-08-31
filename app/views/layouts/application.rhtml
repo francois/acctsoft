@@ -28,8 +28,8 @@
 <% unless @title.blank? -%>
     <h1><%= @title %></h1>
 <% end -%>
-    <%= show_flash_messages :textilize => true %>
-    <%= javascript_tag visual_effect(:shake, 'messages') %>
+    <%= msgs = show_flash_messages :textilize => true %>
+    <%= javascript_tag visual_effect(:shake, 'messages') if msgs %>
     <%= @content_for_layout %>
   </div>
   <div id="footer">
