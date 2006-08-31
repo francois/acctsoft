@@ -33,7 +33,8 @@ form input[type=submit] { font-weight: bold; }
 .list .money,
 .list .number,
 .list .date { text-align: right; }
-.list .description { margin: 0; }
+.list .description p { margin: 0; }
+.list .description table { margin: 1em 0; }
 .list thead tr th, .list thead tr td,
 .list tbody tr th, .list tbody tr td { border-bottom: 1px solid #c9cfff; padding: .0625em .25em .125em 0; }
 .list thead tr th, .list thead tr td { border-bottom-width: 2px; }
