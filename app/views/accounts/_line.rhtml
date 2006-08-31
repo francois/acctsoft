@@ -4,5 +4,5 @@
   <td class="description"><%= line.txn.description_html %>
   <td class="money"><%= format_money(line.amount_dt) unless line.amount_dt.zero? %></td>
   <td class="money"><%= format_money(line.amount_ct) unless line.amount_ct.zero? %></td>
-  <td class="money"><%= format_money @total %></td>
+  <td class="money"><%= format_money(@total) %></td>
 </tr>

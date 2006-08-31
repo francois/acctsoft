@@ -1,4 +1,8 @@
 <% if @force || !@txns.empty? then -%>
+<%
+  dt_volume = @account.total_dt_volume
+  ct_volume = @account.total_ct_volume         
+-%>
 <table class="list">
   <caption>
     <%= link_to @account.no, account_edit_url(:account_no => @account) %>&nbsp;
@@ -17,14 +21,14 @@
   <tfoot>
     <tr>
       <th scope="row" colspan="2">Volume</th>
-      <td class="money total"><%= @account.total_dt_volume %></td>
-      <td class="money total"><%= @account.total_ct_volume %></td>
+      <td class="money total"><%= dt_volume %></td>
+      <td class="money total"><%= ct_volume %></td>
       <td>&nbsp;</td>
     </tr>
     <tr>
       <th scope="row" colspan="2">Solde</th>
-      <td class="money total"><%= @account.total_dt_volume - @account.total_ct_volume if @account.total_dt_volume > @account.total_ct_volume %></td>
-      <td class="money total"><%= @account.total_ct_volume - @account.total_dt_volume if @account.total_ct_volume > @account.total_dt_volume %></td>
+      <td class="money total"><%= format_money(dt_volume - ct_volume) if dt_volume > ct_volume %></td>
+      <td class="money total"><%= format_money(ct_volume - dt_volume) if ct_volume > dt_volume %></td>
       <td>&nbsp;</td>
     </tr>
   </tfoot>
@@ -33,5 +37,5 @@
   </tbody>
 </table>
 <% else -%>
-<!-- Skipped <%= @account.no %> <%= @account.name %> because no transactions -->        
+<!-- Skipped <%= @account.no %> <%= @account.name %> because no transactions -->
 <% end -%>
