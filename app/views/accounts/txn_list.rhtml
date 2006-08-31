@@ -1,7 +1,7 @@
 <% if @force || !@txns.empty? then -%>
 <%
   dt_volume = @account.total_dt_volume
-  ct_volume = @account.total_ct_volume         
+  ct_volume = @account.total_ct_volume
 -%>
 <table class="list">
   <caption>
@@ -21,8 +21,8 @@
   <tfoot>
     <tr>
       <th scope="row" colspan="2">Volume</th>
-      <td class="money total"><%= dt_volume %></td>
-      <td class="money total"><%= ct_volume %></td>
+      <td class="money total"><%= format_money dt_volume %></td>
+      <td class="money total"><%= format_money ct_volume %></td>
       <td>&nbsp;</td>
     </tr>
     <tr>
