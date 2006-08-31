@@ -1,6 +1,11 @@
-<% unless skip_empty and (account.total_dt_volume(@cutoff_date) - account.total_ct_volume(@cutoff_date)).zero? then -%>
+<%
+  unless skip_empty and (account.total_dt_volume(@cutoff_date) - account.total_ct_volume(@cutoff_date)).zero? then
+
+  dt_volume = account.total_dt_volume(@cutoff_date)
+  ct_volume = account.total_ct_volume(@cutoff_date)
+-%>
 <span class="account">
   <span class="title"><%= link_to(account.name, account_edit_url(:account_no => account.no)) %></span>
-  <span class="amount"><%= format_money(account.normally_debitor? ? (account.total_dt_volume(@cutoff_date) - account.total_ct_volume(@cutoff_date)) : (account.total_ct_volume(@cutoff_date) - account.total_dt_volume(@cutoff_date))) %></span>
+  <span class="amount"><%= format_money(account.normally_debitor? ? (dt_volume - ct_volume) : (ct_volume - dt_volume)) %></span>
 </span>
 <% end -%>

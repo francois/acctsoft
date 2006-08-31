@@ -22,8 +22,8 @@ class ReportsController < ApplicationController
   end
 
   def etat_resultats
-    @product_accounts = Account.find(:all, :conditions => ['type_id IN (?)', AccountType.produits.map {|at| at.id}], :order => 'no')
-    @charge_accounts  = Account.find(:all, :conditions => ['type_id IN (?)', AccountType.charges.map {|at| at.id}], :order => 'no')
+    @product_accounts = Account.find(:all, :conditions => ['type_id IN (?)', AccountType.produits.map(&:id)], :order => 'no')
+    @charge_accounts  = Account.find(:all, :conditions => ['type_id IN (?)', AccountType.charges.map(&:id)], :order => 'no')
 
     @total_products_amount = @product_accounts.inject(Money.empty) {|sum, accnt| sum + accnt.total_ct_volume(@cutoff_date) - accnt.total_dt_volume(@cutoff_date) }
     @total_charges_amount = @charge_accounts.inject(Money.empty) {|sum, accnt| sum + accnt.total_dt_volume(@cutoff_date) - accnt.total_ct_volume(@cutoff_date) }
