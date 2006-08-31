@@ -5,8 +5,7 @@
 -%>
 <table class="list">
   <caption>
-    <%= link_to @account.no, account_edit_url(:account_no => @account) %>&nbsp;
-    <%= link_to @account.name, account_edit_url(:account_no => @account) %>
+    <%= link_to(h("#{@account.no} #{@account.name}"), account_edit_url(:account_no => @account)) %>
   </caption>
   <col width="*1"/><col width="*4"/><col span="3" width="*1"/>
   <thead>
@@ -21,8 +20,8 @@
   <tfoot>
     <tr>
       <th scope="row" colspan="2">Volume</th>
-      <td class="money total"><%= format_money dt_volume %></td>
-      <td class="money total"><%= format_money ct_volume %></td>
+      <td class="money total"><%= format_money(dt_volume) %></td>
+      <td class="money total"><%= format_money(ct_volume) %></td>
       <td>&nbsp;</td>
     </tr>
     <tr>
