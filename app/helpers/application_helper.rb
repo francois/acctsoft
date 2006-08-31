@@ -30,11 +30,7 @@ module ApplicationHelper
 
   def format_money(amount, blank='', zero=:format)
     return blank if amount.blank?
-    case amount
-    when Money
-      amount.format(:zero => zero, :html => true)
-    else
-      number_to_currency(amount)
-    end
+    cents = amount.respond_to?(:cents) ? amount.cents : amount
+    number_to_currency(amount.cents / 100.0, :unit => '', :separator => ',', :delimiter => '&nbsp;')
   end
 end
