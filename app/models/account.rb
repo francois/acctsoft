@@ -35,6 +35,12 @@ class Account < ActiveRecord::Base
     (AccountType.passifs + AccountType.avoirs + AccountType.produits).flatten.include?(self.account_type)
   end
 
+  def transactions_between(start_on, end_on)
+    self.txn_parts.find(:all,
+        :conditions => ['txns.posted_on BETWEEN :start_on AND :end_on',
+            {:start_on => start_on, :end_on => end_on}])
+  end
+
   def transactions_on_or_before(cutoff_date)
     conditions = ['txns.posted_on <= ?', cutoff_date] if cutoff_date
     self.txn_parts.find(:all, :conditions => conditions)

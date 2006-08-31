@@ -6,7 +6,7 @@ class ReportsController < ApplicationController
   end
 
   def txn_list
-    @transactions = Txn.find(:all, :conditions => ['posted_on <= ?', @cutoff_date],
+    @transactions = Txn.find(:all, :conditions => ['posted_on BETWEEN ? AND ?', @filter_date, @cutoff_date],
         :order => 'posted_on, updated_at')
   end
 
@@ -75,6 +75,12 @@ class ReportsController < ApplicationController
           session[:cutoff_date] || Date.today
         else
           parse_date(params[:cutoff_date])
+        end
+    session[:filter_date] = @filter_date =
+        if params[:filter_date].blank? then
+          session[:filter_date] || Time.now.at_beginning_of_year.to_date
+        else
+          parse_date(params[:filter_date])
         end
   end
 end

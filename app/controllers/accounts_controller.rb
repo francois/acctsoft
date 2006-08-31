@@ -37,13 +37,13 @@ class AccountsController < ApplicationController
   def txn_list
     @account = Account.find_by_no(params[:account_no])
     raise "Account not found by number: #{params[:account_no].inspect}" unless @account
-    @txns = @account.transactions_on_or_before(parse_date(params[:cutoff_date]))
+    @txns = @account.transactions_between(parse_date(params[:filter_date]), parse_date(params[:cutoff_date]))
     @force = params[:force]
 
     @total = Money.empty
     @calculator =   case
                     when  AccountType.actifs.include?(@account.account_type),
-                          AccountType.charges.include?(@account.account_type), 
+                          AccountType.charges.include?(@account.account_type),
                           AccountType.avoirs.include?(@account.account_type)
                       Proc.new {|total, line| total + line.amount_dt - line.amount_ct }
                     else
