@@ -1,0 +1,67 @@
+<%= start_form_tag %>
+<fieldset id="reconciliation-form">
+  <%= error_messages_for 'reconciliation' %>
+  <div class="row">
+    <%= label :reconciliation, :account_no, 'No compte' %>
+    <%= text_field_with_auto_complete(:reconciliation, :account_no, {:size => 10},
+        {:url => account_lookup_url, :with => %q('account=' + $F(element)), :skip_style => true, :select => 'no'}) %>
+  </div>
+  <div class="row">
+    <%= label :reconciliation, :statement_on, 'Date du relevé' %>
+    <%= text_field :reconciliation, :statement_on, :size => 10,
+        :value => format_date(@reconciliation.statement_on) %>
+  </div>
+  <div class="row">
+    <%= label :reconciliation, :description %>
+    <%= text_field :reconciliation, :description, :size => 50 %>
+  </div>
+</fieldset>
+<div class="actions">
+<% if @reconciliation.new_record? then -%>
+  <%= submit_tag 'Enregistrer & Nouveau' %>
+<% end -%>
+  <%= submit_tag 'Enregistrer' %>
+<% unless @reconciliation.new_record? then -%>
+  <%= submit_tag 'Détruire', :name => 'destroy' %>
+<% end -%>
+  <%= link_to 'Abandonner', :action => :index %>
+</div>
+
+<fieldset id="reconciled_txn_accounts">
+  <table class="list" cellspacing="0" cellpadding="0" width="100%">
+    <caption>Effets réconciliés</caption>
+    <thead>
+      <tr>
+        <th>Action</th>
+        <th class="date">Date</th>
+        <th class="money">Montant</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody id="reconciled_txn_accounts_list">
+<%= render :partial => 'txn_account',
+      :collection => @reconciliation.txn_accounts,
+      :locals => {:state => :unconcile} %>
+    </tbody>
+  </table>
+</fieldset>
+
+<fieldset id="non_reconciled_txn_accounts">
+  <table class="list" cellspacing="0" cellpadding="0" width="100%">
+    <caption>Effets en circulation</caption>
+    <thead>
+      <tr>
+        <th>Action</th>
+        <th class="date">Date</th>
+        <th class="money">Montant</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody id="non_reconciled_txn_accounts_list">
+<%= render :partial => 'txn_account',
+      :collection => @reconciliation.find_potential_transactions,
+      :locals => {:state => :reconcile} %>
+    </tbody>
+  </table>
+</fieldset>
+<%= end_form_tag %>

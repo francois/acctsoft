@@ -33,4 +33,24 @@ module ApplicationHelper
     cents = amount.respond_to?(:cents) ? amount.cents : amount
     number_to_currency(amount.cents / 100.0, :unit => '', :separator => ',', :delimiter => '&nbsp;')
   end
+
+  def link_to_account(account, options={})
+    options = {:text => :full}.merge(options)
+    text =  case options[:text]
+            when :full
+              "#{account.no} #{h(account.name)}"
+            when :no
+              account.no
+            when :name
+              h(account.name)
+            else
+              raise ArgumentError, "Unknown :text option: #{options[:text].inspect}"
+            end
+
+    link_to(text, account_edit_url(:account_no => account))
+  end
+
+  def link_to_txn(transaction)
+    link_to(format_date(transaction.posted_on), transaction_edit_url(:txn_id => transaction))
+  end
 end

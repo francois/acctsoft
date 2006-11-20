@@ -15,6 +15,15 @@ ActionController::Routing::Routes.draw do |map|
   map.customer_edit '/clients/edit/:id', :controller => 'customers', :action => 'edit'
   map.customers '/clients/:action/:id', :controller => 'customers'
 
+  map.with_options(:controller => 'reconciliations') do |m|
+    m.reconciliations '/reconciliations', :action => 'index'
+    m.reconciliation_new '/reconciliations/new', :action => 'edit'
+    m.reconciliation_edit '/reconciliations/:id', :action => 'edit'
+
+    m.reconcile '/reconciliations/:reconciliation_id/reconcile/:id', :action => 'reconcile'
+    m.unconcile '/reconciliations/:reconciliation_id/unconcile/:id', :action => 'unconcile'
+  end
+
   map.delete_invoice_line '/factures/:invoice_no/delete/:line', :controller => 'invoices', :action => 'delete_line', :invoice_no => NumericRegexp, :line => NumericRegexp
   map.invoice_post '/factures/transfert/:invoice_no', :controller => 'invoices', :action => 'transfer', :invoice_no => NumericRegexp
   map.invoice_edit '/factures/:invoice_no', :controller => 'invoices', :action => 'edit', :invoice_no => NumericRegexp

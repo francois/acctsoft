@@ -1,0 +1,6 @@
+<tr>
+  <td class="date"><%= link_to(format_date(reconciliation.reconciled_at), reconciliation_edit_url(:id => reconciliation.id)) %></td>
+  <td><%= link_to_account(reconciliation.account) %></td>
+  <td class="money"><%= format_money(reconciliation.amount) %></td>
+  <td><%= h(reconciliation.description) %></td>
+</tr>

@@ -3,6 +3,7 @@ class TxnAccount < ActiveRecord::Base
 
   belongs_to :txn
   belongs_to :account
+  belongs_to :reconciliation
   validates_presence_of :account_id
 
   composed_of :amount_dt, :class_name => 'Money',
@@ -39,6 +40,16 @@ class TxnAccount < ActiveRecord::Base
 
   def credit
     self.amount_ct
+  end
+
+  def reconcile!(reconciliation)
+    self.reconciliation = reconciliation
+    self.save!
+  end
+
+  def unconcile!
+    self.reconciliation = nil
+    self.save!
   end
 
   protected

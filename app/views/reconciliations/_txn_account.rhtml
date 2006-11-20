@@ -1,0 +1,9 @@
+<tr id="txn_account_<%= txn_account.id %>">
+  <td><%=
+    link_to_remote(state.to_s.capitalize, :url => send("#{state}_url", {:reconciliation_id => @reconciliation.id, :id => txn_account.id}),
+    :loading => visual_effect(:fade, "txn_account_#{txn_account.id}"))
+    %></td>
+  <td class="date"><%= link_to_txn(txn_account.txn) %></td>
+  <td class="money"><%= format_money(txn_account.amount_dt.zero? ? txn_account.amount_ct : txn_account.amount_dt) %></td>
+  <td><%= h(txn_account.txn.description) %></td>
+</tr>

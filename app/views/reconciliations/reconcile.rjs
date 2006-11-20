@@ -1,0 +1,3 @@
+page.remove "txn_account_#{@txn_account.id}"
+page.insert_html :bottom, 'reconciled_txn_accounts_list', :partial => 'txn_account',
+      :object => @txn_account, :locals => {:state => :unconcile}
