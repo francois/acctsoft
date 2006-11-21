@@ -1,1 +1,1 @@
-start mongrel_rails start -e production -p 4023
+start /min mongrel_rails start -e production -p 4023
