@@ -4,6 +4,7 @@
     :loading => visual_effect(:fade, "txn_account_#{txn_account.id}"))
     %></td>
   <td class="date"><%= link_to_txn(txn_account.txn) %></td>
-  <td class="money"><%= format_money(txn_account.amount_dt.zero? ? txn_account.amount_ct : txn_account.amount_dt) %></td>
+  <td class="money"><%= format_money(txn_account.amount_ct) %></td>
+  <td class="money"><%= format_money(txn_account.amount_dt) %></td>
   <td><%= h(txn_account.txn.description) %></td>
 </tr>

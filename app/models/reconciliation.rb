@@ -18,7 +18,11 @@ class Reconciliation < ActiveRecord::Base
     self.account.txn_parts.find(:all, :order => 'txn_accounts.id', :conditions => ['reconciliation_id IS NULL'])
   end
 
-  def amount
+  def amount_dt
     self.txn_accounts.sum(:amount_dt_cents).to_money / 100.0
+  end
+
+  def amount_ct
+    self.txn_accounts.sum(:amount_ct_cents).to_money / 100.0
   end
 end

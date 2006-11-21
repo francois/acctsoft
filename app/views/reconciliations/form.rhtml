@@ -17,9 +17,6 @@
   </div>
 </fieldset>
 <div class="actions">
-<% if @reconciliation.new_record? then -%>
-  <%= submit_tag 'Enregistrer & Nouveau' %>
-<% end -%>
   <%= submit_tag 'Enregistrer' %>
 <% unless @reconciliation.new_record? then -%>
   <%= submit_tag 'Détruire', :name => 'destroy' %>
@@ -34,10 +31,16 @@
       <tr>
         <th>Action</th>
         <th class="date">Date</th>
-        <th class="money">Montant</th>
+        <th class="money">Crédit</th>
+        <th class="money">Débit</th>
         <th>Description</th>
       </tr>
     </thead>
+    <tfoot>
+      <th scope="row" colspan="2">Totaux:</th>
+      <td class="money"><%= format_money(@reconciliation.txn_accounts.map(&:amount_ct).compact.inject {|memo, value| memo + value}) %></td>
+      <td class="money"><%= format_money(@reconciliation.txn_accounts.map(&:amount_dt).compact.inject {|memo, value| memo + value}) %></td>
+    </tfoot>
     <tbody id="reconciled_txn_accounts_list">
 <%= render :partial => 'txn_account',
       :collection => @reconciliation.txn_accounts,
@@ -53,7 +56,8 @@
       <tr>
         <th>Action</th>
         <th class="date">Date</th>
-        <th class="money">Montant</th>
+        <th class="money">Crédit</th>
+        <th class="money">Débit</th>
         <th>Description</th>
       </tr>
     </thead>

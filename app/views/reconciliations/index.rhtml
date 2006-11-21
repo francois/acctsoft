@@ -1,6 +1,6 @@
 <% @title = 'Réconciliations' -%>
 <div class="filters">
-  <%= link_to 'Nouvelle réconciliations', reconciliation_new_url %>
+  <%= link_to 'Nouvelle conciliation', reconciliation_new_url %>
 </div>
 <div class="pager">
   <%= link_to('&lt;&lt;', :page => @reconciliation_pages.current.previous) if @reconciliation_pages.current.previous %>
@@ -8,13 +8,13 @@
   <%= link_to('&gt;&gt;', :page => @reconciliation_pages.current.next) if @reconciliation_pages.current.next %>
 </div>
 <table class="list" cellspacing="0" cellpadding="0">
-  <caption>Liste des réconciliations</caption>
-  <col width="*1"/><col/><col width="*1"/><col width="*2"/>
+  <caption>Liste des conciliations</caption>
   <thead id="list-head">
     <tr>
       <th class="date">Date</th>
       <th>Compte</th>
-      <th class="amount">Montant</th>
+      <th class="amount">Crédits</th>
+      <th class="amount">Débits</th>
       <th>Notes</th>
     </tr>
   </thead>
