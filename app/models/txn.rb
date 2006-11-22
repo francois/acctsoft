@@ -27,6 +27,13 @@ class Txn < ActiveRecord::Base
 
   alias_method :volume, :volume_dt
 
+  def self.check_all
+    self.find(:all).each do |txn|
+      next if txn.valid?
+      puts "#{txn.id}: #{txn.errors.full_messages.join(', ')}"
+    end
+  end
+
   protected
   def format_description_html
     self.description_html = RedCloth.new(self.description).to_html

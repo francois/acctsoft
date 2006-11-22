@@ -32,30 +32,31 @@ class TransactionsController < ApplicationController
 
   protected
   def update_and_redirect
+    if params[:destroy] then
+      @transaction.destroy
+      return redirect_to(transactions_url)
+    end
+
     self.parse_dates
-    if params[:line] then
-      params[:line].each do |id, values|
-        @line = @transaction.lines.find(id) rescue @transaction.lines.build
-        if @line.new_record? then
-          @line.attributes = values
-        else
-          unless @line.update_attributes(values) then
-            flash_failure :now, "Compte #{values[:no]}: #{@line.errors.full_messages.join(', ')}"
-          end
-        end
+    Txn.transaction do
+      @transaction.attributes = params[:transaction]
+      @transaction.save!
+
+      (params[:line] || []).each do |id, values|
+        @line = @transaction.lines.find_by_id(id) || @transaction.lines.build
+        @line.attributes = values
+        @line.save!
       end
     end
 
-    if params[:destroy] then
-      @transaction.destroy
+    if params[:commit] =~ /nouveau/i then
+      redirect_to transaction_new_url
+    else
       redirect_to transactions_url
-    elsif @transaction.update_attributes(params[:transaction]) then
-      if params[:commit] =~ /nouveau/i then
-        redirect_to transaction_new_url
-      else
-        redirect_to transactions_url
-      end
     end
+
+    rescue ActiveRecord::RecordInvalid
+      # NOP
   end
 
   def count_lines!

@@ -1,5 +1,6 @@
 <fieldset id="transaction">
   <%= error_messages_for :transaction %>
+
   <div class="row">
     <%= label :transaction, :posted_on, 'Date effective' %>
     <%= text_field :transaction, :posted_on, :size => 10, :value => format_date(@transaction.posted_on) %>
