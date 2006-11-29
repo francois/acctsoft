@@ -1,7 +1,7 @@
 development:
   adapter: mysql
   database: acctsoft_development
-  username: acctsoft
+  username: acctsoftdev
   password:
   host: localhost
   port: 3306
@@ -9,7 +9,7 @@ development:
 test:
   adapter: mysql
   database: acctsoft_test
-  username: acctsoft
+  username: acctsoftdev
   password:
   host: localhost
   port: 3306
