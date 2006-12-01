@@ -6,20 +6,46 @@ begin
 rescue LoadError
 end
 
-# Must set before requiring generator libs.
-RAILS_ROOT = File.dirname(__FILE__)
+# Mock out what we need from AR::Base.
+module ActiveRecord
+  class Base
+    class << self
+      attr_accessor :pluralize_table_names
+    end
+    self.pluralize_table_names = true
+  end
+end
 
-# Preemptively load the rest of Rails so Gems don't hijack our requires.
-require File.dirname(__FILE__) + '/../../activerecord/lib/active_record'
-require File.dirname(__FILE__) + '/../../actionpack/lib/action_controller'
-require File.dirname(__FILE__) + '/../lib/rails_generator'
+# And what we need from ActionView
+module ActionView
+  module Helpers
+    module ActiveRecordHelper; end
+    class InstanceTag; end
+  end
+end
+
+
+# Must set before requiring generator libs.
+if defined?(RAILS_ROOT)
+  RAILS_ROOT.replace "#{File.dirname(__FILE__)}/fixtures"
+else
+  RAILS_ROOT = "#{File.dirname(__FILE__)}/fixtures"
+end
+
+$LOAD_PATH.unshift "#{File.dirname(__FILE__)}/../lib"
+require 'rails_generator'
+
 
 class RailsGeneratorTest < Test::Unit::TestCase
   BUILTINS = %w(controller mailer model scaffold)
   CAPITALIZED_BUILTINS = BUILTINS.map { |b| b.capitalize }
 
+  def setup
+    ActiveRecord::Base.pluralize_table_names = true
+  end
+
   def test_sources
-    expected = [:app, :user, :RubyGems, :builtin]
+    expected = [:lib, :vendor, :plugins, :user, :RubyGems, :builtin]
     expected.delete(:gem) unless Object.const_defined?(:Gem)
     assert_equal expected, Rails::Generator::Base.sources.map { |s| s.label }
   end
@@ -69,12 +95,11 @@ class RailsGeneratorTest < Test::Unit::TestCase
     spec = Rails::Generator::Base.lookup('working')
     assert_equal 'working', spec.name
     assert_equal "#{RAILS_ROOT}/lib/generators/working", spec.path
-    assert_equal :app, spec.source
-    assert_nothing_raised { assert_match /WorkingGenerator$/, spec.klass.name }
+    assert_equal :lib, spec.source
+    assert_nothing_raised { assert_match(/WorkingGenerator$/, spec.klass.name) }
   end
 
   def test_named_generator_attributes
-    ActiveRecord::Base.pluralize_table_names = true
     g = Rails::Generator::Base.instance('working', %w(admin/foo bar baz))
     assert_equal 'admin/foo', g.name
     assert_equal %w(admin), g.class_path
@@ -83,23 +108,30 @@ class RailsGeneratorTest < Test::Unit::TestCase
     assert_equal 'foo', g.singular_name
     assert_equal 'foos', g.plural_name
     assert_equal g.singular_name, g.file_name
-    assert_equal g.plural_name, g.table_name
+    assert_equal "admin_#{g.plural_name}", g.table_name
     assert_equal %w(bar baz), g.args
   end
 
   def test_named_generator_attributes_without_pluralized
     ActiveRecord::Base.pluralize_table_names = false
     g = Rails::Generator::Base.instance('working', %w(admin/foo bar baz))
-    assert_equal g.singular_name, g.table_name
+    assert_equal "admin_#{g.singular_name}", g.table_name
   end
-  
+
+  def test_session_migration_generator_with_pluralization
+    g = Rails::Generator::Base.instance('session_migration')
+    assert_equal 'session'.pluralize, g.send(:default_session_table_name)
+    ActiveRecord::Base.pluralize_table_names = false
+    assert_equal 'session', g.send(:default_session_table_name)
+  end
+
   def test_scaffold_controller_name
     # Default behaviour is use the model name
     g = Rails::Generator::Base.instance('scaffold', %w(Product))
-    assert_equal "Product", g.controller_name
-    
+    assert_equal "Products", g.controller_name
+
     # When we specify a controller name make sure it sticks!!
     g = Rails::Generator::Base.instance('scaffold', %w(Product Admin))
     assert_equal "Admin", g.controller_name
-  end  
+  end
 end

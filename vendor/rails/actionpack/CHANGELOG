@@ -1,5 +1,438 @@
 *SVN*
 
+* @response.redirect_url works with 201 Created responses: just return headers['Location'] rather than checking the response status.  [Jeremy Kemper]
+
+* Added CSV to Mime::SET so that respond_to csv will work [Cody Fauser]
+
+* Fixed that HEAD should return the proper Content-Length header (that is, actually use @body.size, not just 0) [DHH]
+
+* Added GET-masquarading for HEAD, so request.method will return :get even for HEADs. This will help anyone relying on case request.method to automatically work with HEAD and map.resources will also allow HEADs to all GET actions. Rails automatically throws away the response content in a reply to HEAD, so you don't even need to worry about that. If you, for whatever reason, still need to distinguish between GET and HEAD in some edge case, you can use Request#head? and even Request.headers["REQUEST_METHOD"] for get the "real" answer. Closes #6694 [DHH]
+
+* Update Routing to complain when :controller is not specified by a route. Closes #6669. [Nicholas Seckar]
+
+* Ensure render_to_string cleans up after itself when an exception is raised.  #6658 [rsanheim]
+
+* Extract template_changed_since? from compile_template? so plugins may override its behavior for non-file-based templates.  #6651 [Jeff Barczewski]
+
+* Update to Prototype and script.aculo.us [5579]. [Thomas Fuchs]
+
+* simple_format helper doesn't choke on nil.  #6644 [jerry426]
+
+* Update to Prototype 1.5.0_rc2 [5550] which makes it work in Opera again [Thomas Fuchs]
+
+* Reuse named route helper module between Routing reloads. Use remove_method to delete named route methods after each load. Since the module is never collected, this fixes a significant memory leak. [Nicholas Seckar]
+
+* ActionView::Base.erb_variable accessor names the buffer variable used to render templates. Defaults to _erbout; use _buf for erubis.  [Rick Olson]
+
+* assert_select_rjs :remove.  [Dylan Egan]
+
+* Always clear model associations from session.  #4795 [sd@notso.net, andylien@gmail.com]
+
+* Update to Prototype 1.5.0_rc2. [Sam Stephenson]
+
+* Remove JavaScriptLiteral in favor of ActiveSupport::JSON::Variable. [Sam Stephenson]
+
+* Sync ActionController::StatusCodes::STATUS_CODES with http://www.iana.org/assignments/http-status-codes.  #6586 [dkubb]
+
+* Multipart form values may have a content type without being treated as uploaded files if they do not provide a filename.  #6401 [Andreas Schwarz, Jeremy Kemper]
+
+* assert_response supports symbolic status codes.  #6569 [Kevin Clark]
+    assert_response :ok
+    assert_response :not_found
+    assert_response :forbidden
+
+* Cache parsed query parameters.  #6559 [Stefan Kaes]
+
+* Deprecate JavaScriptHelper#update_element_function, which is superseeded by RJS [Thomas Fuchs]
+
+* pluralize helper interprets nil as zero.  #6474 [pope]
+
+* Fix invalid test fixture exposed by stricter Ruby 1.8.5 multipart parsing.  #6524 [Bob Silva]
+
+* Set ActionView::Base.default_form_builder once rather than passing the :builder option to every form or overriding the form helper methods.  [Jeremy Kemper]
+
+* Deprecate expire_matched_fragments. Use expire_fragment instead.  #6535 [Bob Silva]
+
+* Update to latest Prototype, which doesn't serialize disabled form elements, adds clone() to arrays, empty/non-string Element.update() and adds a fixes excessive error reporting in WebKit beta versions [Thomas Fuchs]
+
+* Deprecate start_form_tag and end_form_tag.  Use form_tag / '</form>' from now on.  [Rick]
+
+* Added block-usage to PrototypeHelper#form_remote_tag, document block-usage of FormTagHelper#form_tag [Rick]
+
+* Add a 0 margin/padding div around the hidden _method input tag that form_tag outputs.  [Rick]
+
+* Added block-usage to TagHelper#content_tag [DHH]. Example:
+
+   <% content_tag :div, :class => "strong" %>
+     Hello world!
+   <% end %>
+  
+  Will output:
+    <div class="strong">Hello world!</div>
+
+* Deprecated UrlHelper#link_to_image and UrlHelper#link_to :post => true #6409 [BobSilva]
+
+* Upgraded NumberHelper with number_to_phone support international formats to comply with ITU E.123 by supporting area codes with less than 3 digits, added precision argument to number_to_human_size (defaults to 1) #6421 [BobSilva]
+
+* Fixed that setting RAILS_ASSET_ID to "" should not add a trailing slash after assets #6454 [BobSilva/chrismear]
+
+* Force *_url named routes to show the host in ActionView [Rick]
+
+  <%= url_for ... %> # no host
+  <%= foo_path %>    # no host
+  <%= foo_url %>     # host!
+
+* Add support for converting blocks into function arguments to JavaScriptGenerator#call and JavaScriptProxy#call. [Sam Stephenson]
+
+* Add JavaScriptGenerator#literal for wrapping a string in an object whose #to_json is the string itself. [Sam Stephenson]
+
+* Add <%= escape_once html %> to escape html while leaving any currently escaped entities alone.  Fix button_to double-escaping issue. [Rick]
+
+* Fix double-escaped entities, such as &amp;amp;, &amp;#123;, etc. [Rick]
+
+* Fix deprecation warnings when rendering the template error template. [Nicholas Seckar]
+
+* Fix routing to correctly determine when generation fails. Closes #6300. [psross].
+
+* Fix broken assert_generates when extra keys are being checked. [Jamis Buck]
+
+* Replace KCODE checks with String#chars for truncate.  Closes #6385 [Manfred Stienstra]
+
+* Make page caching respect the format of the resource that is being requested even if the current route is the default route so that, e.g. posts.rss is not transformed by url_for to '/' and subsequently cached as '/index.html' when it should be cached as '/posts.rss'.  [Marcel Molina Jr.]
+
+* Use String#chars in TextHelper::excerpt. Closes #6386 [Manfred Stienstra]
+
+* Install named routes into ActionView::Base instead of proxying them to the view via helper_method. Closes #5932. [Nicholas Seckar]
+
+* Update to latest Prototype and script.aculo.us trunk versions [Thomas Fuchs]
+
+* Fix relative URL root matching problems. [Mark Imbriaco]
+
+* Fix filter skipping in controller subclasses.  #5949, #6297, #6299 [Martin Emde]
+
+* render_text may optionally append to the response body. render_javascript appends by default. This allows you to chain multiple render :update calls by setting @performed_render = false between them (awaiting a better public API).  [Jeremy Kemper]
+
+* Rename test assertion to prevent shadowing. Closes #6306. [psross]
+
+* Fixed that NumberHelper#number_to_delimiter should respect precision of higher than two digits #6231 [phallstrom]
+
+* Fixed that FormHelper#radio_button didn't respect an :id being passed in #6266 [evansj]
+
+* Added an html_options hash parameter to javascript_tag() and update_page_tag() helpers #6311 [tzaharia]. Example:
+
+    update_page_tag :defer => 'true' { |page| ... }
+
+  Gives:
+
+    <script defer="true" type="text/javascript">...</script>
+    
+  Which is needed for dealing with the IE6 DOM when it's not yet fully loaded.
+
+* Fixed that rescue template path shouldn't be hardcoded, then it's easier to hook in your own #6295 [mnaberez]
+
+* Fixed escaping of backslashes in JavaScriptHelper#escape_javascript #6302 [sven@c3d2.de]
+
+* Fixed that some 500 rescues would cause 500's themselves because the response had not yet been generated #6329 [cmselmer]
+
+* respond_to :html doesn't assume .rhtml.  #6281 [Hampton Catlin]
+
+* Fixed some deprecation warnings in ActionPack [Rick Olson]
+
+* assert_select_rjs decodes escaped unicode chars since the Javascript generators encode them.  #6240 [japgolly]
+
+* Deprecation: @cookies, @headers, @request, @response will be removed after 1.2. Use the corresponding method instead.  [Jeremy Kemper]
+
+* Make the :status parameter expand to the default message for that status code if it is an integer. Also support symbol statuses. [Jamis Buck]. Examples:
+
+    head :status => 404        # expands to "404 Not Found"
+    head :status => :not_found # expands to "404 Not Found"
+    head :status => :created   # expands to "201 Created"
+
+* Add head(options = {}) for responses that have no body. [Jamis Buck]. Examples:
+
+    head :status => 404 # return an empty response with a 404 status
+    head :location => person_path(@person), :status => 201
+
+* Fix bug that kept any before_filter except the first one from being able to halt the before_filter chain.  [Rick Olson]
+
+* strip_links is case-insensitive.  #6285 [tagoh, Bob Silva]
+
+* Clear the cache of possible controllers whenever Routes are reloaded. [Nicholas Seckar]
+
+* Filters overhaul including meantime filter support using around filters + blocks.  #5949 [Martin Emde, Roman Le Negrate, Stefan Kaes, Jeremy Kemper]
+
+* Update RJS render tests. [sam]
+
+* Update CGI process to allow sessions to contain namespaced models. Closes #4638. [dfelstead@site5.com]
+
+* Fix routing to respect user provided requirements and defaults when assigning default routing options (such as :action => 'index'). Closes #5950. [Nicholas Seckar]
+
+* Rescue Errno::ECONNRESET to handle an unexpectedly closed socket connection. Improves SCGI reliability.  #3368, #6226 [sdsykes, fhanshaw@vesaria.com]
+
+* Added that respond_to blocks will automatically set the content type to be the same as is requested [DHH]. Examples:
+
+    respond_to do |format|
+      format.html { render :text => "I'm being sent as text/html" }
+      format.rss  { render :text => "I'm being sent as application/rss+xml" }
+      format.atom { render :text => "I'm being sent as application/xml", :content_type => Mime::XML }
+    end
+
+* Added utf-8 as the default charset for all renders. You can change this default using ActionController::Base.default_charset=(encoding) [DHH]
+
+* Added proper getters and setters for content type and charset [DHH]. Example of what we used to do:
+
+    response.headers["Content-Type"] = "application/atom+xml; charset=utf-8"
+  
+  ...now:
+  
+    response.content_type = Mime::ATOM
+    response.charset      = "utf-8"
+
+* Updated prototype.js to 1.5.0_rc1 with latest fixes. [Rick Olson]
+
+  - XPATH support
+  - Make Form.getElements() return elements in the correct order
+  - fix broken Form.serialize return
+
+* Declare file extensions exempt from layouts.  #6219 [brandon]
+    Example: ActionController::Base.exempt_from_layout 'rpdf'
+
+* Add chained replace/update support for assert_select_rjs [Rick Olson]
+
+    Given RJS like...
+
+      page['test1'].replace "<div id=\"1\">foo</div>"
+      page['test2'].replace_html "<div id=\"2\">foo</div>"
+
+    Test it with...
+
+      assert_select_rjs :chained_replace
+      assert_select_rjs :chained_replace, "test1"
+
+      assert_select_rjs :chained_replace_html
+      assert_select_rjs :chained_replace_html, "test2"
+
+* Load helpers in alphabetical order for consistency. Resolve cyclic javascript_helper dependency.  #6132, #6178 [choonkeat@gmail.com]
+
+* Skip params with empty names, such as the &=Save query string from <input type="submit"/>.  #2569 [manfred, raphinou@yahoo.com]
+
+* Fix assert_tag so that :content => "foo" does not match substrings, but only exact strings. Use :content => /foo/ to match substrings. #2799 [Eric Hodel]
+
+* Add descriptive messages to the exceptions thrown by cgi_methods. #6091, #6103 [Nicholas Seckar, Bob Silva]
+
+* Update JavaScriptGenerator#show/hide/toggle/remove to new Prototype syntax for multiple ids,  #6068 [petermichaux@gmail.com]
+
+* Update UrlWriter to support :only_path. [Nicholas Seckar, Dave Thomas]
+
+* Fixed JavaScriptHelper#link_to_function and JavaScriptHelper#button_to_function to have the script argument be optional [DHH]. So what used to require a nil, like this:
+
+    link_to("Hider", nil, :class => "hider_link") { |p| p[:something].hide }
+  
+  ...can be written like this:
+
+    link_to("Hider", :class => "hider_link") { |p| p[:something].hide }
+
+* Update to script.aculo.us 1.6.3 [Thomas Fuchs]
+
+* Update to Prototype 1.5.0_rc1 [sam]
+
+* Added access to nested attributes in RJS #4548 [richcollins@gmail.com]. Examples:
+
+    page['foo']['style']                  # => $('foo').style;
+    page['foo']['style']['color']         # => $('blank_slate').style.color;
+    page['foo']['style']['color'] = 'red' # => $('blank_slate').style.color = 'red';
+    page['foo']['style'].color = 'red'    # => $('blank_slate').style.color = 'red';
+
+* Fixed that AssetTagHelper#image_tag and others using compute_public_path should not modify the incoming source argument (closes #5102) [eule@space.ch]
+
+* Deprecated the auto-appending of .png to AssetTagHelper#image_tag calls that doesn't have an extension [DHH] 
+
+* Fixed FormOptionsHelper#select to respect :selected value #5813
+
+* Fixed TextHelper#simple_format to deal with multiple single returns within a single paragraph #5835 [moriq@moriq.com]
+
+* Fixed TextHelper#pluralize to handle 1 as a string #5909 [rails@bencurtis.com]
+
+* Improved resolution of DateHelper#distance_of_time_in_words for better precision #5994 [Bob Silva]
+
+* Changed that uncaught exceptions raised any where in the application will cause RAILS_ROOT/public/500.html to be read and shown instead of just the static "Application error (Rails)" [DHH]
+
+* Integration tests: thoroughly test ActionController::Integration::Session.  #6022 [Kevin Clark]
+    (tests skipped unless you `gem install mocha`)
+
+* Added deprecation language for pagination which will become a plugin by Rails 2.0 [DHH]
+
+* Added deprecation language for in_place_editor and auto_complete_field that both pieces will become plugins by Rails 2.0 [DHH]
+
+* Deprecated all of ActionController::Dependencies. All dependency loading is now handled from Active Support [DHH]
+
+* Added assert_select* for CSS selector-based testing (deprecates assert_tag) #5936 [assaf.arkin@gmail.com]
+
+* radio_button_tag generates unique id attributes.  #3353 [Bob Silva, somekool@gmail.com]
+
+* strip_tags passes through blank args such as nil or "".  #2229, #6702 [duncan@whomwah.com, dharana]
+
+* Cleanup assert_tag :children counting.  #2181 [jamie@bravenet.com]
+
+* button_to accepts :method so you can PUT and DELETE with it.  #6005 [Dan Webb]
+
+* Update sanitize text helper to strip plaintext tags, and <img src="javascript:bang">.  [Rick Olson]
+
+* Update routing documentation.  Closes #6017 [Nathan Witmer]
+
+* Add routing tests to assert that RoutingError is raised when conditions aren't met.  Closes #6016 [Nathan Witmer]
+
+* Deprecation: update docs. #5998 [jakob@mentalized.net, Kevin Clark]
+
+* Make auto_link parse a greater subset of valid url formats. [Jamis Buck]
+
+* Integration tests: headers beginning with X aren't excluded from the HTTP_ prefix, so X-Requested-With becomes HTTP_X_REQUESTED_WITH as expected. [Mike Clark]
+
+* Tighten rescue clauses.  #5985 [james@grayproductions.net]
+
+* Fix send_data documentation typo.  #5982 [brad@madriska.com]
+
+* Switch to using FormEncodedPairParser for parsing request parameters. [Nicholas Seckar, DHH]
+
+* respond_to .html now always renders #{action_name}.rhtml so that registered custom template handlers do not override it in priority. Custom mime types require a block and throw proper error now. [Tobias Luetke]
+
+* Deprecation: test deprecated instance vars in partials. [Jeremy Kemper]
+
+* Add UrlWriter to allow writing urls from Mailers and scripts. [Nicholas Seckar]
+
+* Clean up and run the Active Record integration tests by default.  #5854 [kevin.clark@gmail.com, Jeremy Kemper]
+
+* Correct example in cookies docs.  #5832 [jessemerriman@warpmail.net]
+
+* Updated to script.aculo.us 1.6.2 [Thomas Fuchs]
+
+* Relax Routing's anchor pattern warning; it was preventing use of [^/] inside restrictions. [Nicholas Seckar]
+
+* Add controller_paths variable to Routing. [Nicholas Seckar]
+
+* Fix assert_redirected_to issue with named routes for module controllers.  [Rick Olson]
+
+* Tweak RoutingError message to show option diffs, not just missing named route significant keys. [Rick Olson]
+
+* Invoke method_missing directly on hidden actions. Closes #3030. [Nicholas Seckar]
+
+* Require Tempfile explicitly for TestUploadedFile due to changes in class auto loading.  [Rick Olson]
+
+* Add RoutingError exception when RouteSet fails to generate a path from a Named Route. [Rick Olson]
+
+* Replace Reloadable with Reloadable::Deprecated. [Nicholas Seckar]
+
+* Deprecation: check whether instance variables have been monkeyed with before assigning them to deprecation proxies. Raises a RuntimeError if so. [Jeremy Kemper]
+
+* Add support for the param_name parameter to the auto_complete_field helper. #5026 [david.a.williams@gmail.com]
+
+* Deprecation! @params, @session, @flash will be removed after 1.2. Use the corresponding instance methods instead. You'll get printed warnings during tests and logged warnings in dev mode when you access either instance variable directly. [Jeremy Kemper]
+
+* Make Routing noisy when an anchor regexp is assigned to a segment. #5674 [francois.beausoleil@gmail.com]
+
+* Added months and years to the resolution of DateHelper#distance_of_time_in_words, such that "60 days ago" becomes "2 months ago" #5611 [pjhyett@gmail.com]
+
+* Short documentation to mention use of Mime::Type.register. #5710 [choonkeat@gmail.com]
+
+* Make controller_path available as an instance method.  #5724 [jmckible@gmail.com]
+
+* Update query parser to support adjacent hashes. [Nicholas Seckar]
+
+* Make action caching aware of different formats for the same action so that, e.g.  foo.xml is cached separately from foo.html. Implicitly set content type when reading in cached content with mime revealing extensions so the entire onous isn't on the webserver. [Marcel Molina Jr.]
+
+* Restrict Request Method hacking with ?_method to POST requests.  [Rick Olson]
+
+* Fix bug when passing multiple options to SimplyRestful, like :new => { :preview => :get, :draft => :get }.  [Rick Olson, Josh Susser, Lars Pind]
+
+* Dup the options passed to map.resources so that multiple resources get the same options.  [Rick Olson]
+
+* Fixed the new_#{resource}_url route and added named route tests for Simply Restful.  [Rick Olson]
+
+* Added map.resources from the Simply Restful plugin [DHH]. Examples (the API has changed to use plurals!):
+
+    map.resources :messages
+    map.resources :messages, :comments
+    map.resources :messages, :new => { :preview => :post }
+
+* Fixed that integration simulation of XHRs should set Accept header as well [Edward Frederick]
+
+* TestRequest#reset_session should restore a TestSession, not a hash [Koz]
+
+* Don't search a load-path of '.' for controller files [Jamis Buck]
+
+* Update integration.rb to require test_process explicitly instead of via Dependencies. [Nicholas Seckar]
+
+* Fixed that you can still access the flash after the flash has been reset in reset_session.  Closes #5584 [lmarlow@yahoo.com]
+
+* Allow form_for and fields_for to work with indexed form inputs.  [Jeremy Kemper, Matt Lyon]
+
+  <% form_for 'post[]', @post do |f| -%>
+  <% end -%>
+
+* Remove leak in development mode by replacing define_method with module_eval. [Nicholas Seckar]
+
+* Provide support for decimal columns to form helpers. Closes #5672. [dave@pragprog.com]
+
+* Update documentation for erb trim syntax. #5651 [matt@mattmargolis.net]
+
+* Pass :id => nil or :class => nil to error_messages_for to supress that html attribute. #3586 [olivier_ansaldi@yahoo.com, sebastien@goetzilla.info]
+
+* Reset @html_document between requests so assert_tag works. #4810 [jarkko@jlaine.net, easleydp@gmail.com]
+
+* Update render :partial documentation. #5646 [matt@mattmargolis.net]
+
+* Integration tests behave well with render_component. #4632 [edward.frederick@revolution.com, dev.rubyonrails@maxdunn.com]
+
+* Added exception handling of missing layouts #5373 [chris@ozmm.org]
+
+* Fixed that real files and symlinks should be treated the same when compiling templates #5438 [zachary@panandscan.com]
+
+* Fixed that the flash should be reset when reset_session is called #5584 [shugo@ruby-lang.org]
+
+* Added special case for "1 Byte" in NumberHelper#number_to_human_size #5593 [murpyh@rubychan.de]
+
+* Fixed proper form-encoded parameter parsing for requests with "Content-Type: application/x-www-form-urlencoded; charset=utf-8" (note the presence of a charset directive) [DHH]
+
+* Add route_name_path method to generate only the path for a named routes. For example, map.person will add person_path. [Nicholas Seckar]
+
+* Avoid naming collision among compiled view methods. [Jeremy Kemper]
+
+* Fix CGI extensions when they expect string but get nil in Windows. Closes #5276 [mislav@nippur.irb.hr]
+
+* Determine the correct template_root for deeply nested components.  #2841 [s.brink@web.de]
+
+* Fix that routes with *path segments in the recall can generate URLs. [Rick]
+
+* Fix strip_links so that it doesn't hang on multiline <acronym> tags [Jamis Buck]
+
+* Remove problematic control chars in rescue template. #5316 [Stefan Kaes]
+
+* Make sure passed routing options are not mutated by routing code. #5314 [Blair Zajac]
+
+* Make sure changing the controller from foo/bar to bing/bang does not change relative to foo. [Jamis Buck]
+
+* Escape the path before routing recognition. #3671
+
+* Make sure :id and friends are unescaped properly. #5275 [me@julik.nl]
+
+* Fix documentation for with_routing to reflect new reality. #5281 [rramdas@gmail.com]
+
+* Rewind readable CGI params so others may reread them (such as CGI::Session when passing the session id in a multipart form).  #210 [mklame@atxeu.com, matthew@walker.wattle.id.au]
+
+* Added Mime::TEXT (text/plain) and Mime::ICS (text/calendar) as new default types [DHH]
+
+* Added Mime::Type.register(string, symbol, synonyms = []) for adding new custom mime types [DHH]. Example: Mime::Type.register("image/gif", :gif)
+
+* Added support for Mime objects in render :content_type option [DHH]. Example: render :text => some_atom, :content_type => Mime::ATOM
+
+* Add :status option to send_data and send_file. Defaults to '200 OK'.  #5243 [Manfred Stienstra <m.stienstra@fngtps.com>]
+
+* Routing rewrite. Simpler, faster, easier to understand. The published API for config/routes.rb is unchanged, but nearly everything else is different, so expect breakage in plugins and libs that try to fiddle with routes. [Nicholas Seckar, Jamis Buck]
+
+  map.connect '/foo/:id', :controller => '...', :action => '...'
+  map.connect '/foo/:id.:format', :controller => '...', :action => '...'
+  map.connect '/foo/:id', ..., :conditions => { :method => :get }
+
 * Cope with missing content type and length headers. Parse parameters from multipart and urlencoded request bodies only. [Jeremy Kemper]
 
 * Accept multipart PUT parameters. #5235 [guy.naor@famundo.com]
@@ -37,7 +470,6 @@
   
   All this relies on the fact that you have a route that includes .:format.
   
-
 * Expanded :method option in FormTagHelper#form_tag, FormHelper#form_for, PrototypeHelper#remote_form_for, PrototypeHelper#remote_form_tag, and PrototypeHelper#link_to_remote to allow for verbs other than GET and POST by automatically creating a hidden form field named _method, which will simulate the other verbs over post [DHH]
 
 * Added :method option to UrlHelper#link_to, which allows for using other verbs than GET for the link. This replaces the :post option, which is now deprecated. Example: link_to "Destroy", person_url(:id => person), :method => :delete [DHH]
@@ -2350,9 +2782,9 @@ Default YAML web services were retired, ActionController::Base.param_parsers car
 
 * Added pluralize method to the TextHelper that makes it easy to get strings like "1 message", "3 messages"
 
-* Added proper escaping for the rescues [Andreas Schwartz]
+* Added proper escaping for the rescues [Andreas Schwarz]
 
-* Added proper escaping for the option and collection tags [Andreas Schwartz]
+* Added proper escaping for the option and collection tags [Andreas Schwarz]
 
 * Fixed NaN errors on benchmarking [Jim Weirich]
 

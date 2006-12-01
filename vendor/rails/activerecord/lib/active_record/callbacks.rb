@@ -158,6 +158,12 @@ module ActiveRecord
   # after_initialize will only be run if an explicit implementation is defined (<tt>def after_find</tt>). In that case, all of the
   # callback types will be called.
   #
+  # == before_validation* returning statements
+  #
+  # If the returning value of a before_validation callback can be evaluated to false, the process will be aborted and Base#save will return false.
+  # If Base#save! is called it will raise a RecordNotSave error.
+  # Nothing will be appended to the errors object.
+  #
   # == Cancelling callbacks
   #
   # If a before_* callback returns false, all the later callbacks and the associated action are cancelled. If an after_* callback returns
@@ -226,6 +232,10 @@ module ActiveRecord
     def before_save() end
 
     # Is called _after_ Base.save (regardless of whether it's a create or update save).
+    #
+    #  class Contact < ActiveRecord::Base
+    #    after_save { logger.info( 'New contact saved!' ) }
+    #  end
     def after_save()  end
     def create_or_update_with_callbacks #:nodoc:
       return false if callback(:before_save) == false
@@ -281,12 +291,12 @@ module ActiveRecord
     # existing objects that have a record.
     def after_validation_on_update()  end
 
-    def valid_with_callbacks #:nodoc:
+    def valid_with_callbacks? #:nodoc:
       return false if callback(:before_validation) == false
       if new_record? then result = callback(:before_validation_on_create) else result = callback(:before_validation_on_update) end
       return false if result == false
 
-      result = valid_without_callbacks
+      result = valid_without_callbacks?
 
       callback(:after_validation)
       if new_record? then callback(:after_validation_on_create) else callback(:after_validation_on_update) end
@@ -295,9 +305,16 @@ module ActiveRecord
     end
 
     # Is called _before_ Base.destroy.
+    #
+    # Note: If you need to _destroy_ or _nullify_ associated records first,
+    # use the _:dependent_ option on your associations.
     def before_destroy() end
 
     # Is called _after_ Base.destroy (and all the attributes have been frozen).
+    #
+    #  class Contact < ActiveRecord::Base
+    #    after_destroy { |record| logger.info( "Contact #{record.id} was destroyed." ) }
+    #  end
     def after_destroy()  end
     def destroy_with_callbacks #:nodoc:
       return false if callback(:before_destroy) == false

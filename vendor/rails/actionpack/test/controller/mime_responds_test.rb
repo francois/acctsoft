@@ -61,6 +61,29 @@ class RespondToController < ActionController::Base
       type.all  { render :text => "Nothing" }
     end
   end
+  
+  def custom_constant_handling
+    Mime::Type.register("text/x-mobile", :mobile)
+
+    respond_to do |type|
+      type.html   { render :text => "HTML"   }
+      type.mobile { render :text => "Mobile" }
+    end
+    
+    Mime.send :remove_const, :MOBILE
+  end
+  
+  def custom_constant_handling_without_block
+    Mime::Type.register("text/x-mobile", :mobile)
+
+    respond_to do |type|
+      type.html   { render :text => "HTML"   }
+      type.mobile
+    end
+    
+    Mime.send :remove_const, :MOBILE    
+  end
+  
 
   def handle_any
     respond_to do |type|
@@ -255,6 +278,18 @@ class MimeControllerTest < Test::Unit::TestCase
     assert_equal '$("body").visualEffect("highlight");', @response.body
   end
   
+  def test_custom_constant
+    get :custom_constant_handling, :format => "mobile"
+    assert_equal "Mobile", @response.body
+  end
+  
+  def custom_constant_handling_without_block
+    
+    assert_raised(ActionController::RenderError) do
+      get :custom_constant_handling, :format => "mobile"
+    end
+  end
+  
   def test_forced_format
     get :html_xml_or_rss
     assert_equal "HTML", @response.body
@@ -267,5 +302,22 @@ class MimeControllerTest < Test::Unit::TestCase
 
     get :html_xml_or_rss, :format => "rss"
     assert_equal "RSS", @response.body
+  end
+
+  def test_render_action_for_html
+    @controller.instance_eval do
+      def render(*args)
+        unless args.empty?
+          @action = args.first[:action]
+        end
+        response.body = @action
+      end
+    end
+
+    get :using_defaults
+    assert_equal "using_defaults", @response.body
+
+    get :using_defaults, :format => "xml"
+    assert_equal "using_defaults.rxml", @response.body
   end
 end

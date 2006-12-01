@@ -87,6 +87,7 @@ module ActiveRecord
     end
 
     alias :add_on_boundry_breaking :add_on_boundary_breaking
+    deprecate :add_on_boundary_breaking => :validates_length_of, :add_on_boundry_breaking => :validates_length_of
 
     # Returns true if the specified +attribute+ has errors associated with it.
     def invalid?(attribute)
@@ -218,7 +219,7 @@ module ActiveRecord
       base.extend ClassMethods
       base.class_eval do
         alias_method_chain :save, :validation
-        alias_method_chain :save!, :validation!       
+        alias_method_chain :save!, :validation
         alias_method_chain :update_attribute, :validation_skipping
       end
     end
@@ -374,6 +375,10 @@ module ActiveRecord
       #
       # The first_name attribute must be in the object and it cannot be blank.
       #      
+      # If you want to validate the presence of a boolean field (where the real values are true and false),
+      # you will want to use validates_inclusion_of :field_name, :in => [true, false]
+      # This is due to the way Object#blank? handles boolean values. false.blank? # => true
+      #
       # Configuration options:
       # * <tt>message</tt> - A custom error message (default is: "can't be blank")
       # * <tt>on</tt> - Specifies when this validation is active (default is :save, other options :create, :update)
@@ -528,8 +533,8 @@ module ActiveRecord
             condition_sql = "#{record.class.table_name}.#{attr_name} #{attribute_condition(value)}"
             condition_params = [value]
           else
-            condition_sql = "UPPER(#{record.class.table_name}.#{attr_name}) #{attribute_condition(value)}"
-            condition_params = [value.upcase]
+            condition_sql = "LOWER(#{record.class.table_name}.#{attr_name}) #{attribute_condition(value)}"
+            condition_params = [value.downcase]
           end
           if scope = configuration[:scope]
             Array(scope).map do |scope_item|
@@ -554,8 +559,10 @@ module ActiveRecord
       # provided.
       #
       #   class Person < ActiveRecord::Base
-      #     validates_format_of :email, :with => /^([^@\s]+)@((?:[-a-z0-9]+\.)+[a-z]{2,})$/i, :on => :create
+      #     validates_format_of :email, :with => /\A([^@\s]+)@((?:[-a-z0-9]+\.)+[a-z]{2,})\Z/i, :on => :create
       #   end
+      #
+      # Note: use \A and \Z to match the start and end of the string, ^ and $ match the start/end of a line.
       #
       # A regular expression must be provided or else an exception will be raised.
       #
@@ -670,7 +677,7 @@ module ActiveRecord
 
       # Validates whether the value of the specified attribute is numeric by trying to convert it to
       # a float with Kernel.Float (if <tt>integer</tt> is false) or applying it to the regular expression
-      # <tt>/^[\+\-]?\d+$/</tt> (if <tt>integer</tt> is set to true).
+      # <tt>/\A[\+\-]?\d+\Z/</tt> (if <tt>integer</tt> is set to true).
       #
       #   class Person < ActiveRecord::Base
       #     validates_numericality_of :value, :on => :create
@@ -691,7 +698,7 @@ module ActiveRecord
 
         if configuration[:only_integer]
           validates_each(attr_names,configuration) do |record, attr_name,value|
-            record.errors.add(attr_name, configuration[:message]) unless record.send("#{attr_name}_before_type_cast").to_s =~ /^[+-]?\d+$/
+            record.errors.add(attr_name, configuration[:message]) unless record.send("#{attr_name}_before_type_cast").to_s =~ /\A[+-]?\d+\Z/
           end
         else
           validates_each(attr_names,configuration) do |record, attr_name,value|
@@ -725,7 +732,7 @@ module ActiveRecord
       private
         def write_inheritable_set(key, methods)
           existing_methods = read_inheritable_attribute(key) || []
-          write_inheritable_attribute(key, methods | existing_methods)
+          write_inheritable_attribute(key, existing_methods | methods)
         end
 
         def validation_method(on)

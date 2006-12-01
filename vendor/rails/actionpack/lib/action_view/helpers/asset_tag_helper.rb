@@ -122,6 +122,14 @@ module ActionView
       # * file name, like "rss.gif", that gets expanded to "/images/rss.gif"
       # * file name without extension, like "logo", that gets expanded to "/images/logo.png"
       def image_path(source)
+        unless (source.split("/").last || source).include?(".") || source.blank?
+          ActiveSupport::Deprecation.warn(
+            "You've called image_path with a source that doesn't include an extension. " +
+            "In Rails 2.0, that will not result in .png automatically being appended. " +
+            "So you should call image_path('#{source}.png') instead", caller
+          )
+        end
+
         compute_public_path(source, 'images', 'png')
       end
 
@@ -150,11 +158,14 @@ module ActionView
       
       private
         def compute_public_path(source, dir, ext)
-          source  = "/#{dir}/#{source}" unless source.first == "/" || source.include?(":")
-          source << ".#{ext}" unless source.split("/").last.include?(".")
-          source << '?' + rails_asset_id(source) if defined?(RAILS_ROOT) && %r{^[-a-z]+://} !~ source
-          source  = "#{@controller.request.relative_url_root}#{source}" unless %r{^[-a-z]+://} =~ source
-          source = ActionController::Base.asset_host + source unless source.include?(":")
+          source = source.dup
+          source << ".#{ext}" if File.extname(source).blank?
+          unless source =~ %r{^[-a-z]+://}
+            source = "/#{dir}/#{source}" unless source[0] == ?/
+            asset_id = rails_asset_id(source)
+            source << '?' + asset_id if defined?(RAILS_ROOT) and not asset_id.blank?
+            source = "#{ActionController::Base.asset_host}#{@controller.request.relative_url_root}#{source}"
+          end
           source
         end
         

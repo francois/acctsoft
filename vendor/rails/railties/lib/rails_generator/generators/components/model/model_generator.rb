@@ -25,10 +25,14 @@ class ModelGenerator < Rails::Generator::NamedBase
   end
 
   protected
+    def banner
+      "Usage: #{$0} generate ModelName [field:type, field:type]"
+    end
+
     def add_options!(opt)
       opt.separator ''
       opt.separator 'Options:'
       opt.on("--skip-migration", 
-             "Don't generate a migration file for this model") { |options[:skip_migration]| }
+             "Don't generate a migration file for this model") { |v| options[:skip_migration] = v }
     end
 end

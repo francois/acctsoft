@@ -207,6 +207,16 @@ class RequestTest < Test::Unit::TestCase
     @request.env['SCRIPT_NAME'] = "/hieraki/dispatch.cgi"
     assert_equal "/hieraki/", @request.request_uri
     assert_equal "/", @request.path    
+                                              
+    @request.set_REQUEST_URI '/hieraki/dispatch.cgi'
+    @request.relative_url_root = '/hieraki'
+    assert_equal "/dispatch.cgi", @request.path    
+    @request.relative_url_root = nil
+
+    @request.set_REQUEST_URI '/hieraki/dispatch.cgi'
+    @request.relative_url_root = '/foo'
+    assert_equal "/hieraki/dispatch.cgi", @request.path    
+    @request.relative_url_root = nil
 
     # This test ensures that Rails uses REQUEST_URI over PATH_INFO
     @request.relative_url_root = nil
@@ -262,5 +272,40 @@ class RequestTest < Test::Unit::TestCase
     @request.env['HTTP_X_FORWARDED_PROTO'] = 'https'
     assert @request.ssl?
   end
+
+  def test_symbolized_request_methods
+    [:get, :post, :put, :delete].each do |method|
+      set_request_method_to method
+      assert_equal method, @request.method
+    end
+  end
+
+  def test_allow_method_hacking_on_post
+    set_request_method_to :post
+    [:get, :put, :delete].each do |method|
+      @request.instance_eval { @parameters = { :_method => method } ; @request_method = nil }
+      assert_equal method, @request.method
+    end
+  end
+
+  def test_restrict_method_hacking
+    @request.instance_eval { @parameters = { :_method => 'put' } }
+    [:get, :put, :delete].each do |method|
+      set_request_method_to method
+      assert_equal method, @request.method
+    end
+  end
   
+  def test_head_masquarading_as_get
+    set_request_method_to :head
+    assert_equal :get, @request.method
+    assert @request.get?
+    assert @request.head?
+  end
+
+  protected
+    def set_request_method_to(method)
+      @request.env['REQUEST_METHOD'] = method.to_s.upcase
+      @request.instance_eval { @request_method = nil }
+    end
 end

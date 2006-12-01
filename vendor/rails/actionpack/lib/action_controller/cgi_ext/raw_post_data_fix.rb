@@ -36,7 +36,7 @@ class CGI #:nodoc:
         if boundary = extract_multipart_form_boundary(content_type)
           @multipart = true
           @params = read_multipart(boundary, content_length)
-        elsif content_type.downcase != 'application/x-www-form-urlencoded'
+        elsif content_type.blank? || content_type !~ %r{application/x-www-form-urlencoded}i
           read_params(method, content_length)
           @params = {}
         end
@@ -75,7 +75,7 @@ class CGI #:nodoc:
         content = stdinput.read(content_length) || ''
         # Fix for Safari Ajax postings that always append \000
         content.chop! if content[-1] == 0
-        content.gsub! /&_=$/, ''
+        content.gsub!(/&_=$/, '')
         env_table['RAW_POST_DATA'] = content.freeze
       end
 

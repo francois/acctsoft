@@ -13,7 +13,14 @@ require 'fixtures/keyboard'
 
 class Category < ActiveRecord::Base; end
 class Smarts < ActiveRecord::Base; end
-class CreditCard < ActiveRecord::Base; end
+class CreditCard < ActiveRecord::Base
+  class PinNumber < ActiveRecord::Base
+    class CvvCode < ActiveRecord::Base; end
+    class SubCvvCode < CvvCode; end
+  end
+  class SubPinNumber < PinNumber; end
+  class Brand < Category; end
+end
 class MasterCreditCard < ActiveRecord::Base; end
 class Post < ActiveRecord::Base; end
 class Computer < ActiveRecord::Base; end
@@ -44,7 +51,7 @@ class Task < ActiveRecord::Base
 end
 
 class BasicsTest < Test::Unit::TestCase
-  fixtures :topics, :companies, :developers, :projects, :computers
+  fixtures :topics, :companies, :developers, :projects, :computers, :accounts
 
   def test_table_exists
     assert !NonExistentTable.table_exists?
@@ -142,8 +149,11 @@ class BasicsTest < Test::Unit::TestCase
   def test_save!
     topic = Topic.new(:title => "New Topic")
     assert topic.save!
-  end
     
+    reply = Reply.new
+    assert_raise(ActiveRecord::RecordInvalid) { reply.save! }
+  end
+  
   def test_hashes_not_mangled
     new_topic = { :title => "New Topic" }
     new_topic_values = { :title => "AnotherTopic" }
@@ -259,7 +269,34 @@ class BasicsTest < Test::Unit::TestCase
     assert topic.approved?, "approved should be true"
     # puts ""
   end
-
+  
+  def test_query_attribute_string
+    [nil, "", " "].each do |value|
+      assert_equal false, Topic.new(:author_name => value).author_name?
+    end
+    
+    assert_equal true, Topic.new(:author_name => "Name").author_name?
+  end
+  
+  def test_query_attribute_number
+    [nil, 0, "0"].each do |value|
+      assert_equal false, Developer.new(:salary => value).salary?
+    end
+    
+    assert_equal true, Developer.new(:salary => 1).salary?
+    assert_equal true, Developer.new(:salary => "1").salary?
+  end
+  
+  def test_query_attribute_boolean
+    [nil, "", false, "false", "f", 0].each do |value|
+      assert_equal false, Topic.new(:approved => value).approved?
+    end
+    
+    [true, "true", "1", 1].each do |value|
+      assert_equal true, Topic.new(:approved => value).approved?
+    end
+  end
+  
   def test_reader_generation
     Topic.find(:first).title
     Firm.find(:first).name
@@ -315,23 +352,22 @@ class BasicsTest < Test::Unit::TestCase
       Time, Topic.find(1).written_on,
       "The written_on attribute should be of the Time class"
     )
+
+    # For adapters which support microsecond resolution.
+    if current_adapter?(:PostgreSQLAdapter)
+      assert_equal 11, Topic.find(1).written_on.sec
+      assert_equal 223300, Topic.find(1).written_on.usec
+      assert_equal 9900, Topic.find(2).written_on.usec
+    end
   end
-  
+
   def test_destroy
-    topic = Topic.new
-    topic.title = "Yet Another New Topic"
-    topic.written_on = "2003-12-12 23:23:00"
-    topic.save
-    topic.destroy
+    topic = Topic.find(1)
+    assert_equal topic, topic.destroy, 'topic.destroy did not return self'
+    assert topic.frozen?, 'topic not frozen after destroy'
     assert_raise(ActiveRecord::RecordNotFound) { Topic.find(topic.id) }
   end
-  
-  def test_destroy_returns_self
-    topic = Topic.new("title" => "Yet Another Title")
-    assert topic.save
-    assert_equal topic, topic.destroy, "destroy did not return destroyed object"
-  end
-  
+
   def test_record_not_found_exception
     assert_raises(ActiveRecord::RecordNotFound) { topicReloaded = Topic.find(99999) }
   end
@@ -368,21 +404,33 @@ class BasicsTest < Test::Unit::TestCase
   end
 
   def test_table_name_guesses
+    classes = [Category, Smarts, CreditCard, CreditCard::PinNumber, CreditCard::PinNumber::CvvCode, CreditCard::SubPinNumber, CreditCard::Brand, MasterCreditCard]
+
     assert_equal "topics", Topic.table_name
-    
+
     assert_equal "categories", Category.table_name
     assert_equal "smarts", Smarts.table_name
     assert_equal "credit_cards", CreditCard.table_name
+    assert_equal "credit_card_pin_numbers", CreditCard::PinNumber.table_name
+    assert_equal "credit_card_pin_number_cvv_codes", CreditCard::PinNumber::CvvCode.table_name
+    assert_equal "credit_card_pin_numbers", CreditCard::SubPinNumber.table_name
+    assert_equal "categories", CreditCard::Brand.table_name
     assert_equal "master_credit_cards", MasterCreditCard.table_name
 
     ActiveRecord::Base.pluralize_table_names = false
-    [Category, Smarts, CreditCard, MasterCreditCard].each{|c| c.reset_table_name}
+    classes.each(&:reset_table_name)
+
     assert_equal "category", Category.table_name
     assert_equal "smarts", Smarts.table_name
     assert_equal "credit_card", CreditCard.table_name
+    assert_equal "credit_card_pin_number", CreditCard::PinNumber.table_name
+    assert_equal "credit_card_pin_number_cvv_code", CreditCard::PinNumber::CvvCode.table_name
+    assert_equal "credit_card_pin_number", CreditCard::SubPinNumber.table_name
+    assert_equal "category", CreditCard::Brand.table_name
     assert_equal "master_credit_card", MasterCreditCard.table_name
+
     ActiveRecord::Base.pluralize_table_names = true
-    [Category, Smarts, CreditCard, MasterCreditCard].each{|c| c.reset_table_name}
+    classes.each(&:reset_table_name)
 
     ActiveRecord::Base.table_name_prefix = "test_"
     Category.reset_table_name
@@ -410,8 +458,9 @@ class BasicsTest < Test::Unit::TestCase
     ActiveRecord::Base.table_name_suffix = ""
     Category.reset_table_name
     assert_equal "category", Category.table_name
+
     ActiveRecord::Base.pluralize_table_names = true
-    [Category, Smarts, CreditCard, MasterCreditCard].each{|c| c.reset_table_name}
+    classes.each(&:reset_table_name)
   end
   
   def test_destroy_all
@@ -439,18 +488,18 @@ class BasicsTest < Test::Unit::TestCase
   
   def test_increment_counter
     Topic.increment_counter("replies_count", 1)
-    assert_equal 1, Topic.find(1).replies_count
+    assert_equal 2, Topic.find(1).replies_count
 
     Topic.increment_counter("replies_count", 1)
-    assert_equal 2, Topic.find(1).replies_count
+    assert_equal 3, Topic.find(1).replies_count
   end
   
   def test_decrement_counter
     Topic.decrement_counter("replies_count", 2)
-    assert_equal 1, Topic.find(2).replies_count
+    assert_equal -1, Topic.find(2).replies_count
 
     Topic.decrement_counter("replies_count", 2)
-    assert_equal 0, Topic.find(1).replies_count
+    assert_equal -2, Topic.find(2).replies_count
   end
   
   def test_update_all
@@ -549,16 +598,29 @@ class BasicsTest < Test::Unit::TestCase
     end
   end
 
-  def test_utc_as_time_zone
-    # Oracle and SQLServer do not have a TIME datatype.
-    return true if current_adapter?(:SQLServerAdapter) || current_adapter?(:OracleAdapter)
+  # Oracle and SQLServer do not have a TIME datatype.
+  unless current_adapter?(:SQLServerAdapter, :OracleAdapter)
+    def test_utc_as_time_zone
+      Topic.default_timezone = :utc
+      attributes = { "bonus_time" => "5:42:00AM" }
+      topic = Topic.find(1)
+      topic.attributes = attributes
+      assert_equal Time.utc(2000, 1, 1, 5, 42, 0), topic.bonus_time
+      Topic.default_timezone = :local
+    end
 
-    Topic.default_timezone = :utc
-    attributes = { "bonus_time" => "5:42:00AM" }
-    topic = Topic.find(1)
-    topic.attributes = attributes
-    assert_equal Time.utc(2000, 1, 1, 5, 42, 0), topic.bonus_time
-    Topic.default_timezone = :local
+    def test_utc_as_time_zone_and_new
+      Topic.default_timezone = :utc
+      attributes = { "bonus_time(1i)"=>"2000",
+                     "bonus_time(2i)"=>"1",
+                     "bonus_time(3i)"=>"1",
+                     "bonus_time(4i)"=>"10",
+                     "bonus_time(5i)"=>"35",
+                     "bonus_time(6i)"=>"50" }
+      topic = Topic.new(attributes)
+      assert_equal Time.utc(2000, 1, 1, 10, 35, 50), topic.bonus_time
+      Topic.default_timezone = :local
+    end
   end
 
   def test_default_values_on_empty_strings
@@ -612,6 +674,40 @@ class BasicsTest < Test::Unit::TestCase
 
     Topic.find(1).update_attribute(:approved, false)
     assert !Topic.find(1).approved?
+  end
+  
+  def test_update_attributes
+    topic = Topic.find(1)
+    assert !topic.approved?
+    assert_equal "The First Topic", topic.title
+    
+    topic.update_attributes("approved" => true, "title" => "The First Topic Updated")
+    topic.reload
+    assert topic.approved?
+    assert_equal "The First Topic Updated", topic.title
+
+    topic.update_attributes(:approved => false, :title => "The First Topic")
+    topic.reload
+    assert !topic.approved?
+    assert_equal "The First Topic", topic.title
+  end
+  
+  def test_update_attributes!
+    reply = Reply.find(2)
+    assert_equal "The Second Topic's of the day", reply.title
+    assert_equal "Have a nice day", reply.content
+    
+    reply.update_attributes!("title" => "The Second Topic's of the day updated", "content" => "Have a nice evening")
+    reply.reload
+    assert_equal "The Second Topic's of the day updated", reply.title
+    assert_equal "Have a nice evening", reply.content
+    
+    reply.update_attributes!(:title => "The Second Topic's of the day", :content => "Have a nice day")
+    reply.reload
+    assert_equal "The Second Topic's of the day", reply.title
+    assert_equal "Have a nice day", reply.content
+    
+    assert_raise(ActiveRecord::RecordInvalid) { reply.update_attributes!(:title => nil, :content => "Have a nice evening") }
   end
   
   def test_mass_assignment_protection
@@ -733,7 +829,7 @@ class BasicsTest < Test::Unit::TestCase
 
   def test_attributes_on_dummy_time
     # Oracle and SQL Server do not have a TIME datatype.
-    return true if current_adapter?(:SQLServerAdapter) || current_adapter?(:OracleAdapter)
+    return true if current_adapter?(:SQLServerAdapter, :OracleAdapter)
 
     attributes = {
       "bonus_time" => "5:42:00AM"
@@ -903,12 +999,44 @@ class BasicsTest < Test::Unit::TestCase
     end
   end
 
+  class NumericData < ActiveRecord::Base
+    self.table_name = 'numeric_data'
+  end
+
+  def test_numeric_fields
+    m = NumericData.new(
+      :bank_balance => 1586.43,
+      :big_bank_balance => BigDecimal("1000234000567.95"),
+      :world_population => 6000000000,
+      :my_house_population => 3
+    )
+    assert m.save
+
+    m1 = NumericData.find(m.id)
+    assert_not_nil m1
+
+    # As with migration_test.rb, we should make world_population >= 2**62
+    # to cover 64-bit platforms and test it is a Bignum, but the main thing
+    # is that it's an Integer.
+    assert_kind_of Integer, m1.world_population
+    assert_equal 6000000000, m1.world_population
+
+    assert_kind_of Fixnum, m1.my_house_population
+    assert_equal 3, m1.my_house_population
+
+    assert_kind_of BigDecimal, m1.bank_balance
+    assert_equal BigDecimal("1586.43"), m1.bank_balance
+
+    assert_kind_of BigDecimal, m1.big_bank_balance
+    assert_equal BigDecimal("1000234000567.95"), m1.big_bank_balance
+  end
+
   def test_auto_id
     auto = AutoId.new
     auto.save
     assert (auto.id > 0)
   end
-  
+
   def quote_column_name(name)
     "<#{name}>"
   end
@@ -920,6 +1048,12 @@ class BasicsTest < Test::Unit::TestCase
     inverted = actual.invert
     assert_equal("<foo>", inverted["bar"])
     assert_equal("<baz>", inverted["quux"])
+  end
+
+  def test_sql_injection_via_find
+    assert_raises(ActiveRecord::RecordNotFound) do
+      Topic.find("123456 OR id > 0")
+    end
   end
 
   def test_column_name_properly_quoted
@@ -968,6 +1102,18 @@ class BasicsTest < Test::Unit::TestCase
     assert_equal author_name, Topic.find(topic.id).author_name
   end
   
+  def test_quote_chars
+    str = 'The Narrator'
+    topic = Topic.create(:author_name => str)
+    assert_equal str, topic.author_name
+    
+    assert_kind_of ActiveSupport::Multibyte::Chars, str.chars
+    topic = Topic.find_by_author_name(str.chars)
+    
+    assert_kind_of Topic, topic
+    assert_equal str, topic.author_name, "The right topic should have been found by name even with name passed as Chars"
+  end
+  
   def test_class_level_destroy
     should_be_destroyed_reply = Reply.create("title" => "hello", "content" => "world")
     Topic.find(1).replies << should_be_destroyed_reply
@@ -987,12 +1133,12 @@ class BasicsTest < Test::Unit::TestCase
   end
 
   def test_increment_attribute
-    assert_equal 0, topics(:first).replies_count
+    assert_equal 1, topics(:first).replies_count
     topics(:first).increment! :replies_count
-    assert_equal 1, topics(:first, :reload).replies_count
+    assert_equal 2, topics(:first, :reload).replies_count
     
     topics(:first).increment(:replies_count).increment!(:replies_count)
-    assert_equal 3, topics(:first, :reload).replies_count
+    assert_equal 4, topics(:first, :reload).replies_count
   end
   
   def test_increment_nil_attribute
@@ -1003,13 +1149,13 @@ class BasicsTest < Test::Unit::TestCase
   
   def test_decrement_attribute
     topics(:first).increment(:replies_count).increment!(:replies_count)
-    assert_equal 2, topics(:first).replies_count
+    assert_equal 3, topics(:first).replies_count
     
     topics(:first).decrement!(:replies_count)
-    assert_equal 1, topics(:first, :reload).replies_count
+    assert_equal 2, topics(:first, :reload).replies_count
 
     topics(:first).decrement(:replies_count).decrement!(:replies_count)
-    assert_equal -1, topics(:first, :reload).replies_count
+    assert_equal 0, topics(:first, :reload).replies_count
   end
   
   def test_toggle_attribute
@@ -1089,7 +1235,7 @@ class BasicsTest < Test::Unit::TestCase
   def test_count_with_join
     res = Post.count_by_sql "SELECT COUNT(*) FROM posts LEFT JOIN comments ON posts.id=comments.post_id WHERE posts.#{QUOTED_TYPE} = 'Post'"
     res2 = nil
-    assert_nothing_raised do
+    assert_deprecated 'count' do
       res2 = Post.count("posts.#{QUOTED_TYPE} = 'Post'",
                         "LEFT JOIN comments ON posts.id=comments.post_id")
     end
@@ -1112,15 +1258,17 @@ class BasicsTest < Test::Unit::TestCase
 
     assert_equal res4, res5 
 
-    res6 = Post.count_by_sql "SELECT COUNT(DISTINCT p.id) FROM posts p, comments co WHERE p.#{QUOTED_TYPE} = 'Post' AND p.id=co.post_id"
-    res7 = nil
-    assert_nothing_raised do
-      res7 = Post.count(:conditions => "p.#{QUOTED_TYPE} = 'Post' AND p.id=co.post_id",
-                        :joins => "p, comments co",
-                        :select => "p.id",
-                        :distinct => true)
+    unless current_adapter?(:SQLite2Adapter, :DeprecatedSQLiteAdapter)
+      res6 = Post.count_by_sql "SELECT COUNT(DISTINCT p.id) FROM posts p, comments co WHERE p.#{QUOTED_TYPE} = 'Post' AND p.id=co.post_id"
+      res7 = nil
+      assert_nothing_raised do
+        res7 = Post.count(:conditions => "p.#{QUOTED_TYPE} = 'Post' AND p.id=co.post_id",
+                          :joins => "p, comments co",
+                          :select => "p.id",
+                          :distinct => true)
+      end
+      assert_equal res6, res7
     end
-    assert_equal res6, res7
   end
   
   def test_clear_association_cache_stored     
@@ -1195,6 +1343,24 @@ class BasicsTest < Test::Unit::TestCase
     assert scoped_developers.include?(developers(:david))
   end
 
+  def test_scoped_find_limit_offset_including_has_many_association
+    topics = Topic.with_scope(:find => {:limit => 1, :offset => 1, :include => :replies}) do
+      Topic.find(:all, :order => "topics.id")
+    end
+    assert_equal 1, topics.size
+    assert_equal 2, topics.first.id
+  end
+
+  def test_scoped_find_order_including_has_many_association
+    developers = Developer.with_scope(:find => { :order => 'developers.salary DESC', :include => :projects }) do
+      Developer.find(:all)
+    end
+    assert developers.size >= 2
+    for i in 1...developers.size
+      assert developers[i-1].salary >= developers[i].salary
+    end
+  end
+
   def test_base_class
     assert LoosePerson.abstract_class?
     assert !LooseDescendant.abstract_class?
@@ -1220,39 +1386,63 @@ class BasicsTest < Test::Unit::TestCase
     assert xml.include?(%(<title>The First Topic</title>))
     assert xml.include?(%(<author-name>David</author-name>))
     assert xml.include?(%(<id type="integer">1</id>))
-    assert xml.include?(%(<replies-count type="integer">0</replies-count>))
+    assert xml.include?(%(<replies-count type="integer">1</replies-count>))
     assert xml.include?(%(<written-on type="datetime">#{written_on_in_current_timezone}</written-on>))
     assert xml.include?(%(<content>Have a nice day</content>))
     assert xml.include?(%(<author-email-address>david@loudthinking.com</author-email-address>))
-    assert xml.include?(%(<parent-id></parent-id>))
-    if current_adapter?(:SybaseAdapter) or current_adapter?(:SQLServerAdapter)
+    assert xml.match(%(<parent-id type="integer"></parent-id>))
+    if current_adapter?(:SybaseAdapter, :SQLServerAdapter, :OracleAdapter)
       assert xml.include?(%(<last-read type="datetime">#{last_read_in_current_timezone}</last-read>))
     else
       assert xml.include?(%(<last-read type="date">2004-04-15</last-read>))
     end
     # Oracle and DB2 don't have true boolean or time-only fields
-    unless current_adapter?(:OracleAdapter) || current_adapter?(:DB2Adapter)
+    unless current_adapter?(:OracleAdapter, :DB2Adapter)
       assert xml.include?(%(<approved type="boolean">false</approved>)), "Approved should be a boolean"
       assert xml.include?(%(<bonus-time type="datetime">#{bonus_time_in_current_timezone}</bonus-time>))
     end
   end
-  
+
   def test_to_xml_skipping_attributes
-    xml = topics(:first).to_xml(:indent => 0, :skip_instruct => true, :except => :title)
+    xml = topics(:first).to_xml(:indent => 0, :skip_instruct => true, :except => [:title, :replies_count])
     assert_equal "<topic>", xml.first(7)
     assert !xml.include?(%(<title>The First Topic</title>))
     assert xml.include?(%(<author-name>David</author-name>))    
 
-    xml = topics(:first).to_xml(:indent => 0, :skip_instruct => true, :except => [ :title, :author_name ])
+    xml = topics(:first).to_xml(:indent => 0, :skip_instruct => true, :except => [:title, :author_name, :replies_count])
     assert !xml.include?(%(<title>The First Topic</title>))
     assert !xml.include?(%(<author-name>David</author-name>))    
   end
-  
+
   def test_to_xml_including_has_many_association
-    xml = topics(:first).to_xml(:indent => 0, :skip_instruct => true, :include => :replies)
+    xml = topics(:first).to_xml(:indent => 0, :skip_instruct => true, :include => :replies, :except => :replies_count)
     assert_equal "<topic>", xml.first(7)
     assert xml.include?(%(<replies><reply>))
     assert xml.include?(%(<title>The Second Topic's of the day</title>))
+  end
+
+  def test_array_to_xml_including_has_many_association
+    xml = [ topics(:first), topics(:second) ].to_xml(:indent => 0, :skip_instruct => true, :include => :replies)
+    assert xml.include?(%(<replies><reply>))
+  end
+
+  def test_array_to_xml_including_methods
+    xml = [ topics(:first), topics(:second) ].to_xml(:indent => 0, :skip_instruct => true, :methods => [ :topic_id ])
+    assert xml.include?(%(<topic-id type="integer">#{topics(:first).topic_id}</topic-id>)), xml
+    assert xml.include?(%(<topic-id type="integer">#{topics(:second).topic_id}</topic-id>)), xml
+  end
+  
+  def test_array_to_xml_including_has_one_association
+    xml = [ companies(:first_firm), companies(:rails_core) ].to_xml(:indent => 0, :skip_instruct => true, :include => :account)
+    assert xml.include?(companies(:first_firm).account.to_xml(:indent => 0, :skip_instruct => true))
+    assert xml.include?(companies(:rails_core).account.to_xml(:indent => 0, :skip_instruct => true))
+  end
+
+  def test_array_to_xml_including_belongs_to_association
+    xml = [ companies(:first_client), companies(:second_client), companies(:another_client) ].to_xml(:indent => 0, :skip_instruct => true, :include => :firm)
+    assert xml.include?(companies(:first_client).to_xml(:indent => 0, :skip_instruct => true))
+    assert xml.include?(companies(:second_client).firm.to_xml(:indent => 0, :skip_instruct => true))
+    assert xml.include?(companies(:another_client).firm.to_xml(:indent => 0, :skip_instruct => true))
   end
 
   def test_to_xml_including_belongs_to_association
@@ -1308,6 +1498,10 @@ class BasicsTest < Test::Unit::TestCase
     assert_equal 'ActiveRecord::Person', ActiveRecord::Base.send(:type_name_with_module, 'Person')
     assert_equal '::Person', ActiveRecord::Base.send(:type_name_with_module, '::Person')
   end
+  
+  def test_to_param_should_return_string
+    assert_kind_of String, Client.find(:first).to_param
+  end
 
   # FIXME: this test ought to run, but it needs to run sandboxed so that it
   # doesn't b0rk the current test environment by undefing everything.
@@ -1333,7 +1527,7 @@ class BasicsTest < Test::Unit::TestCase
   
   private
     def assert_readers(model, exceptions)
-      expected_readers = Set.new(model.column_names - (model.serialized_attributes.keys + ['id']))
+      expected_readers = Set.new(model.column_names - ['id'])
       expected_readers += expected_readers.map { |col| "#{col}?" }
       expected_readers -= exceptions
       assert_equal expected_readers, model.read_methods

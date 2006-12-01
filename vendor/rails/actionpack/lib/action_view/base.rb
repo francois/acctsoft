@@ -1,7 +1,6 @@
 require 'erb'
 
 module ActionView #:nodoc:
-
   class ActionViewError < StandardError #:nodoc:
   end
 
@@ -11,7 +10,7 @@ module ActionView #:nodoc:
   # 
   # = ERb
   # 
-  # You trigger ERb by using embeddings such as <% %> and <%= %>. The difference is whether you want output or not. Consider the 
+  # You trigger ERb by using embeddings such as <% %>, <% -%>, and <%= %>. The <%= %> tag set is used when you want output. Consider the 
   # following loop for names:
   #
   #   <b>Names of all the people</b>
@@ -19,12 +18,14 @@ module ActionView #:nodoc:
   #     Name: <%= person.name %><br/>
   #   <% end %>
   #
-  # The loop is setup in regular embedding tags (<% %>) and the name is written using the output embedding tag (<%= %>). Note that this
+  # The loop is setup in regular embedding tags <% %> and the name is written using the output embedding tag <%= %>. Note that this
   # is not just a usage suggestion. Regular output functions like print or puts won't work with ERb templates. So this would be wrong:
   #
   #   Hi, Mr. <% puts "Frodo" %>
   #
-  # (If you absolutely must write from within a function, you can use the TextHelper#concat)
+  # If you absolutely must write from within a function, you can use the TextHelper#concat
+  #
+  # <%- and -%> suppress leading and trailing whitespace, including the trailing newline, and can be used interchangeably with <% and %>.
   #
   # == Using sub templates
   #
@@ -52,12 +53,21 @@ module ActionView #:nodoc:
   # 
   # You can pass local variables to sub templates by using a hash with the variable names as keys and the objects as values:
   #
-  #   <%= render "shared/header", { "headline" => "Welcome", "person" => person } %>
+  #   <%= render "shared/header", { :headline => "Welcome", :person => person } %>
   #
   # These can now be accessed in shared/header with:
   #
   #   Headline: <%= headline %>
   #   First name: <%= person.first_name %>
+  #
+  # If you need to find out whether a certain local variable has been assigned a value in a particular render call,
+  # you need to use the following pattern:
+  #
+  #   <% if local_assigns.has_key? :headline %>
+  #     Headline: <%= headline %>
+  #   <% end %>
+  #
+  # Testing using <tt>defined? headline</tt> will not work. This is an implementation restriction.
   #
   # == Template caching
   #
@@ -146,7 +156,8 @@ module ActionView #:nodoc:
     attr_accessor :base_path, :assigns, :template_extension
     attr_accessor :controller
 
-    attr_reader :logger, :params, :request, :response, :session, :headers, :flash
+    attr_reader :logger, :response, :headers
+    attr_internal *ActionController::Base::DEPRECATED_INSTANCE_VARIABLES
 
     # Specify trim mode for the ERB compiler. Defaults to '-'.
     # See ERB documentation for suitable values.
@@ -172,6 +183,9 @@ module ActionView #:nodoc:
     # that alert()s the caught exception (and then re-raises it). 
     @@debug_rjs = false
     cattr_accessor :debug_rjs
+    
+    @@erb_variable = '_erbout'
+    cattr_accessor :erb_variable
 
     @@template_handlers = HashWithIndifferentAccess.new
  
@@ -197,7 +211,7 @@ module ActionView #:nodoc:
     end
 
     def self.load_helpers(helper_dir)#:nodoc:
-      Dir.foreach(helper_dir) do |helper_file| 
+      Dir.entries(helper_dir).sort.each do |helper_file|
         next unless helper_file =~ /^([a-z][a-z_]*_helper).rb$/
         require File.join(helper_dir, $1)
         helper_module_name = $1.camelize
@@ -265,8 +279,7 @@ module ActionView #:nodoc:
       elsif options == :update
         update_page(&block)
       elsif options.is_a?(Hash)
-        options[:locals] ||= {}
-        options[:use_full_path] = options[:use_full_path].nil? ? true : options[:use_full_path]
+        options = options.reverse_merge(:type => :rhtml, :locals => {}, :use_full_path => true)
 
         if options[:file]
           render_file(options[:file], options[:use_full_path], options[:locals])
@@ -275,7 +288,7 @@ module ActionView #:nodoc:
         elsif options[:partial]
           render_partial(options[:partial], ActionView::Base::ObjectWrapper.new(options[:object]), options[:locals])
         elsif options[:inline]
-          render_template(options[:type] || :rhtml, options[:inline], nil, options[:locals] || {})
+          render_template(options[:type], options[:inline], nil, options[:locals])
         end
       end
     end
@@ -299,6 +312,9 @@ module ActionView #:nodoc:
     # will only be read if it has to be compiled.
     #
     def compile_and_render_template(extension, template = nil, file_path = nil, local_assigns = {}) #:nodoc:
+      # convert string keys to symbols if requested
+      local_assigns = local_assigns.symbolize_keys if @@local_assigns_support_string_keys
+
       # compile the given template, if necessary
       if compile_template?(template, file_path, local_assigns)
         template ||= read_template_file(file_path, extension)
@@ -307,9 +323,7 @@ module ActionView #:nodoc:
 
       # Get the method name for this template and run it
       method_name = @@method_names[file_path || template]
-      evaluate_assigns                                    
-
-      local_assigns = local_assigns.symbolize_keys if @@local_assigns_support_string_keys
+      evaluate_assigns
 
       send(method_name, local_assigns) do |*name|
         instance_variable_get "@content_for_#{name.first || 'layout'}"
@@ -335,14 +349,14 @@ module ActionView #:nodoc:
     def builder_template_exists?(template_path)#:nodoc:
       template_exists?(template_path, :rxml)
     end
-    
+
     def javascript_template_exists?(template_path)#:nodoc:
       template_exists?(template_path, :rjs)
     end
 
     def file_exists?(template_path)#:nodoc:
       template_file_name, template_file_extension = path_and_extension(template_path)
-      
+
       if template_file_extension
         template_exists?(template_file_name, template_file_extension)
       else
@@ -372,11 +386,11 @@ module ActionView #:nodoc:
         template_path_without_extension = template_path.sub(/\.(\w+)$/, '')
         [ template_path_without_extension, $1 ]
       end
-      
+
       def cached_template_extension(template_path)
         @@cache_template_extensions && @@cached_template_extension[template_path]
-      end      
-          
+      end
+
       def find_template_extension_for(template_path)
         if match = delegate_template_exists?(template_path)
           match.first.to_sym
@@ -384,7 +398,7 @@ module ActionView #:nodoc:
         elsif builder_template_exists?(template_path):    :rxml
         elsif javascript_template_exists?(template_path): :rjs
         else
-          raise ActionViewError, "No rhtml, rxml, rjs or delegate template found for #{template_path}"
+          raise ActionViewError, "No rhtml, rxml, rjs or delegate template found for #{template_path} in #{@base_path}"
         end
       end
 
@@ -414,22 +428,29 @@ module ActionView #:nodoc:
         local_assigns.empty? ||
           ((args = @@template_args[render_symbol]) && local_assigns.all? { |k,_| args.has_key?(k) })
       end
-      
+
       # Check whether compilation is necessary.
       # Compile if the inline template or file has not been compiled yet.
       # Or if local_assigns has a new key, which isn't supported by the compiled code yet.
-      # Or if the file has changed on disk and checking file mods hasn't been disabled. 
+      # Or if the file has changed on disk and checking file mods hasn't been disabled.
       def compile_template?(template, file_name, local_assigns)
         method_key    = file_name || template
         render_symbol = @@method_names[method_key]
 
         if @@compile_time[render_symbol] && supports_local_assigns?(render_symbol, local_assigns)
-          if file_name && !@@cache_template_loading 
-            @@compile_time[render_symbol] < File.mtime(file_name)
+          if file_name && !@@cache_template_loading
+            template_changed_since?(file_name, @@compile_time[render_symbol])
           end
         else
           true
         end
+      end
+
+      # handles checking if template changed since last compile, isolated so that templates
+      # not stored on the file system can hook and extend appropriately
+      def template_changed_since?(file_name, compile_time)
+        compile_time < File.mtime(file_name) ||
+          (File.symlink?(file_name) && (compile_time < File.lstat(file_name).mtime))
       end
 
       # Create source code for given template
@@ -437,11 +458,11 @@ module ActionView #:nodoc:
         if template_requires_setup?(extension)
           body = case extension.to_sym
             when :rxml
+              "controller.response.content_type ||= 'application/xml'\n" +
               "xml = Builder::XmlMarkup.new(:indent => 2)\n" +
-              "@controller.headers['Content-Type'] ||= 'application/xml'\n" +
               template
             when :rjs
-              "@controller.headers['Content-Type'] ||= 'text/javascript'\n" +
+              "controller.response.content_type ||= 'text/javascript'\n" +
               "update_page do |page|\n#{template}\nend"
           end
         else
@@ -454,7 +475,7 @@ module ActionView #:nodoc:
 
         locals_code = ""
         locals_keys.each do |key|
-          locals_code << "#{key} = local_assigns[:#{key}] if local_assigns.has_key?(:#{key})\n"
+          locals_code << "#{key} = local_assigns[:#{key}]\n"
         end
 
         "def #{render_symbol}(local_assigns)\n#{locals_code}#{body}\nend"
@@ -469,34 +490,27 @@ module ActionView #:nodoc:
       end
 
       def assign_method_name(extension, template, file_name)
-        method_name = '_run_'
-        method_name << "#{extension}_" if extension
+        method_key = file_name || template
+        @@method_names[method_key] ||= compiled_method_name(extension, template, file_name)
+      end
 
+      def compiled_method_name(extension, template, file_name)
+        ['_run', extension, compiled_method_name_file_path_segment(file_name)].compact.join('_').to_sym
+      end
+
+      def compiled_method_name_file_path_segment(file_name)
         if file_name
-          file_path = File.expand_path(file_name)
-          base_path = File.expand_path(@base_path)
-
-          i = file_path.index(base_path)
-          l = base_path.length
-
-          method_name_file_part = i ? file_path[i+l+1,file_path.length-l-1] : file_path.clone
-          method_name_file_part.sub!(/\.r(html|xml|js)$/,'')
-          method_name_file_part.tr!('/:-', '_')
-          method_name_file_part.gsub!(/[^a-zA-Z0-9_]/){|s| s[0].to_s}
-
-          method_name += method_name_file_part
+          s = File.expand_path(file_name)
+          s.sub!(/^#{Regexp.escape(File.expand_path(RAILS_ROOT))}/, '') if defined?(RAILS_ROOT)
+          s.gsub!(/([^a-zA-Z0-9_])/) { $1[0].to_s }
+          s
         else
-          @@inline_template_count += 1
-          method_name << @@inline_template_count.to_s
+          (@@inline_template_count += 1).to_s
         end
-
-        @@method_names[file_name || template] = method_name.intern
       end
 
       def compile_template(extension, template, file_name, local_assigns)
-        method_key = file_name || template
-
-        render_symbol = @@method_names[method_key] || assign_method_name(extension, template, file_name)
+        render_symbol = assign_method_name(extension, template, file_name)
         render_source = create_template_source(extension, template, render_symbol, local_assigns.keys)
 
         line_offset = @@template_args[render_symbol].size
@@ -513,18 +527,18 @@ module ActionView #:nodoc:
           else
             CompiledTemplates.module_eval(render_source, 'compiled-template', -line_offset)
           end
-        rescue Object => e
+        rescue Exception => e  # errors from template code
           if logger
             logger.debug "ERROR: compiling #{render_symbol} RAISED #{e}"
             logger.debug "Function body: #{render_source}"
             logger.debug "Backtrace: #{e.backtrace.join("\n")}"
           end
 
-          raise TemplateError.new(@base_path, method_key, @assigns, template, e)
+          raise TemplateError.new(@base_path, file_name || template, @assigns, template, e)
         end
 
         @@compile_time[render_symbol] = Time.now
-        # logger.debug "Compiled template #{method_key}\n  ==> #{render_symbol}" if logger
+        # logger.debug "Compiled template #{file_name || template}\n  ==> #{render_symbol}" if logger
       end
   end
 end

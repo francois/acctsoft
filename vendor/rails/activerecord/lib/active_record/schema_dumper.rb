@@ -1,4 +1,5 @@
 require 'stringio'
+require 'bigdecimal'
 
 module ActiveRecord
   # This class is used to dump the database schema for some connection to some
@@ -90,13 +91,15 @@ HEADER
             spec = {}
             spec[:name]    = column.name.inspect
             spec[:type]    = column.type.inspect
-            spec[:limit]   = column.limit.inspect if column.limit != @types[column.type][:limit] 
-            spec[:default] = column.default.inspect if !column.default.nil?
+            spec[:limit]   = column.limit.inspect if column.limit != @types[column.type][:limit] && column.type != :decimal
+            spec[:precision] = column.precision.inspect if !column.precision.nil?
+            spec[:scale] = column.scale.inspect if !column.scale.nil?
             spec[:null]    = 'false' if !column.null
+            spec[:default] = default_string(column.default) if !column.default.nil?
             (spec.keys - [:name, :type]).each{ |k| spec[k].insert(0, "#{k.inspect} => ")}
             spec
           end.compact
-          keys = [:name, :type, :limit, :default, :null] & column_specs.map{ |spec| spec.keys }.inject([]){ |a,b| a | b }
+          keys = [:name, :type, :limit, :precision, :scale, :default, :null] & column_specs.map{ |spec| spec.keys }.inject([]){ |a,b| a | b }
           lengths = keys.map{ |key| column_specs.map{ |spec| spec[key] ? spec[key].length + 2 : 0 }.max }
           format_string = lengths.map{ |len| "%-#{len}s" }.join("")
           column_specs.each do |colspec|
@@ -122,6 +125,17 @@ HEADER
         stream
       end
 
+      def default_string(value)
+        case value
+        when BigDecimal
+          value.to_s
+        when Date, DateTime, Time
+          "'" + value.to_s(:db) + "'"
+        else
+          value.inspect
+        end
+      end
+      
       def indexes(table, stream)
         indexes = @connection.indexes(table)
         indexes.each do |index|

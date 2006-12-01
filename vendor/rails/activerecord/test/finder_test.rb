@@ -20,10 +20,14 @@ class FinderTest < Test::Unit::TestCase
   end
   
   def test_exists
-    assert (Topic.exists?(1))
-    assert !(Topic.exists?(45))
-    assert !(Topic.exists?("foo"))
-    assert !(Topic.exists?([1,2]))
+    assert Topic.exists?(1)
+    assert Topic.exists?("1")
+    assert Topic.exists?(:author_name => "David")
+    assert Topic.exists?(:author_name => "Mary", :approved => true)
+    assert Topic.exists?(["parent_id = ?", 1])
+    assert !Topic.exists?(45)
+    assert !Topic.exists?("foo")
+    assert_raise(NoMethodError) { Topic.exists?([1,2]) }
   end
   
   def test_find_by_array_of_one_id
@@ -89,6 +93,11 @@ class FinderTest < Test::Unit::TestCase
     assert_equal(topics(:second).title, topics.first.title)
   end
   
+  def test_find_by_sql_with_sti_on_joined_table
+    accounts = Account.find_by_sql("SELECT * FROM accounts INNER JOIN companies ON companies.id = accounts.firm_id")
+    assert_equal [Account], accounts.collect(&:class).uniq
+  end
+  
   def test_find_first
     first = Topic.find(:first, :conditions => "title = 'The First Topic'")
     assert_equal(topics(:first).title, first.title)
@@ -117,16 +126,57 @@ class FinderTest < Test::Unit::TestCase
     assert topic.respond_to?("author_name")
   end
 
-  def test_find_on_conditions
+  def test_find_on_array_conditions
     assert Topic.find(1, :conditions => ["approved = ?", false])
     assert_raises(ActiveRecord::RecordNotFound) { Topic.find(1, :conditions => ["approved = ?", true]) }
   end
   
-  def test_condition_interpolation
+  def test_find_on_hash_conditions
+    assert Topic.find(1, :conditions => { :approved => false })
+    assert_raises(ActiveRecord::RecordNotFound) { Topic.find(1, :conditions => { :approved => true }) }
+  end
+  
+  def test_find_on_multiple_hash_conditions
+    assert Topic.find(1, :conditions => { :author_name => "David", :title => "The First Topic", :replies_count => 1, :approved => false })
+    assert_raises(ActiveRecord::RecordNotFound) { Topic.find(1, :conditions => { :author_name => "David", :title => "The First Topic", :replies_count => 1, :approved => true }) }
+    assert_raises(ActiveRecord::RecordNotFound) { Topic.find(1, :conditions => { :author_name => "David", :title => "HHC", :replies_count => 1, :approved => false }) }
+    assert_raises(ActiveRecord::RecordNotFound) { Topic.find(1, :conditions => { :author_name => "David", :title => "The First Topic", :replies_count => 1, :approved => true }) }
+  end
+  
+  def test_condition_array_interpolation
     assert_kind_of Firm, Company.find(:first, :conditions => ["name = '%s'", "37signals"])
     assert_nil Company.find(:first, :conditions => ["name = '%s'", "37signals!"])
     assert_nil Company.find(:first, :conditions => ["name = '%s'", "37signals!' OR 1=1"])
     assert_kind_of Time, Topic.find(:first, :conditions => ["id = %d", 1]).written_on
+  end
+  
+  def test_condition_hash_interpolation
+    assert_kind_of Firm, Company.find(:first, :conditions => { :name => "37signals"})
+    assert_nil Company.find(:first, :conditions => { :name => "37signals!"})
+    assert_kind_of Time, Topic.find(:first, :conditions => {:id => 1}).written_on
+  end
+  
+  def test_hash_condition_find_malformed
+    assert_raises(ActiveRecord::StatementInvalid) {
+      Company.find(:first, :conditions => { :id => 2, :dhh => true })
+    }
+  end
+
+  def test_hash_condition_find_with_escaped_characters
+    Company.create("name" => "Ain't noth'n like' \#stuff")
+    assert Company.find(:first, :conditions => { :name => "Ain't noth'n like' \#stuff" })
+  end
+
+  def test_hash_condition_find_with_array
+    p1, p2 = Post.find(:all, :limit => 2, :order => 'id asc')
+    assert_equal [p1, p2], Post.find(:all, :conditions => { :id => [p1, p2] }, :order => 'id asc')
+    assert_equal [p1, p2], Post.find(:all, :conditions => { :id => [p1, p2.id] }, :order => 'id asc')
+  end
+
+  def test_hash_condition_find_with_nil
+    topic = Topic.find(:first, :conditions => { :last_read => nil } )
+    assert_not_nil topic
+    assert_nil topic.last_read
   end
 
   def test_bind_variables
@@ -211,9 +261,9 @@ class FinderTest < Test::Unit::TestCase
   end
 
   def test_count
-    assert_equal(0, Entrant.count("id > 3"))
-    assert_equal(1, Entrant.count(["id > ?", 2]))
-    assert_equal(2, Entrant.count(["id > ?", 1]))
+    assert_equal(0, Entrant.count(:conditions => "id > 3"))
+    assert_equal(1, Entrant.count(:conditions => ["id > ?", 2]))
+    assert_equal(2, Entrant.count(:conditions => ["id > ?", 1]))
   end
 
   def test_count_by_sql
@@ -307,6 +357,7 @@ class FinderTest < Test::Unit::TestCase
     sig38 = Company.find_or_create_by_name("38signals")
     assert_equal number_of_companies + 1, Company.count
     assert_equal sig38, Company.find_or_create_by_name("38signals")
+    assert !sig38.new_record?
   end
 
   def test_find_or_create_from_two_attributes
@@ -314,6 +365,20 @@ class FinderTest < Test::Unit::TestCase
     another = Topic.find_or_create_by_title_and_author_name("Another topic","John")
     assert_equal number_of_topics + 1, Topic.count
     assert_equal another, Topic.find_or_create_by_title_and_author_name("Another topic", "John")
+    assert !another.new_record?
+  end
+  
+  def test_find_or_initialize_from_one_attribute
+    sig38 = Company.find_or_initialize_by_name("38signals")
+    assert_equal "38signals", sig38.name
+    assert sig38.new_record?
+  end
+  
+  def test_find_or_initialize_from_two_attributes
+    another = Topic.find_or_initialize_by_title_and_author_name("Another topic","John")
+    assert_equal "Another topic", another.title
+    assert_equal "John", another.author_name
+    assert another.new_record?
   end
 
   def test_find_with_bad_sql
@@ -401,8 +466,8 @@ class FinderTest < Test::Unit::TestCase
   end
 
   def test_select_values
-    assert_equal ["1","2","3","4","5","6","7","8"], Company.connection.select_values("SELECT id FROM companies ORDER BY id").map! { |i| i.to_s }
-    assert_equal ["37signals","Summit","Microsoft", "Flamboyant Software", "Ex Nihilo", "RailsCore", "Leetsoft", "Jadedpixel"], Company.connection.select_values("SELECT name FROM companies ORDER BY id")
+    assert_equal ["1","2","3","4","5","6","7","8","9"], Company.connection.select_values("SELECT id FROM companies ORDER BY id").map! { |i| i.to_s }
+    assert_equal ["37signals","Summit","Microsoft", "Flamboyant Software", "Ex Nihilo", "RailsCore", "Leetsoft", "Jadedpixel", "Odegy"], Company.connection.select_values("SELECT name FROM companies ORDER BY id")
   end
 
   protected

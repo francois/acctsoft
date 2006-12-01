@@ -239,7 +239,7 @@ module HTML #:nodoc:
     def match(conditions)
       case conditions
         when String
-          @content.index(conditions)
+          @content == conditions
         when Regexp
           @content =~ conditions
         when Hash
@@ -455,7 +455,6 @@ module HTML #:nodoc:
       # count children
       if opts = conditions[:children]
         matches = children.select do |c|
-          c.match(/./) or
           (c.kind_of?(HTML::Tag) and (c.closing == :self or ! c.childless?))
         end
         

@@ -142,11 +142,13 @@ module ActionView
       #
       # Note: This also works for the methods in FormOptionHelper and DateHelper that are designed to work with an object as base.
       # Like collection_select and datetime_select.
-      def fields_for(object_name, *args, &proc)
+      def fields_for(object_name, *args, &block)
         raise ArgumentError, "Missing block" unless block_given?
         options = args.last.is_a?(Hash) ? args.pop : {}
         object  = args.first
-        yield((options[:builder] || FormBuilder).new(object_name, object, self, options, proc))
+
+        builder = options[:builder] || ActionView::Base.default_form_builder
+        yield builder.new(object_name, object, self, options, block)
       end
 
       # Returns an input tag of the "text" type tailored for accessing a specified attribute (identified by +method+) on an object
@@ -238,7 +240,11 @@ module ActionView
         @template_object, @local_binding = template_object, local_binding
         @object = object
         if @object_name.sub!(/\[\]$/,"")
-          @auto_index = @template_object.instance_variable_get("@#{Regexp.last_match.pre_match}").id_before_type_cast
+          if object ||= @template_object.instance_variable_get("@#{Regexp.last_match.pre_match}") and object.respond_to?(:id_before_type_cast)
+            @auto_index = object.id_before_type_cast
+          else
+            raise ArgumentError, "object[] naming but object param and @object var don't exist or don't respond to id_before_type_cast: #{object.inspect}"
+          end
         end
       end
 
@@ -265,9 +271,9 @@ module ActionView
         else
           checked = self.class.radio_button_checked?(value(object), tag_value)
         end
-        options["checked"] = "checked" if checked
+        options["checked"]  = "checked" if checked
         pretty_tag_value    = tag_value.to_s.gsub(/\s/, "_").gsub(/\W/, "").downcase
-        options["id"]       = @auto_index ?             
+        options["id"]     ||= defined?(@auto_index) ?             
           "#{@object_name}_#{@auto_index}_#{@method_name}_#{pretty_tag_value}" :
           "#{@object_name}_#{@method_name}_#{pretty_tag_value}"
         add_default_name_and_id(options)
@@ -377,7 +383,7 @@ module ActionView
             options["name"] ||= tag_name_with_index(options["index"])
             options["id"]   ||= tag_id_with_index(options["index"])
             options.delete("index")
-          elsif @auto_index
+          elsif defined?(@auto_index)
             options["name"] ||= tag_name_with_index(@auto_index)
             options["id"]   ||= tag_id_with_index(@auto_index)
           else
@@ -408,7 +414,7 @@ module ActionView
       class_inheritable_accessor :field_helpers
       self.field_helpers = (FormHelper.instance_methods - ['form_for'])
 
-      attr_accessor :object_name, :object
+      attr_accessor :object_name, :object, :options
 
       def initialize(object_name, object, template, options, proc)
         @object_name, @object, @template, @options, @proc = object_name, object, template, options, proc        
@@ -431,5 +437,10 @@ module ActionView
         @template.radio_button(@object_name, method, tag_value, options.merge(:object => @object))
       end
     end
+  end
+
+  class Base
+    cattr_accessor :default_form_builder
+    self.default_form_builder = ::ActionView::Helpers::FormBuilder
   end
 end

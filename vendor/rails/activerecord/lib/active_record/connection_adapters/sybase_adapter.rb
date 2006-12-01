@@ -86,14 +86,15 @@ module ActiveRecord
 
         def simplified_type(field_type)
           case field_type
-            when /int|bigint|smallint|tinyint/i                        then :integer
-            when /float|double|decimal|money|numeric|real|smallmoney/i then :float
-            when /text|ntext/i                                         then :text
-            when /binary|image|varbinary/i                             then :binary
-            when /char|nchar|nvarchar|string|varchar/i                 then :string
-            when /bit/i                                                then :boolean
-            when /datetime|smalldatetime/i                             then :datetime
-            else                                                       super
+            when /int|bigint|smallint|tinyint/i        then :integer
+            when /float|double|real/i                  then :float
+            when /decimal|money|numeric|smallmoney/i   then :decimal
+            when /text|ntext/i                         then :text
+            when /binary|image|varbinary/i             then :binary
+            when /char|nchar|nvarchar|string|varchar/i then :string
+            when /bit/i                                then :boolean
+            when /datetime|smalldatetime/i             then :datetime
+            else                                       super
           end
         end
 
@@ -137,6 +138,7 @@ module ActiveRecord
           :text        => { :name => "text" },
           :integer     => { :name => "int" },
           :float       => { :name => "float", :limit => 8 },
+          :decimal     => { :name => "decimal" },
           :datetime    => { :name => "datetime" },
           :timestamp   => { :name => "timestamp" },
           :time        => { :name => "time" },
@@ -166,15 +168,6 @@ module ActiveRecord
 
       def table_alias_length
         30
-      end
-
-      def select_all(sql, name = nil)
-        select(sql, name)
-      end
-
-      def select_one(sql, name = nil)
-        result = select(sql, name)
-        result.nil? ? nil : result.first
       end
 
       def columns(table_name, name = nil)
@@ -232,9 +225,6 @@ module ActiveRecord
         @connection.results[0].row_count
       end
 
-      alias_method :update, :execute
-      alias_method :delete, :execute
-
       def begin_db_transaction()    execute "BEGIN TRAN" end
       def commit_db_transaction()   execute "COMMIT TRAN" end
       def rollback_db_transaction() execute "ROLLBACK TRAN" end
@@ -287,18 +277,16 @@ module ActiveRecord
           when NilClass              then (column && column.type == :boolean) ? '0' : "NULL"
           when TrueClass             then '1'
           when FalseClass            then '0'
-          when Float, Fixnum, Bignum
-            force_numeric?(column) ? value.to_s : "'#{value.to_s}'"
-          when Date                  then "'#{value.to_s}'" 
+          when Float, Fixnum, Bignum then force_numeric?(column) ? value.to_s : "'#{value.to_s}'"
           when Time, DateTime        then "'#{value.strftime("%Y-%m-%d %H:%M:%S")}'"
-          else                            "'#{quote_string(value.to_yaml)}'"
+          else                       super
         end
       end
 
       # True if column is explicitly declared non-numeric, or
       # if column is nil (not specified).
       def force_numeric?(column)
-        (column.nil? || [:integer, :float].include?(column.type))
+        (column.nil? || [:integer, :float, :decimal].include?(column.type))
       end
 
       def quote_string(s)

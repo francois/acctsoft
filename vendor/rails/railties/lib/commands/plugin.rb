@@ -136,7 +136,7 @@ class RailsEnvironment
     Tempfile.open("svn-set-prop") do |file|
       file.write(items)
       file.flush
-      system("svn propset -q svn:externals -F #{file.path} \"#{root}/vendor/plugins\"")
+      system("svn propset -q svn:externals -F \"#{file.path}\" \"#{root}/vendor/plugins\"")
     end
   end
   
@@ -185,6 +185,7 @@ class Plugin
     path = "#{rails_env.root}/vendor/plugins/#{name}"
     if File.directory?(path)
       puts "Removing 'vendor/plugins/#{name}'" if $verbose
+      run_uninstall_hook
       rm_r path
     else
       puts "Plugin doesn't exist: #{path}"
@@ -196,15 +197,15 @@ class Plugin
   end
 
   def info
-    tmp = "#{rails_env.root}/_tmp_meta.yml"
+    tmp = "#{rails_env.root}/_tmp_about.yml"
     if svn_url?
       cmd = "svn export #{@uri} \"#{rails_env.root}/#{tmp}\""
       puts cmd if $verbose
       system(cmd)
     end
-    open(svn_url? ? tmp : File.join(@uri, 'meta.yml')) do |stream|
+    open(svn_url? ? tmp : File.join(@uri, 'about.yml')) do |stream|
       stream.read
-    end rescue "No meta.yml found in #{uri}"
+    end rescue "No about.yml found in #{uri}"
   ensure
     FileUtils.rm_rf tmp if svn_url?
   end
@@ -214,6 +215,11 @@ class Plugin
     def run_install_hook
       install_hook_file = "#{rails_env.root}/vendor/plugins/#{name}/install.rb"
       load install_hook_file if File.exists? install_hook_file
+    end
+
+    def run_uninstall_hook
+      uninstall_hook_file = "#{rails_env.root}/vendor/plugins/#{name}/uninstall.rb"
+      load uninstall_hook_file if File.exists? uninstall_hook_file
     end
 
     def install_using_export(options = {})
@@ -571,8 +577,8 @@ module Commands
     def options
       OptionParser.new do |o|
         o.set_summary_indent('  ')
-        o.banner =    "Usage: #{@base_command.script_name} source REPOSITORY"
-        o.define_head "Add a new repository."
+        o.banner =    "Usage: #{@base_command.script_name} source REPOSITORY [REPOSITORY [REPOSITORY]...]"
+        o.define_head "Add new repositories to the default search list."
       end
     end
     
@@ -678,13 +684,17 @@ module Commands
       puts "Scraping #{uri}" if $verbose
       dupes = []
       content = open(uri).each do |line|
-        if line =~ /<a[^>]*href=['"]([^'"]*)['"]/ or line =~ /(svn:\/\/[^<|\n]*)/
-          uri = $1
-          if uri =~ /\/plugins\// and uri !~ /\/browser\//
-            uri = extract_repository_uri(uri)
-            yield uri unless dupes.include?(uri) or Repositories.instance.exist?(uri)
-            dupes << uri
+        begin
+          if line =~ /<a[^>]*href=['"]([^'"]*)['"]/ || line =~ /(svn:\/\/[^<|\n]*)/
+            uri = $1
+            if uri =~ /^\w+:\/\// && uri =~ /\/plugins\// && uri !~ /\/browser\// && uri !~ /^http:\/\/wiki\.rubyonrails/ && uri !~ /http:\/\/instiki/
+              uri = extract_repository_uri(uri)
+              yield uri unless dupes.include?(uri) || Repositories.instance.exist?(uri)
+              dupes << uri
+            end
           end
+        rescue
+          puts "Problems scraping '#{uri}': #{$!.to_s}"
         end
       end
     end
@@ -755,7 +765,7 @@ module Commands
         ::Plugin.find(name).install(install_method, @options)
       end
     rescue
-      puts "Plugin not found: #{name}"
+      puts "Plugin not found: #{args.inspect}"
       exit 1
     end
   end
@@ -826,7 +836,7 @@ module Commands
       OptionParser.new do |o|
         o.set_summary_indent('  ')
         o.banner =    "Usage: #{@base_command.script_name} info name [name]..."
-        o.define_head "Shows plugin info at {url}/meta.yml."
+        o.define_head "Shows plugin info at {url}/about.yml."
       end
     end
 

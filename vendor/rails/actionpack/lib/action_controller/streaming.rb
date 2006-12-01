@@ -28,6 +28,7 @@ module ActionController #:nodoc:
       #   or to read the entire file before sending (false). Defaults to true.
       # * <tt>:buffer_size</tt> - specifies size (in bytes) of the buffer used to stream the file.
       #   Defaults to 4096.
+      # * <tt>:status</tt> - specifies the status code to send with the response. Defaults to '200 OK'.
       #
       # The default Content-Type and Content-Disposition headers are
       # set to download arbitrary binary files in as many browsers as
@@ -37,8 +38,11 @@ module ActionController #:nodoc:
       # Simple download:
       #   send_file '/path/to.zip'
       #
-      # Show a JPEG in browser:
+      # Show a JPEG in the browser:
       #   send_file '/path/to.jpeg', :type => 'image/jpeg', :disposition => 'inline'
+      #
+      # Show a 404 page in the browser:
+      #   send_file '/path/to/404.html, :type => 'text/html; charset=utf-8', :status => 404
       #
       # Read about the other Content-* HTTP headers if you'd like to
       # provide the user with more information (such as Content-Description).
@@ -61,27 +65,18 @@ module ActionController #:nodoc:
         @performed_render = false
 
         if options[:stream]
-          render :text => Proc.new { |response, output|
+          render :status => options[:status], :text => Proc.new { |response, output|
             logger.info "Streaming file #{path}" unless logger.nil?
             len = options[:buffer_size] || 4096
             File.open(path, 'rb') do |file|
-              if output.respond_to?(:syswrite)
-                begin
-                  while true
-                    output.syswrite(file.sysread(len))
-                  end
-                rescue EOFError
-                end
-              else
-                while buf = file.read(len)
-                  output.write(buf)
-                end
+              while buf = file.read(len)
+                output.write(buf)
               end
             end
           }
         else
           logger.info "Sending file #{path}" unless logger.nil?
-          File.open(path, 'rb') { |file| render :text => file.read }
+          File.open(path, 'rb') { |file| render :status => options[:status], :text => file.read }
         end
       end
 
@@ -94,6 +89,7 @@ module ActionController #:nodoc:
       #   Defaults to 'application/octet-stream'.
       # * <tt>:disposition</tt> - specifies whether the file will be shown inline or downloaded.  
       #   Valid values are 'inline' and 'attachment' (default).
+      # * <tt>:status</tt> - specifies the status code to send with the response. Defaults to '200 OK'.
       #
       # Generic data download:
       #   send_data buffer
@@ -109,7 +105,7 @@ module ActionController #:nodoc:
         logger.info "Sending data #{options[:filename]}" unless logger.nil?
         send_file_headers! options.merge(:length => data.size)
         @performed_render = false
-        render :text => data
+        render :status => options[:status], :text => data
       end
 
     private
@@ -120,10 +116,10 @@ module ActionController #:nodoc:
         end
 
         disposition = options[:disposition].dup || 'attachment'
-        
+
         disposition <<= %(; filename="#{options[:filename]}") if options[:filename]
 
-        @headers.update(
+        headers.update(
           'Content-Length'            => options[:length],
           'Content-Type'              => options[:type].strip,  # fixes a problem with extra '\r' with some browsers
           'Content-Disposition'       => disposition,
@@ -136,7 +132,7 @@ module ActionController #:nodoc:
         # after it displays the "open/save" dialog, which means that if you 
         # hit "open" the file isn't there anymore when the application that 
         # is called for handling the download is run, so let's workaround that
-        @headers['Cache-Control'] = 'private' if @headers['Cache-Control'] == 'no-cache'
+        headers['Cache-Control'] = 'private' if headers['Cache-Control'] == 'no-cache'
       end
   end
 end

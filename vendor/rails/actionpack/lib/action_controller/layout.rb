@@ -183,7 +183,6 @@ module ActionController #:nodoc:
       private
         def inherited_with_layout(child)
           inherited_without_layout(child)
-          child.send :include, Reloadable
           layout_match = child.name.underscore.sub(/_controller$/, '').sub(/^controllers\//, '')
           child.layout(layout_match) unless layout_list.grep(%r{layouts/#{layout_match}\.[a-z][0-9a-z]*$}).empty?
         end
@@ -236,6 +235,8 @@ module ActionController #:nodoc:
       template_with_options = options.is_a?(Hash)
 
       if apply_layout?(template_with_options, options) && (layout = pick_layout(template_with_options, options, deprecated_layout))
+        assert_existence_of_template_file(layout)
+
         options = options.merge :layout => false if template_with_options
         logger.info("Rendering #{options} within #{layout}") if logger
 
@@ -249,7 +250,7 @@ module ActionController #:nodoc:
         erase_render_results
         add_variables_to_assigns
         @template.instance_variable_set("@content_for_layout", content_for_layout)
-        @response.layout = layout
+        response.layout = layout
         render_text(@template.render_file(layout, true), deprecated_status)
       else
         render_with_no_layout(options, deprecated_status, &block)

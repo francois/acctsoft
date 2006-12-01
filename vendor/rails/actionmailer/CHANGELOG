@@ -1,5 +1,36 @@
 *SVN*
 
+* Allow mailer actions named send by using __send__ internally.  #6467 [iGEL]
+
+* Add assert_emails and assert_no_emails to test the number of emails delivered.  #6479 [Jonathan Viney]
+    # Assert total number of emails delivered:
+    assert_emails 0
+    ContactMailer.deliver_contact
+    assert_emails 1
+
+    # Assert number of emails delivered within a block:
+    assert_emails 1 do
+      post :signup, :name => 'Jonathan'
+    end
+
+* Make mime version default to 1.0. closes #2323 [ror@andreas-s.net]
+
+* Make sure quoted-printable text is decoded correctly when only portions of the text are encoded. closes #3154. [jon@siliconcircus.com]
+
+* Make sure DOS newlines in quoted-printable text are normalized to unix newlines before unquoting. closes #4166 and #4452. [Jamis Buck]
+
+* Fixed that iconv decoding should catch InvalidEncoding #3153 [jon@siliconcircus.com]
+
+* Tighten rescue clauses.  #5985 [james@grayproductions.net]
+
+* Automatically included ActionController::UrlWriter, such that URL generation can happen within ActionMailer controllers. [DHH]
+
+* Replace Reloadable with Reloadable::Deprecated. [Nicholas Seckar]
+
+* Mailer template root applies to a class and its subclasses rather than acting globally. #5555 [somekool@gmail.com]
+
+* Resolve action naming collision. #5520 [ssinghi@kreeti.com]
+
 * ActionMailer::Base documentation rewrite. Closes #4991 [Kevin Clark, Marcel Molina Jr.]
 
 * Replace alias method chaining with Module#alias_method_chain. [Marcel Molina Jr.] 
@@ -7,6 +38,7 @@
 * Replace Ruby's deprecated append_features in favor of included. [Marcel Molina Jr.]
 
 * Correct spurious documentation example code which results in a SyntaxError. [Marcel Molina Jr.]
+
 
 *1.2.1* (April 6th, 2006)
 

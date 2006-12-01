@@ -42,6 +42,11 @@ module ActiveRecord
         reset_target!
       end
 
+      # Calculate sum using SQL, not Enumerable
+      def sum(*args, &block)
+        calculate(:sum, *args, &block)
+      end
+
       # Remove +records+ from this association.  Does not destroy +records+.
       def delete(*records)
         records = flatten_deeper(records)
@@ -142,6 +147,19 @@ module ActiveRecord
       end
 
       protected
+        def method_missing(method, *args, &block)
+          if @target.respond_to?(method) || (!@reflection.klass.respond_to?(method) && Class.respond_to?(method))
+            super
+          else
+            @reflection.klass.with_scope(construct_scope) { @reflection.klass.send(method, *args, &block) }
+          end
+        end
+
+        # overloaded in derived Association classes to provide useful scoping depending on association type.
+        def construct_scope
+          {}
+        end
+
         def reset_target!
           @target = Array.new
         end
@@ -158,11 +176,6 @@ module ActiveRecord
         end
 
       private
-        # Array#flatten has problems with recursive arrays. Going one level deeper solves the majority of the problems.
-        def flatten_deeper(array)
-          array.collect { |element| element.respond_to?(:flatten) ? element.flatten : element }.flatten
-        end
-        
         def callback(method, record)
           callbacks_for(method).each do |callback|
             case callback

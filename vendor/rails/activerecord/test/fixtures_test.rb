@@ -343,3 +343,48 @@ class InvalidTableNameFixturesTest < Test::Unit::TestCase
     end
   end
 end
+
+class CheckEscapedYamlFixturesTest < Test::Unit::TestCase
+  set_fixture_class :funny_jokes => 'Joke'
+  fixtures :funny_jokes
+
+  def test_proper_escaped_fixture
+    assert_equal "The \\n Aristocrats\nAte the candy\n", funny_jokes(:another_joke).name
+  end
+end
+
+class DevelopersProject; end;
+
+class ManyToManyFixturesWithClassDefined < Test::Unit::TestCase
+  fixtures :developers_projects
+  
+  def test_this_should_run_cleanly
+    assert true
+  end
+end
+
+
+class FixturesBrokenRollbackTest < Test::Unit::TestCase
+  def blank_setup; end
+  alias_method :ar_setup_with_fixtures, :setup_with_fixtures
+  alias_method :setup_with_fixtures, :blank_setup
+  alias_method :setup, :blank_setup
+
+  def blank_teardown; end
+  alias_method :ar_teardown_with_fixtures, :teardown_with_fixtures
+  alias_method :teardown_with_fixtures, :blank_teardown
+  alias_method :teardown, :blank_teardown
+
+  def test_no_rollback_in_teardown_unless_transaction_active
+    assert_equal 0, Thread.current['open_transactions']
+    assert_raise(RuntimeError) { ar_setup_with_fixtures }
+    assert_equal 0, Thread.current['open_transactions']
+    assert_nothing_raised { ar_teardown_with_fixtures }
+    assert_equal 0, Thread.current['open_transactions']
+  end
+
+  private
+    def load_fixtures
+      raise 'argh'
+    end
+end

@@ -70,7 +70,8 @@ class AssetTagHelperTest < Test::Unit::TestCase
     %(stylesheet_link_tag("/dir/file")) => %(<link href="/dir/file.css" media="screen" rel="Stylesheet" type="text/css" />),
     %(stylesheet_link_tag("dir/file")) => %(<link href="/stylesheets/dir/file.css" media="screen" rel="Stylesheet" type="text/css" />),
     %(stylesheet_link_tag("style", :media => "all")) => %(<link href="/stylesheets/style.css" media="all" rel="Stylesheet" type="text/css" />),
-    %(stylesheet_link_tag("random.styles", "/css/stylish")) => %(<link href="/stylesheets/random.styles" media="screen" rel="Stylesheet" type="text/css" />\n<link href="/css/stylish.css" media="screen" rel="Stylesheet" type="text/css" />)
+    %(stylesheet_link_tag("random.styles", "/css/stylish")) => %(<link href="/stylesheets/random.styles" media="screen" rel="Stylesheet" type="text/css" />\n<link href="/css/stylish.css" media="screen" rel="Stylesheet" type="text/css" />),
+    %(stylesheet_link_tag("http://www.example.com/styles/style")) => %(<link href="http://www.example.com/styles/style.css" media="screen" rel="Stylesheet" type="text/css" />)
   }
 
   ImagePathToTag = {
@@ -113,11 +114,15 @@ class AssetTagHelperTest < Test::Unit::TestCase
   end
 
   def test_image_path
-    ImagePathToTag.each { |method, tag| assert_dom_equal(tag, eval(method)) }
+    ImagePathToTag.each do |method, tag| 
+      assert_deprecated(/image_path/) { assert_dom_equal(tag, eval(method)) }
+    end
   end
 
   def test_image_tag
-    ImageLinkToTag.each { |method, tag| assert_dom_equal(tag, eval(method)) }
+    ImageLinkToTag.each do |method, tag|
+      assert_deprecated(/image_path/) { assert_dom_equal(tag, eval(method)) }
+    end
   end
   
   def test_timebased_asset_id
@@ -136,6 +141,21 @@ class AssetTagHelperTest < Test::Unit::TestCase
     ENV["RAILS_ASSET_ID"] = "4500"
     assert_equal %(<img alt="Rails" src="/images/rails.png?4500" />), image_tag("rails.png")
   end
+
+  def test_preset_empty_asset_id
+    Object.send(:const_set, :RAILS_ROOT, File.dirname(__FILE__) + "/../fixtures/")
+    ENV["RAILS_ASSET_ID"] = ""
+    assert_equal %(<img alt="Rails" src="/images/rails.png" />), image_tag("rails.png")
+  end
+
+  def test_url_dup_image_tag
+    Object.send(:const_set, :RAILS_ROOT, File.dirname(__FILE__) + "/../fixtures/")
+    img_url = '/images/rails.png'
+    url_copy = img_url.dup
+    image_tag(img_url)
+    
+    assert_equal url_copy, img_url
+  end
 end
 
 class AssetTagHelperNonVhostTest < Test::Unit::TestCase
@@ -145,13 +165,11 @@ class AssetTagHelperNonVhostTest < Test::Unit::TestCase
 
   def setup
     @controller = Class.new do
-    
       attr_accessor :request
 
       def url_for(options, *parameters_for_method_reference)
         "http://www.example.com/calloboration/hieraki"
       end
-      
     end.new
     
     @request = Class.new do 
@@ -198,7 +216,6 @@ class AssetTagHelperNonVhostTest < Test::Unit::TestCase
     %(image_tag("xml")) => %(<img alt="Xml" src="/calloboration/hieraki/images/xml.png" />),
     %(image_tag("rss", :alt => "rss syndication")) => %(<img alt="rss syndication" src="/calloboration/hieraki/images/rss.png" />),
     %(image_tag("gold", :size => "45x70")) => %(<img alt="Gold" height="70" src="/calloboration/hieraki/images/gold.png" width="45" />),
-    %(image_tag("http://www.example.com/images/icon.gif")) => %(<img alt="Icon" src="http://www.example.com/images/icon.gif" />),
     %(image_tag("symbolize", "size" => "45x70")) => %(<img alt="Symbolize" height="70" src="/calloboration/hieraki/images/symbolize.png" width="45" />)
   }
 
@@ -230,11 +247,13 @@ class AssetTagHelperNonVhostTest < Test::Unit::TestCase
   end
 
   def test_image_path
-    ImagePathToTag.each { |method, tag| assert_dom_equal(tag, eval(method)) }
+    ImagePathToTag.each { |method, tag| assert_deprecated(/image_path/) { assert_dom_equal(tag, eval(method)) } }
   end
   
   def test_image_tag
-    ImageLinkToTag.each { |method, tag| assert_dom_equal(tag, eval(method)) }
+    ImageLinkToTag.each do |method, tag| 
+      assert_deprecated(/image_path/) { assert_dom_equal(tag, eval(method)) }
+    end
     # Assigning a default alt tag should not cause an exception to be raised
     assert_nothing_raised { image_tag('') }
   end

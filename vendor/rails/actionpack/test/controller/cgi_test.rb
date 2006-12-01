@@ -17,6 +17,7 @@ class CGITest < Test::Unit::TestCase
     @query_string_without_equal = "action"
     @query_string_with_many_ampersands =
       "&action=create_customer&&&full_name=David%20Heinemeier%20Hansson"
+    @query_string_with_empty_key = "action=create_customer&full_name=David%20Heinemeier%20Hansson&=Save"
   end
 
   def test_query_string
@@ -27,12 +28,42 @@ class CGITest < Test::Unit::TestCase
   end
   
   def test_deep_query_string
-    assert_equal({'x' => {'y' => {'z' => '10'}}}, CGIMethods.parse_query_parameters('x[y][z]=10'))
+    expected = {'x' => {'y' => {'z' => '10'}}}
+    assert_equal(expected, CGIMethods.parse_query_parameters('x[y][z]=10'))
   end
   
   def test_deep_query_string_with_array
     assert_equal({'x' => {'y' => {'z' => ['10']}}}, CGIMethods.parse_query_parameters('x[y][z][]=10'))
     assert_equal({'x' => {'y' => {'z' => ['10', '5']}}}, CGIMethods.parse_query_parameters('x[y][z][]=10&x[y][z][]=5'))
+  end
+
+  def test_deep_query_string_with_array_of_hash
+    assert_equal({'x' => {'y' => [{'z' => '10'}]}}, CGIMethods.parse_query_parameters('x[y][][z]=10'))
+    assert_equal({'x' => {'y' => [{'z' => '10', 'w' => '10'}]}}, CGIMethods.parse_query_parameters('x[y][][z]=10&x[y][][w]=10'))
+  end
+
+  def test_deep_query_string_with_array_of_hashes_with_one_pair
+    assert_equal({'x' => {'y' => [{'z' => '10'}, {'z' => '20'}]}}, CGIMethods.parse_query_parameters('x[y][][z]=10&x[y][][z]=20'))
+    assert_equal("10", CGIMethods.parse_query_parameters('x[y][][z]=10&x[y][][z]=20')["x"]["y"].first["z"])
+    assert_equal("10", CGIMethods.parse_query_parameters('x[y][][z]=10&x[y][][z]=20').with_indifferent_access[:x][:y].first[:z])
+  end
+  
+  def test_request_hash_parsing
+    query = {
+      "note[viewers][viewer][][type]" => ["User", "Group"],
+      "note[viewers][viewer][][id]"   => ["1", "2"]
+    }
+
+    expected = { "note" => { "viewers"=>{"viewer"=>[{ "id"=>"1", "type"=>"User"}, {"type"=>"Group", "id"=>"2"} ]} } }
+
+    assert_equal(expected, CGIMethods.parse_request_parameters(query))
+  end
+  
+  def test_deep_query_string_with_array_of_hashes_with_multiple_pairs
+    assert_equal(
+      {'x' => {'y' => [{'z' => '10', 'w' => 'a'}, {'z' => '20', 'w' => 'b'}]}}, 
+      CGIMethods.parse_query_parameters('x[y][][z]=10&x[y][][w]=a&x[y][][z]=20&x[y][][w]=b')
+    )
   end
   
   def test_query_string_with_nil
@@ -69,6 +100,13 @@ class CGITest < Test::Unit::TestCase
       CGIMethods.parse_query_parameters(@query_string_without_equal)
     )    
   end
+  
+  def test_query_string_with_empty_key
+    assert_equal(
+      { "action" => "create_customer", "full_name" => "David Heinemeier Hansson" },
+      CGIMethods.parse_query_parameters(@query_string_with_empty_key)
+    )
+  end
 
   def test_query_string_with_many_ampersands
     assert_equal(
@@ -87,7 +125,8 @@ class CGITest < Test::Unit::TestCase
       "something_nil" => [ nil ],
       "something_empty" => [ "" ],
       "products[first]" => [ "Apple Computer" ],
-      "products[second]" => [ "Pc" ]
+      "products[second]" => [ "Pc" ],
+      "" => [ 'Save' ]
     }
     
     expected_output =  {
@@ -116,9 +155,10 @@ class CGITest < Test::Unit::TestCase
   end
   
   def test_parse_params_from_multipart_upload
-    mockup = Struct.new(:content_type, :original_filename)
+    mockup = Struct.new(:content_type, :original_filename, :read, :rewind)
     file = mockup.new('img/jpeg', 'foo.jpg')
     ie_file = mockup.new('img/jpeg', 'c:\\Documents and Settings\\foo\\Desktop\\bar.jpg')
+    non_file_text_part = mockup.new('text/plain', '', 'abc')
   
     input = {
       "something" => [ StringIO.new("") ],
@@ -129,9 +169,10 @@ class CGITest < Test::Unit::TestCase
       "products[string]" => [ StringIO.new("Apple Computer") ],
       "products[file]" => [ file ],
       "ie_products[string]" => [ StringIO.new("Microsoft") ],
-      "ie_products[file]" => [ ie_file ]
+      "ie_products[file]" => [ ie_file ],
+      "text_part" => [non_file_text_part]
     }
-    
+
     expected_output =  {
       "something" => "",
       "array_of_stringios" => ["One", "Two"],
@@ -153,7 +194,8 @@ class CGITest < Test::Unit::TestCase
       "ie_products" => {
         "string" => "Microsoft",
         "file" => ie_file
-      }
+      },
+      "text_part" => "abc"
     }
 
     params = CGIMethods.parse_request_parameters(input)
@@ -206,25 +248,25 @@ class CGITest < Test::Unit::TestCase
 
   def test_parse_params_with_single_brackets_in_middle
     input     = { "a/b[c]d" =>  %w(e) }
-    expected  = { "a/b[c]d" => "e" }
+    expected  = { "a/b" => {} }
     assert_equal expected, CGIMethods.parse_request_parameters(input)
   end
 
   def test_parse_params_with_separated_brackets
     input     = { "a/b@[c]d[e]" =>  %w(f) }
-    expected  = { "a/b@" => { "c]d[e" => "f" }}
+    expected  = { "a/b@" => { }}
     assert_equal expected, CGIMethods.parse_request_parameters(input)
   end
 
   def test_parse_params_with_separated_brackets_and_array
     input     = { "a/b@[c]d[e][]" =>  %w(f) }
-    expected  = { "a/b@" => { "c]d[e" => ["f"] }}
+    expected  = { "a/b@" => { }}
     assert_equal expected , CGIMethods.parse_request_parameters(input)
   end
 
   def test_parse_params_with_unmatched_brackets_and_array
     input     = { "a/b@[c][d[e][]" =>  %w(f) }
-    expected  = { "a/b@" => { "c" => { "d[e" => ["f"] }}}
+    expected  = { "a/b@" => { "c" => { }}}
     assert_equal expected, CGIMethods.parse_request_parameters(input)
   end
   
@@ -299,8 +341,15 @@ class MultipartCGITest < Test::Unit::TestCase
     assert_equal 'bar', params['foo']
 
     # Ruby CGI doesn't handle multipart/mixed for us.
-    assert_kind_of StringIO, params['files']
+    assert_kind_of String, params['files']
     assert_equal 19756, params['files'].size
+  end
+
+  # Rewind readable cgi params so others may reread them (such as CGI::Session
+  # when passing the session id in a multipart form).
+  def test_multipart_param_rewound
+    params = process('text_file')
+    assert_equal 'bar', @cgi.params['foo'][0].read
   end
 
   private
@@ -309,7 +358,8 @@ class MultipartCGITest < Test::Unit::TestCase
       File.open(File.join(FIXTURE_PATH, name), 'rb') do |file|
         ENV['CONTENT_LENGTH'] = file.stat.size.to_s
         $stdin = file
-        CGIMethods.parse_request_parameters CGI.new.params
+        @cgi = CGI.new
+        CGIMethods.parse_request_parameters @cgi.params
       end
     ensure
       $stdin = old_stdin

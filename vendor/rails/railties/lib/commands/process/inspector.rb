@@ -1,6 +1,6 @@
 require 'optparse'
 
-if RUBY_PLATFORM =~ /mswin32/ then abort("Reaper is only for Unix") end
+if RUBY_PLATFORM =~ /mswin32/ then abort("Inspector is only for Unix") end
 
 OPTIONS = {
   :pid_path => File.expand_path(RAILS_ROOT + '/tmp/pids'),
@@ -54,9 +54,9 @@ ARGV.options do |opts|
 
   opts.on("  Options:")
 
-  opts.on("-s", "--ps=command", "default: #{OPTIONS[:ps]}", String)           { |OPTIONS[:ps]| }
-  opts.on("-p", "--pidpath=path", "default: #{OPTIONS[:pid_path]}", String)   { |OPTIONS[:pid_path]| }
-  opts.on("-r", "--pattern=pattern", "default: #{OPTIONS[:pattern]}", String) { |OPTIONS[:pattern]| }
+  opts.on("-s", "--ps=command", "default: #{OPTIONS[:ps]}", String)           { |v| OPTIONS[:ps] = v }
+  opts.on("-p", "--pidpath=path", "default: #{OPTIONS[:pid_path]}", String)   { |v| OPTIONS[:pid_path] = v }
+  opts.on("-r", "--pattern=pattern", "default: #{OPTIONS[:pattern]}", String) { |v| OPTIONS[:pattern] = v }
 
   opts.separator ""
 

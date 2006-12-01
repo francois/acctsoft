@@ -67,7 +67,9 @@ module ActiveRecord
           @reflection.klass.find(*args)
         end
       end      
-
+      
+      # Deprecated as of Rails 1.2.   If your associations require attributes
+      # you should be using has_many :through
       def push_with_attributes(record, join_attributes = {})
         raise_on_type_mismatch(record)
         join_attributes.each { |key, value| record[key.to_s] = value }
@@ -79,20 +81,11 @@ module ActiveRecord
 
         self
       end
+      deprecate :push_with_attributes => "consider using has_many :through instead"
 
       alias :concat_with_attributes :push_with_attributes
 
       protected
-        def method_missing(method, *args, &block)
-          if @target.respond_to?(method) || (!@reflection.klass.respond_to?(method) && Class.respond_to?(method))
-            super
-          else
-            @reflection.klass.with_scope(:find => { :conditions => @finder_sql, :joins => @join_sql, :readonly => false }) do
-              @reflection.klass.send(method, *args, &block)
-            end
-          end
-        end
-
         def count_records
           load_target.size
         end
@@ -115,7 +108,7 @@ module ActiveRecord
                   attributes[column.name] = record.quoted_id
                 else
                   if record.attributes.has_key?(column.name)
-                    value = @owner.send(:quote, record[column.name], column)
+                    value = @owner.send(:quote_value, record[column.name], column)
                     attributes[column.name] = value unless value.nil?
                   end
               end
@@ -153,6 +146,10 @@ module ActiveRecord
           end
 
           @join_sql = "INNER JOIN #{@reflection.options[:join_table]} ON #{@reflection.klass.table_name}.#{@reflection.klass.primary_key} = #{@reflection.options[:join_table]}.#{@reflection.association_foreign_key}"
+        end
+
+        def construct_scope
+          { :find => { :conditions => @finder_sql, :joins => @join_sql, :readonly => false } }
         end
 
         # Join tables with additional columns on top of the two foreign keys must be considered ambigious unless a select

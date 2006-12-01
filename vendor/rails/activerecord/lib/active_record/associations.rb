@@ -10,69 +10,49 @@ require 'active_record/deprecated_associations'
 
 module ActiveRecord
   class HasManyThroughAssociationNotFoundError < ActiveRecordError #:nodoc:
-    def initialize(reflection)
-      @reflection = reflection
-    end
-    
-    def message
-      "Could not find the association #{@reflection.options[:through].inspect} in model #{@reflection.klass}"
+    def initialize(owner_class_name, reflection)
+      super("Could not find the association #{reflection.options[:through].inspect} in model #{owner_class_name}")
     end
   end
 
   class HasManyThroughAssociationPolymorphicError < ActiveRecordError #:nodoc:
     def initialize(owner_class_name, reflection, source_reflection)
-      @owner_class_name  = owner_class_name
-      @reflection        = reflection
-      @source_reflection = source_reflection
-    end
-    
-    def message
-      "Cannot have a has_many :through association '#{@owner_class_name}##{@reflection.name}' on the polymorphic object '#{@source_reflection.class_name}##{@source_reflection.name}'."
+      super("Cannot have a has_many :through association '#{owner_class_name}##{reflection.name}' on the polymorphic object '#{source_reflection.class_name}##{source_reflection.name}'.")
     end
   end
 
   class HasManyThroughSourceAssociationNotFoundError < ActiveRecordError #:nodoc:
     def initialize(reflection)
-      @reflection              = reflection
-      @through_reflection      = reflection.through_reflection
-      @source_reflection_names = reflection.source_reflection_names
-      @source_associations     = reflection.through_reflection.klass.reflect_on_all_associations.collect { |a| a.name.inspect }
-    end
-    
-    def message
-      "Could not find the source association(s) #{@source_reflection_names.collect(&:inspect).to_sentence :connector => 'or'} in model #{@through_reflection.klass}.  Try 'has_many #{@reflection.name.inspect}, :through => #{@through_reflection.name.inspect}, :source => <name>'.  Is it one of #{@source_associations.to_sentence :connector => 'or'}?"
+      through_reflection      = reflection.through_reflection
+      source_reflection_names = reflection.source_reflection_names
+      source_associations     = reflection.through_reflection.klass.reflect_on_all_associations.collect { |a| a.name.inspect }
+      super("Could not find the source association(s) #{source_reflection_names.collect(&:inspect).to_sentence :connector => 'or'} in model #{through_reflection.klass}.  Try 'has_many #{reflection.name.inspect}, :through => #{through_reflection.name.inspect}, :source => <name>'.  Is it one of #{source_associations.to_sentence :connector => 'or'}?")
     end
   end
 
   class HasManyThroughSourceAssociationMacroError < ActiveRecordError #:nodoc
     def initialize(reflection)
-      @reflection         = reflection
-      @through_reflection = reflection.through_reflection
-      @source_reflection  = reflection.source_reflection
+      through_reflection = reflection.through_reflection
+      source_reflection  = reflection.source_reflection
+      super("Invalid source reflection macro :#{source_reflection.macro}#{" :through" if source_reflection.options[:through]} for has_many #{reflection.name.inspect}, :through => #{through_reflection.name.inspect}.  Use :source to specify the source reflection.")
     end
-    
-    def message
-      "Invalid source reflection macro :#{@source_reflection.macro}#{" :through" if @source_reflection.options[:through]} for has_many #{@reflection.name.inspect}, :through => #{@through_reflection.name.inspect}.  Use :source to specify the source reflection."
+  end
+
+  class HasManyThroughCantAssociateNewRecords < ActiveRecordError #:nodoc:
+    def initialize(owner, reflection)
+      super("Cannot associate new records through '#{owner.class.name}##{reflection.name}' on '#{reflection.source_reflection.class_name rescue nil}##{reflection.source_reflection.name rescue nil}'. Both records must have an id in order to create the has_many :through record associating them.")
     end
   end
 
   class EagerLoadPolymorphicError < ActiveRecordError #:nodoc:
     def initialize(reflection)
-      @reflection = reflection
-    end
-    
-    def message
-      "Can not eagerly load the polymorphic association #{@reflection.name.inspect}"
+      super("Can not eagerly load the polymorphic association #{reflection.name.inspect}")
     end
   end
 
   class ReadOnlyAssociation < ActiveRecordError #:nodoc:
     def initialize(reflection)
-      @reflection = reflection
-    end
-  
-    def message
-      "Can not add to a has_many :through association.  Try adding to #{@reflection.through_reflection.name.inspect}."
+      super("Can not add to a has_many :through association.  Try adding to #{reflection.through_reflection.name.inspect}.")
     end
   end
 
@@ -104,7 +84,7 @@ module ActiveRecord
     # * <tt>Project#portfolio, Project#portfolio=(portfolio), Project#portfolio.nil?</tt>
     # * <tt>Project#project_manager, Project#project_manager=(project_manager), Project#project_manager.nil?,</tt>
     # * <tt>Project#milestones.empty?, Project#milestones.size, Project#milestones, Project#milestones<<(milestone),</tt>
-    #   <tt>Project#milestones.delete(milestone), Project#milestones.find(milestone_id), Project#milestones.find_all(conditions),</tt>
+    #   <tt>Project#milestones.delete(milestone), Project#milestones.find(milestone_id), Project#milestones.find(:all, options),</tt>
     #   <tt>Project#milestones.build, Project#milestones.create</tt>
     # * <tt>Project#categories.empty?, Project#categories.size, Project#categories, Project#categories<<(category1),</tt>
     #   <tt>Project#categories.delete(category1)</tt>
@@ -118,25 +98,27 @@ module ActiveRecord
     # Both express a 1-1 relationship, the difference is mostly where to place the foreign key, which goes on the table for the class
     # saying belongs_to. Example:
     #
-    #   class Post < ActiveRecord::Base
-    #     has_one :author
+    #   class User < ActiveRecord::Base
+    #     # I reference an account.
+    #     belongs_to :account
     #   end
     #
-    #   class Author < ActiveRecord::Base
-    #     belongs_to :post
+    #   class Account < ActiveRecord::Base
+    #     # One user references me.
+    #     has_one :user
     #   end
     #
     # The tables for these classes could look something like:
     #
-    #   CREATE TABLE posts (
+    #   CREATE TABLE users (
     #     id int(11) NOT NULL auto_increment,
-    #     title varchar default NULL,
+    #     account_id int(11) default NULL,
+    #     name varchar default NULL,
     #     PRIMARY KEY  (id)
     #   )
     #
-    #   CREATE TABLE authors (
+    #   CREATE TABLE accounts (
     #     id int(11) NOT NULL auto_increment,
-    #     post_id int(11) default NULL,
     #     name varchar default NULL,
     #     PRIMARY KEY  (id)
     #   )
@@ -297,6 +279,30 @@ module ActiveRecord
     # This works by using a type column in addition to a foreign key to specify the associated record.  In the Asset example, you'd need
     # an attachable_id integer column and an attachable_type string column.
     #
+    # Using polymorphic associations in combination with single table inheritance (STI) is a little tricky. In order
+    # for the associations to work as expected, ensure that you store the base model for the STI models in the 
+    # type column of the polymorphic association. To continue with the asset example above, suppose there are guest posts
+    # and member posts that use the posts table for STI. So there will be an additional 'type' column in the posts table.
+    #
+    #   class Asset < ActiveRecord::Base
+    #     belongs_to :attachable, :polymorphic => true
+    #     
+    #     def attachable_type=(sType)
+    #        super(sType.to_s.classify.constantize.base_class.to_s)
+    #     end
+    #   end
+    # 
+    #   class Post < ActiveRecord::Base
+    #     # because we store "Post" in attachable_type now :dependent => :destroy will work
+    #     has_many :assets, :as => :attachable, :dependent => :destroy
+    #   end
+    #
+    #   class GuestPost < ActiveRecord::Base
+    #   end
+    #
+    #   class MemberPost < ActiveRecord::Base
+    #   end
+    #
     # == Caching
     #
     # All of the methods are built on a simple caching principle that will keep the result of the last query around unless specifically
@@ -343,23 +349,17 @@ module ActiveRecord
     # But that shouldn't fool you to think that you can pull out huge amounts of data with no performance penalty just because you've reduced
     # the number of queries. The database still needs to send all the data to Active Record and it still needs to be processed. So it's no
     # catch-all for performance problems, but it's a great way to cut down on the number of queries in a situation as the one described above.
+    # 
+    # Since the eager loading pulls from multiple tables, you'll have to disambiguate any column references in both conditions and orders. So
+    # :order => "posts.id DESC" will work while :order => "id DESC" will not. Because eager loading generates the SELECT statement too, the
+    # :select option is ignored.
     #
-    # Please note that limited eager loading with has_many and has_and_belongs_to_many associations is not compatible with describing conditions
-    # on these eager tables. This will work:
-    #
-    #   Post.find(:all, :include => :comments, :conditions => "posts.title = 'magic forest'", :limit => 2)
-    #
-    # ...but this will not (and an ArgumentError will be raised):
-    #
-    #   Post.find(:all, :include => :comments, :conditions => "comments.body like 'Normal%'", :limit => 2)
-    #
-    # Also have in mind that since the eager loading is pulling from multiple tables, you'll have to disambiguate any column references
-    # in both conditions and orders. So :order => "posts.id DESC" will work while :order => "id DESC" will not. This may require that
-    # you alter the :order and :conditions on the association definitions themselves.  Because eager loading generates the SELECT statement too,
-    # the :select option is ignored.
-    #
-    # It's currently not possible to use eager loading on multiple associations from the same table. Eager loading will not pull
-    # additional attributes on join tables, so "rich associations" with has_and_belongs_to_many is not a good fit for eager loading.
+    # You can use eager loading on multiple associations from the same table, but you cannot use those associations in orders and conditions
+    # as there is currently not any way to disambiguate them. Eager loading will not pull additional attributes on join tables, so "rich
+    # associations" with has_and_belongs_to_many are not a good fit for eager loading.
+    # 
+    # When eager loaded, conditions are interpolated in the context of the model class, not the model instance.  Conditions are lazily interpolated
+    # before the actual model exists.
     # 
     # == Table Aliasing
     #
@@ -457,6 +457,7 @@ module ActiveRecord
       # * <tt>collection.delete(object, ...)</tt> - removes one or more objects from the collection by setting their foreign keys to NULL.  
       #   This will also destroy the objects if they're declared as belongs_to and dependent on this model.
       # * <tt>collection=objects</tt> - replaces the collections content by deleting and adding objects as appropriate.
+      # * <tt>collection_singular_ids</tt> - returns an array of the associated objects ids
       # * <tt>collection_singular_ids=ids</tt> - replace the collection by the objects identified by the primary keys in +ids+
       # * <tt>collection.clear</tt> - removes every object from the collection. This destroys the associated objects if they
       #   are <tt>:dependent</tt>, deletes them directly from the database if they are <tt>:dependent => :delete_all</tt>,
@@ -476,6 +477,7 @@ module ActiveRecord
       # * <tt>Firm#clients<<</tt>
       # * <tt>Firm#clients.delete</tt>
       # * <tt>Firm#clients=</tt>
+      # * <tt>Firm#client_ids</tt>
       # * <tt>Firm#client_ids=</tt>
       # * <tt>Firm#clients.clear</tt>
       # * <tt>Firm#clients.empty?</tt> (similar to <tt>firm.clients.size == 0</tt>)
@@ -588,8 +590,9 @@ module ActiveRecord
       #   sql fragment, such as "rank = 5".
       # * <tt>:order</tt>       - specify the order from which the associated object will be picked at the top. Specified as
       #    an "ORDER BY" sql fragment, such as "last_name, first_name DESC"
-      # * <tt>:dependent</tt>   - if set to :destroy (or true) all the associated objects are destroyed when this object is. Also,
-      #   association is assigned.
+      # * <tt>:dependent</tt>   - if set to :destroy (or true) the associated object is destroyed when this object is. If set to
+      #   :delete the associated object is deleted *without* calling its destroy method. If set to :nullify the associated
+      #   object's foreign key is set to NULL. Also, association is assigned.
       # * <tt>:foreign_key</tt> - specify the foreign key used for the association. By default this is guessed to be the name
       #   of this class in lower-case and "_id" suffixed. So a +Person+ class that makes a has_one association will use "person_id"
       #   as the default foreign_key.
@@ -608,7 +611,7 @@ module ActiveRecord
         module_eval do
           after_save <<-EOF
             association = instance_variable_get("@#{reflection.name}")
-            unless association.nil?
+            if !association.nil? && (new_record? || association.new_record? || association["#{reflection.primary_key_name}"] != id)
               association["#{reflection.primary_key_name}"] = id
               association.save(true)
             end
@@ -672,6 +675,12 @@ module ActiveRecord
       #              :conditions => 'discounts > #{payments_count}'
       #   belongs_to :attachable, :polymorphic => true
       def belongs_to(association_id, options = {})
+        if options.include?(:class_name) && !options.include?(:foreign_key)
+          ::ActiveSupport::Deprecation.warn(
+          "The inferred foreign_key name will change in Rails 2.0 to use the association name instead of its class name when they differ.  When using :class_name in belongs_to, use the :foreign_key option to explicitly set the key name to avoid problems in the transition.",
+          caller)
+        end
+        
         reflection = create_belongs_to_reflection(association_id, options)
         
         if reflection.options[:polymorphic]
@@ -680,7 +689,7 @@ module ActiveRecord
           module_eval do
             before_save <<-EOF
               association = instance_variable_get("@#{reflection.name}")
-              if !association.nil? 
+              if association && association.target
                 if association.new_record?
                   association.save(true)
                 end
@@ -757,6 +766,7 @@ module ActiveRecord
       # * <tt>collection.delete(object, ...)</tt> - removes one or more objects from the collection by removing their associations from the join table.  
       #   This does not destroy the objects.
       # * <tt>collection=objects</tt> - replaces the collections content by deleting and adding objects as appropriate.
+      # * <tt>collection_singular_ids</tt> - returns an array of the associated objects ids
       # * <tt>collection_singular_ids=ids</tt> - replace the collection by the objects identified by the primary keys in +ids+
       # * <tt>collection.clear</tt> - removes every object from the collection. This does not destroy the objects.
       # * <tt>collection.empty?</tt> - returns true if there are no associated objects.
@@ -771,9 +781,9 @@ module ActiveRecord
       # Example: An Developer class declares <tt>has_and_belongs_to_many :projects</tt>, which will add:
       # * <tt>Developer#projects</tt>
       # * <tt>Developer#projects<<</tt>
-      # * <tt>Developer#projects.push_with_attributes</tt>
       # * <tt>Developer#projects.delete</tt>
       # * <tt>Developer#projects=</tt>
+      # * <tt>Developer#project_ids</tt>
       # * <tt>Developer#project_ids=</tt>
       # * <tt>Developer#projects.clear</tt>
       # * <tt>Developer#projects.empty?</tt>
@@ -865,14 +875,14 @@ module ActiveRecord
             if association.nil? || force_reload
               association = association_proxy_class.new(self, reflection)
               retval = association.reload
-              unless retval.nil?
-                instance_variable_set("@#{reflection.name}", association)
-              else
+              if retval.nil? and association_proxy_class == BelongsToAssociation
                 instance_variable_set("@#{reflection.name}", nil)
                 return nil
               end
+              instance_variable_set("@#{reflection.name}", association)
             end
-            association
+
+            association.target.nil? ? nil : association
           end
 
           define_method("#{reflection.name}=") do |new_value|
@@ -894,7 +904,7 @@ module ActiveRecord
           end
 
           define_method("set_#{reflection.name}_target") do |target|
-            return if target.nil?
+            return if target.nil? and association_proxy_class == BelongsToAssociation
             association = association_proxy_class.new(self, reflection)
             association.target = target
             instance_variable_set("@#{reflection.name}", association)
@@ -927,8 +937,13 @@ module ActiveRecord
             association
           end
 
+          define_method("#{reflection.name.to_s.singularize}_ids") do
+            send(reflection.name).map(&:id)
+          end
+
           define_method("#{reflection.name.to_s.singularize}_ids=") do |new_value|
-            send("#{reflection.name}=", reflection.class_name.constantize.find(new_value))
+            ids = (new_value || []).reject { |nid| nid.blank? }
+            send("#{reflection.name}=", reflection.class_name.constantize.find(ids))
           end
         end
 
@@ -1002,13 +1017,17 @@ module ActiveRecord
         end
 
         def configure_dependency_for_has_many(reflection)
+          if reflection.options[:dependent] == true
+            ::ActiveSupport::Deprecation.warn("The :dependent => true option is deprecated and will be removed from Rails 2.0.  Please use :dependent => :destroy instead.  See http://www.rubyonrails.org/deprecation for details.", caller)
+          end
+
           if reflection.options[:dependent] && reflection.options[:exclusively_dependent]
             raise ArgumentError, ':dependent and :exclusively_dependent are mutually exclusive options.  You may specify one or the other.'
           end
 
           if reflection.options[:exclusively_dependent]
             reflection.options[:dependent] = :delete_all
-            #warn "The :exclusively_dependent option is deprecated.  Please use :dependent => :delete_all instead.")
+            ::ActiveSupport::Deprecation.warn("The :exclusively_dependent option is deprecated and will be removed from Rails 2.0.  Please use :dependent => :delete_all instead.  See http://www.rubyonrails.org/deprecation for details.", caller)
           end
 
           # See HasManyAssociation#delete_records.  Dependent associations
@@ -1021,7 +1040,7 @@ module ActiveRecord
           end
 
           case reflection.options[:dependent]
-            when :destroy, true  
+            when :destroy, true
               module_eval "before_destroy '#{reflection.name}.each { |o| o.destroy }'"
             when :delete_all
               module_eval "before_destroy { |record| #{reflection.class_name}.delete_all(%(#{dependent_conditions})) }"
@@ -1030,20 +1049,22 @@ module ActiveRecord
             when nil, false
               # pass
             else
-              raise ArgumentError, 'The :dependent option expects either :destroy, :delete_all, or :nullify' 
+              raise ArgumentError, 'The :dependent option expects either :destroy, :delete_all, or :nullify'
           end
         end
-        
+
         def configure_dependency_for_has_one(reflection)
           case reflection.options[:dependent]
             when :destroy, true
               module_eval "before_destroy '#{reflection.name}.destroy unless #{reflection.name}.nil?'"
+            when :delete
+              module_eval "before_destroy '#{reflection.class_name}.delete(#{reflection.name}.id) unless #{reflection.name}.nil?'"
             when :nullify
-              module_eval "before_destroy '#{reflection.name}.update_attribute(\"#{reflection.primary_key_name}\", nil)'"
+              module_eval "before_destroy '#{reflection.name}.update_attribute(\"#{reflection.primary_key_name}\", nil) unless #{reflection.name}.nil?'"
             when nil, false
               # pass
             else
-              raise ArgumentError, "The :dependent option expects either :destroy or :nullify."
+              raise ArgumentError, "The :dependent option expects either :destroy, :delete or :nullify."
           end
         end
         
@@ -1145,10 +1166,11 @@ module ActiveRecord
  
           add_joins!(sql, options, scope)
           add_conditions!(sql, options[:conditions], scope)
-          add_limited_ids_condition!(sql, options, join_dependency) if !using_limitable_reflections?(join_dependency.reflections) && options[:limit]
+          add_limited_ids_condition!(sql, options, join_dependency) if !using_limitable_reflections?(join_dependency.reflections) && ((scope && scope[:limit]) || options[:limit])
 
-          sql << "ORDER BY #{options[:order]} " if options[:order]
+          sql << "GROUP BY #{options[:group]} " if options[:group]
  
+          add_order!(sql, options[:order], scope)
           add_limit!(sql, options, scope) if using_limitable_reflections?(join_dependency.reflections)
  
           return sanitize_sql(sql)
@@ -1168,26 +1190,29 @@ module ActiveRecord
             "#{name} Load IDs For Limited Eager Loading"
           ).collect { |row| connection.quote(row[primary_key]) }.join(", ")
         end
- 
+
         def construct_finder_sql_for_association_limiting(options, join_dependency)
-          scope = scope(:find)
+          scope       = scope(:find)
+          is_distinct = include_eager_conditions?(options) || include_eager_order?(options)
           sql = "SELECT "
-          sql << "DISTINCT #{table_name}." if include_eager_conditions?(options) || include_eager_order?(options)
-          sql << primary_key
-          sql << ", #{options[:order].split(',').collect { |s| s.split.first } * ', '}" if options[:order] && (include_eager_conditions?(options) || include_eager_order?(options))
+          if is_distinct
+            sql << connection.distinct("#{table_name}.#{primary_key}", options[:order])
+          else
+            sql << primary_key
+          end
           sql << " FROM #{table_name} "
-          
-          if include_eager_conditions?(options) || include_eager_order?(options)
-            sql << join_dependency.join_associations.collect{|join| join.association_join }.join
+
+          if is_distinct
+            sql << join_dependency.join_associations.collect(&:association_join).join
             add_joins!(sql, options, scope)
           end
-          
+
           add_conditions!(sql, options[:conditions], scope)
           sql << "ORDER BY #{options[:order]} " if options[:order]
           add_limit!(sql, options, scope)
           return sanitize_sql(sql)
         end
-        
+
         # Checks if the conditions reference a table other than the current model table
         def include_eager_conditions?(options)
           # look in both sets of conditions
@@ -1248,7 +1273,7 @@ module ActiveRecord
           extension_module_name.constantize
         end
 
-        class JoinDependency
+        class JoinDependency # :nodoc:
           attr_reader :joins, :reflections, :table_aliases
 
           def initialize(base, associations, joins)
@@ -1334,11 +1359,15 @@ module ActiveRecord
                 when :has_many, :has_and_belongs_to_many
                   collection = record.send(join.reflection.name)
                   collection.loaded
-    
+
                   return nil if record.id.to_s != join.parent.record_id(row).to_s or row[join.aliased_primary_key].nil?
                   association = join.instantiate(row)
                   collection.target.push(association) unless collection.target.include?(association)
-                when :has_one, :belongs_to
+                when :has_one
+                  return if record.id.to_s != join.parent.record_id(row).to_s
+                  association = join.instantiate(row) unless row[join.aliased_primary_key].nil?
+                  record.send("set_#{join.reflection.name}_target", association)
+                when :belongs_to
                   return if record.id.to_s != join.parent.record_id(row).to_s or row[join.aliased_primary_key].nil?
                   association = join.instantiate(row)
                   record.send("set_#{join.reflection.name}_target", association)
@@ -1348,7 +1377,7 @@ module ActiveRecord
               return association
             end
 
-          class JoinBase
+          class JoinBase # :nodoc:
             attr_reader :active_record, :table_joins
             delegate    :table_name, :column_names, :primary_key, :reflections, :sanitize_sql, :to => :active_record
 
@@ -1393,7 +1422,7 @@ module ActiveRecord
             end
           end
 
-          class JoinAssociation < JoinBase
+          class JoinAssociation < JoinBase # :nodoc:
             attr_reader :reflection, :parent, :aliased_table_name, :aliased_prefix, :aliased_join_table_name, :parent_table_name
             delegate    :options, :klass, :through_reflection, :source_reflection, :to => :reflection
 
@@ -1418,18 +1447,22 @@ module ActiveRecord
                 # if the table name has been used, then use an alias
                 @aliased_table_name = active_record.connection.table_alias_for "#{pluralize(reflection.name)}_#{parent_table_name}"
                 table_index = join_dependency.table_aliases[aliased_table_name]
+                join_dependency.table_aliases[aliased_table_name] += 1
                 @aliased_table_name = @aliased_table_name[0..active_record.connection.table_alias_length-3] + "_#{table_index+1}" if table_index > 0
+              else
+                join_dependency.table_aliases[aliased_table_name] += 1
               end
-              join_dependency.table_aliases[aliased_table_name] += 1
               
               if reflection.macro == :has_and_belongs_to_many || (reflection.macro == :has_many && reflection.options[:through])
                 @aliased_join_table_name = reflection.macro == :has_and_belongs_to_many ? reflection.options[:join_table] : reflection.through_reflection.klass.table_name
                 unless join_dependency.table_aliases[aliased_join_table_name].zero?
                   @aliased_join_table_name = active_record.connection.table_alias_for "#{pluralize(reflection.name)}_#{parent_table_name}_join"
                   table_index = join_dependency.table_aliases[aliased_join_table_name]
+                  join_dependency.table_aliases[aliased_join_table_name] += 1
                   @aliased_join_table_name = @aliased_join_table_name[0..active_record.connection.table_alias_length-3] + "_#{table_index+1}" if table_index > 0
+                else
+                  join_dependency.table_aliases[aliased_join_table_name] += 1
                 end
-                join_dependency.table_aliases[aliased_join_table_name] += 1
               end
             end
 
@@ -1440,7 +1473,7 @@ module ActiveRecord
                      table_alias_for(options[:join_table], aliased_join_table_name),
                      aliased_join_table_name,
                      options[:foreign_key] || reflection.active_record.to_s.classify.foreign_key,
-                     reflection.active_record.table_name, reflection.active_record.primary_key] +
+                     parent.aliased_table_name, reflection.active_record.primary_key] +
                   " LEFT OUTER JOIN %s ON %s.%s = %s.%s " % [
                      table_name_and_alias, aliased_table_name, klass.primary_key,
                      aliased_join_table_name, options[:association_foreign_key] || klass.table_name.classify.foreign_key
@@ -1457,7 +1490,7 @@ module ActiveRecord
                           table_alias_for(through_reflection.klass.table_name, aliased_join_table_name),
                           aliased_join_table_name, polymorphic_foreign_key,
                           parent.aliased_table_name, parent.primary_key,
-                          aliased_join_table_name, polymorphic_foreign_type, klass.quote(parent.active_record.base_class.name)] +
+                          aliased_join_table_name, polymorphic_foreign_type, klass.quote_value(parent.active_record.base_class.name)] +
                         " LEFT OUTER JOIN %s ON %s.%s = %s.%s " % [table_name_and_alias,
                           aliased_table_name, primary_key, aliased_join_table_name, options[:foreign_key] || reflection.klass.to_s.classify.foreign_key
                         ]
@@ -1472,23 +1505,28 @@ module ActiveRecord
                             aliased_table_name, "#{source_reflection.options[:as]}_id", 
                             aliased_join_table_name, options[:foreign_key] || primary_key,
                             aliased_table_name, "#{source_reflection.options[:as]}_type", 
-                            klass.quote(source_reflection.active_record.base_class.name)
+                            klass.quote_value(source_reflection.active_record.base_class.name)
                           ]
                         else
                           case source_reflection.macro
                             when :belongs_to
                               first_key  = primary_key
-                              second_key = options[:foreign_key] || klass.to_s.classify.foreign_key
+                              second_key = source_reflection.options[:foreign_key] || klass.to_s.classify.foreign_key
+                              extra      = nil
                             when :has_many
-                              first_key  = through_reflection.klass.to_s.classify.foreign_key
+                              first_key  = through_reflection.klass.base_class.to_s.classify.foreign_key
                               second_key = options[:foreign_key] || primary_key
+                              extra      = through_reflection.klass.descends_from_active_record? ? nil :
+                                " AND %s.%s = %s" % [
+                                  aliased_join_table_name,
+                                  reflection.active_record.connection.quote_column_name(through_reflection.active_record.inheritance_column),
+                                  through_reflection.klass.quote_value(through_reflection.klass.name.demodulize)]
                           end
-                          
-                          " LEFT OUTER JOIN %s ON %s.%s = %s.%s "  % [
-                            table_alias_for(through_reflection.klass.table_name, aliased_join_table_name), aliased_join_table_name,
-                            through_reflection.primary_key_name,
-                            parent.aliased_table_name, parent.primary_key] +
-                          " LEFT OUTER JOIN %s ON %s.%s = %s.%s " % [
+                          " LEFT OUTER JOIN %s ON (%s.%s = %s.%s%s) "  % [
+                            table_alias_for(through_reflection.klass.table_name, aliased_join_table_name), 
+                            aliased_join_table_name, through_reflection.primary_key_name,
+                            parent.aliased_table_name, parent.primary_key, extra] +
+                          " LEFT OUTER JOIN %s ON (%s.%s = %s.%s) " % [
                             table_name_and_alias,
                             aliased_table_name, first_key, 
                             aliased_join_table_name, second_key
@@ -1502,7 +1540,7 @@ module ActiveRecord
                         aliased_table_name, "#{reflection.options[:as]}_id",
                         parent.aliased_table_name, parent.primary_key,
                         aliased_table_name, "#{reflection.options[:as]}_type",
-                        klass.quote(parent.active_record.base_class.name)
+                        klass.quote_value(parent.active_record.base_class.name)
                       ]
                     when reflection.macro == :has_one && reflection.options[:as]
                       " LEFT OUTER JOIN %s ON %s.%s = %s.%s AND %s.%s = %s " % [
@@ -1510,7 +1548,7 @@ module ActiveRecord
                         aliased_table_name, "#{reflection.options[:as]}_id",
                         parent.aliased_table_name, parent.primary_key,
                         aliased_table_name, "#{reflection.options[:as]}_type",
-                        klass.quote(reflection.active_record.base_class.name)
+                        klass.quote_value(reflection.active_record.base_class.name)
                       ]
                     else
                       foreign_key = options[:foreign_key] || reflection.active_record.name.foreign_key
@@ -1531,8 +1569,12 @@ module ActiveRecord
               join << %(AND %s.%s = %s ) % [
                 aliased_table_name, 
                 reflection.active_record.connection.quote_column_name(reflection.active_record.inheritance_column), 
-                klass.quote(klass.name.demodulize)] unless klass.descends_from_active_record?
-              join << "AND #{interpolate_sql(sanitize_sql(reflection.options[:conditions]))} " if reflection.options[:conditions]
+                klass.quote_value(klass.name.demodulize)] unless klass.descends_from_active_record?
+
+              [through_reflection, reflection].each do |ref|
+                join << "AND #{interpolate_sql(sanitize_sql(ref.options[:conditions]))} " if ref && ref.options[:conditions]
+              end
+
               join
             end
             
@@ -1550,8 +1592,8 @@ module ActiveRecord
               end
 
               def interpolate_sql(sql)
-                instance_eval("%@#{sql.gsub('@', '\@')}@")
-              end
+                instance_eval("%@#{sql.gsub('@', '\@')}@") 
+              end 
           end
         end
     end

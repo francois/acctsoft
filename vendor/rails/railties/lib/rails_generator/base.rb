@@ -1,6 +1,7 @@
 require File.dirname(__FILE__) + '/options'
 require File.dirname(__FILE__) + '/manifest'
 require File.dirname(__FILE__) + '/spec'
+require File.dirname(__FILE__) + '/generated_attribute'
 
 # Rails::Generator is a code generation platform tailored for the Rails
 # web application framework.  Generators are easily invoked within Rails
@@ -165,6 +166,13 @@ module Rails
         def banner
           "Usage: #{$0} #{spec.name} #{spec.name.camelize}Name [options]"
         end
+    
+        def attributes
+          @attributes ||= @args.collect do |attribute|
+            Rails::Generator::GeneratedAttribute.new(*attribute.split(":"))
+          end
+        end
+
 
       private
         def assign_names!(name)
@@ -175,6 +183,7 @@ module Rails
           if @class_nesting.empty?
             @class_name = @class_name_without_nesting
           else
+            @table_name = @class_nesting.underscore << "_" << @table_name
             @class_name = "#{@class_nesting}::#{@class_name_without_nesting}"
           end
         end

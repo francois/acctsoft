@@ -1,29 +1,8 @@
-$:.unshift(File.dirname(__FILE__) + "/../lib/")
-
-require 'test/unit'
-require 'action_mailer'
-
-class MockSMTP
-  def self.deliveries
-    @@deliveries
-  end
-
-  def initialize
-    @@deliveries = []
-  end
-
-  def sendmail(mail, from, to)
-    @@deliveries << [mail, from, to]
-  end
-end
-
-class Net::SMTP
-  def self.start(*args)
-    yield MockSMTP.new
-  end
-end
+require "#{File.dirname(__FILE__)}/abstract_unit"
 
 class FunkyPathMailer < ActionMailer::Base
+  self.template_root = "#{File.dirname(__FILE__)}/fixtures/path.with.dots"
+
   def multipart_with_template_path_with_dots(recipient)
     recipients recipient
     subject    "Have a lovely picture"
@@ -31,14 +10,9 @@ class FunkyPathMailer < ActionMailer::Base
     attachment :content_type => "image/jpeg",
       :body => "not really a jpeg, we're only testing, after all"
   end
-
-  def template_path
-    "#{File.dirname(__FILE__)}/fixtures/path.with.dots"
-  end
 end
 
 class TestMailer < ActionMailer::Base
-
   def signed_up(recipient)
     @recipients   = recipient
     @subject      = "[Signed up] Welcome #{recipient}"
@@ -220,7 +194,7 @@ class TestMailer < ActionMailer::Base
     subject      "nested multipart"
     from         "test@example.com"
     content_type "multipart/mixed"
-    part :content_type => "multipart/alternative", :content_disposition => "inline" do |p|
+    part :content_type => "multipart/alternative", :content_disposition => "inline", :headers => { "foo" => "bar" } do |p|
       p.part :content_type => "text/plain", :body => "test text\nline #2"
       p.part :content_type => "text/html", :body => "<b>test</b> HTML<br/>\nline #2"
     end
@@ -271,8 +245,6 @@ class TestMailer < ActionMailer::Base
   end
 end
 
-TestMailer.template_root = File.dirname(__FILE__) + "/fixtures"
-
 class ActionMailerTest < Test::Unit::TestCase
   include ActionMailer::Quoting
 
@@ -282,6 +254,7 @@ class ActionMailerTest < Test::Unit::TestCase
 
   def new_mail( charset="utf-8" )
     mail = TMail::Mail.new
+    mail.mime_version = "1.0"
     if charset
       mail.set_content_type "text", "plain", { "charset" => charset }
     end
@@ -304,6 +277,7 @@ class ActionMailerTest < Test::Unit::TestCase
     
     assert_equal "multipart/mixed", created.content_type
     assert_equal "multipart/alternative", created.parts.first.content_type
+    assert_equal "bar", created.parts.first.header['foo'].to_s
     assert_equal "text/plain", created.parts.first.parts.first.content_type
     assert_equal "text/html", created.parts.first.parts[1].content_type
     assert_equal "application/octet-stream", created.parts[1].content_type
@@ -322,7 +296,6 @@ class ActionMailerTest < Test::Unit::TestCase
     expected.body    = "Hello there, \n\nMr. #{@recipient}"
     expected.from    = "system@loudthinking.com"
     expected.date    = Time.local(2004, 12, 12)
-    expected.mime_version = nil
 
     created = nil
     assert_nothing_raised { created = TestMailer.create_signed_up(@recipient) }
@@ -816,3 +789,37 @@ EOF
   end
 end
 
+class InheritableTemplateRootTest < Test::Unit::TestCase
+  def test_attr
+    expected = "#{File.dirname(__FILE__)}/fixtures/path.with.dots"
+    assert_equal expected, FunkyPathMailer.template_root
+
+    sub = Class.new(FunkyPathMailer)
+    sub.template_root = 'test/path'
+
+    assert_equal 'test/path', sub.template_root
+    assert_equal expected, FunkyPathMailer.template_root
+  end
+end
+
+class MethodNamingTest < Test::Unit::TestCase
+  class TestMailer < ActionMailer::Base
+    def send
+      body 'foo'
+    end
+  end
+
+  def setup
+    ActionMailer::Base.delivery_method = :test
+    ActionMailer::Base.perform_deliveries = true
+    ActionMailer::Base.deliveries = []
+  end
+
+  def test_send_method
+    assert_nothing_raised do
+      assert_emails 1 do
+        TestMailer.deliver_send
+      end
+    end
+  end
+end

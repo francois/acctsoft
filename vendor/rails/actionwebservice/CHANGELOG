@@ -1,12 +1,32 @@
 *SVN*
 
+* Removed deprecated end_form_tag helper. [Kent Sibilev]
+
+* Removed deprecated @request and @response usages. [Kent Sibilev]
+
+* Removed invocation of deprecated before_action and around_action filter methods. Corresponding before_invocation and after_invocation methods should be used instead. #6275 [Kent Sibilev]
+
+* Provide access to the underlying SOAP driver. #6212 [bmilekic, Kent Sibilev]
+
+* Deprecation: update docs. #5998 [jakob@mentalized.net, Kevin Clark]
+
+* ActionWebService WSDL generation ignores HTTP_X_FORWARDED_HOST [Paul Butcher <paul@paulbutcher.com>]
+
+* Tighten rescue clauses.  #5985 [james@grayproductions.net]
+
+* Fixed XMLRPC multicall when one of the called methods returns a struct object. [Kent Sibilev] 
+
+* Replace Reloadable with Reloadable::Deprecated. [Nicholas Seckar]
+
+* Fix invoke_layered since api_method didn't declare :expects. Closes #4720. [Kevin Ballard <kevin@sb.org>, Kent Sibilev]
+
 * Replace alias method chaining with Module#alias_method_chain. [Marcel Molina Jr.]
 
 * Replace Ruby's deprecated append_features in favor of included. [Marcel Molina Jr.]
 
 * Fix test database name typo. [Marcel Molina Jr.]
 
-*1.1.2* (April 9th, 2005)
+*1.1.2* (April 9th, 2006)
 
 * Rely on Active Record 1.14.2
 

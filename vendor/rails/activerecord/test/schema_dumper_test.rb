@@ -7,6 +7,7 @@ if ActiveRecord::Base.connection.respond_to?(:tables)
   class SchemaDumperTest < Test::Unit::TestCase
     def standard_dump
       stream = StringIO.new
+      ActiveRecord::SchemaDumper.ignore_tables = []
       ActiveRecord::SchemaDumper.dump(ActiveRecord::Base.connection, stream)
       stream.string
     end
@@ -18,6 +19,11 @@ if ActiveRecord::Base.connection.respond_to?(:tables)
       assert_no_match %r{create_table "schema_info"}, output
     end
     
+    def test_schema_dump_excludes_sqlite_sequence
+      output = standard_dump
+      assert_no_match %r{create_table "sqlite_sequence"}, output
+    end
+
     def assert_line_up(lines, pattern, required = false)
       return assert(true) if lines.empty?
       matches = lines.map { |line| line.match(pattern) }
@@ -30,7 +36,7 @@ if ActiveRecord::Base.connection.respond_to?(:tables)
     def test_arguments_line_up
       output  = standard_dump
       output.scan(/^( *)create_table.*?\n(.*?)^\1end/m).map{ |m| m.last.split(/\n/) }.each do |column_set|
-        assert_line_up(column_set, /:(?:integer|float|datetime|timestamp|time|date|text|binary|string|boolean)/, true)
+        assert_line_up(column_set, /:(?:integer|decimal|float|datetime|timestamp|time|date|text|binary|string|boolean)/, true)
         assert_line_up(column_set, /:default => /)
         assert_line_up(column_set, /:limit => /)
         assert_line_up(column_set, /:null => /)
@@ -45,7 +51,7 @@ if ActiveRecord::Base.connection.respond_to?(:tables)
     def test_schema_dump_includes_not_null_columns
       stream = StringIO.new
       
-      ActiveRecord::SchemaDumper.ignore_tables = [/^[^s]/]
+      ActiveRecord::SchemaDumper.ignore_tables = [/^[^r]/]
       ActiveRecord::SchemaDumper.dump(ActiveRecord::Base.connection, stream)
       output = stream.string
       assert_match %r{:null => false}, output
@@ -81,6 +87,14 @@ if ActiveRecord::Base.connection.respond_to?(:tables)
       assert_raise(StandardError) do
         ActiveRecord::SchemaDumper.dump(ActiveRecord::Base.connection, stream)
       end
+    end
+
+    def test_schema_dump_includes_decimal_options
+      stream = StringIO.new      
+      ActiveRecord::SchemaDumper.ignore_tables = [/^[^n]/]
+      ActiveRecord::SchemaDumper.dump(ActiveRecord::Base.connection, stream)
+      output = stream.string
+      assert_match %r{:precision => 3,[[:space:]]+:scale => 2,[[:space:]]+:default => 2.78}, output
     end
   end
 

@@ -3,10 +3,9 @@
 require 'webrick'
 require 'cgi'
 require 'stringio'
+require 'dispatcher'
 
 include WEBrick
-
-ABSOLUTE_RAILS_ROOT = File.expand_path(RAILS_ROOT)
 
 class CGI #:nodoc:
   def stdinput
@@ -60,17 +59,13 @@ class DispatchServlet < WEBrick::HTTPServlet::AbstractServlet
     server.mount('/', DispatchServlet, options)
 
     trap("INT") { server.shutdown }
-
-    require File.join(@server_options[:server_root], "..", "config", "environment") unless defined?(RAILS_ROOT)
-    require "dispatcher"
-
+    
     server.start
   end
 
   def initialize(server, options) #:nodoc:
     @server_options = options
     @file_handler = WEBrick::HTTPServlet::FileHandler.new(server, options[:server_root])
-    Dir.chdir(ABSOLUTE_RAILS_ROOT)
     super
   end
 

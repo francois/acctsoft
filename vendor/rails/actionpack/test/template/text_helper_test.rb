@@ -11,11 +11,19 @@ class TextHelperTest < Test::Unit::TestCase
     # a view is rendered.  The cycle helper depends on this behavior.
     @_cycles = nil if (defined? @_cycles)
   end
-  
+
   def test_simple_format
+    assert_equal "<p></p>", simple_format(nil)
+
     assert_equal "<p>crazy\n<br /> cross\n<br /> platform linebreaks</p>", simple_format("crazy\r\n cross\r platform linebreaks")
     assert_equal "<p>A paragraph</p>\n\n<p>and another one!</p>", simple_format("A paragraph\n\nand another one!")
     assert_equal "<p>A paragraph\n<br /> With a newline</p>", simple_format("A paragraph\n With a newline")
+
+    text = "A\nB\nC\nD".freeze
+    assert_equal "<p>A\n<br />B\n<br />C\n<br />D</p>", simple_format(text)
+
+    text = "A\r\n  \nB\n\n\r\n\t\nC\nD".freeze
+    assert_equal "<p>A\n<br />  \n<br />B</p>\n\n<p>\t\n<br />C\n<br />D</p>", simple_format(text)
   end
 
   def test_truncate
@@ -23,33 +31,18 @@ class TextHelperTest < Test::Unit::TestCase
     assert_equal "Hello Wor...", truncate("Hello World!!", 12)
   end
 
-  def test_truncate_multibyte_without_kcode
-    result = execute_in_sandbox(<<-'CODE')
-      require File.dirname(__FILE__) + '/../../activesupport/lib/active_support/core_ext/kernel'
-      require "#{File.dirname(__FILE__)}/../lib/action_view/helpers/text_helper"
-      include ActionView::Helpers::TextHelper
-      truncate("\354\225\210\353\205\225\355\225\230\354\204\270\354\232\224", 10)
-    CODE
-
-    assert_equal "\354\225\210\353\205\225\355...", result
+  def test_truncate_multibyte
+    with_kcode 'none' do
+      assert_equal "\354\225\210\353\205\225\355...", truncate("\354\225\210\353\205\225\355\225\230\354\204\270\354\232\224", 10) 
+    end
+    with_kcode 'u' do
+      assert_equal "\354\225\204\353\246\254\353\236\221 \354\225\204\353\246\254 ...",
+        truncate("\354\225\204\353\246\254\353\236\221 \354\225\204\353\246\254 \354\225\204\353\235\274\353\246\254\354\230\244", 10)
+    end
   end
-
-  def test_truncate_multibyte_with_kcode
-    result = execute_in_sandbox(<<-'CODE')
-      $KCODE = "u"
-      require 'jcode'
-
-      require File.dirname(__FILE__) + '/../../activesupport/lib/active_support/core_ext/kernel'
-      require "#{File.dirname(__FILE__)}/../lib/action_view/helpers/text_helper"
-      include ActionView::Helpers::TextHelper
-      truncate("\354\225\204\353\246\254\353\236\221 \354\225\204\353\246\254\353\236 \354\225\204\353\235\274\353\246\254\354\230\244", 10)
-    CODE
-
-    assert_equal "\354\225\204\353\246\254\353\236\221 \354\225\204\353\246\254\353\236 ...", result
-  end
-
+  
   def test_strip_links
-    assert_equal "on my mind", strip_links("<a href='almost'>on my mind</a>")
+    assert_equal "on my mind\nall day long", strip_links("<a href='almost'>on my mind</a>\n<A href='almost'>all day long</A>")
   end
 
   def test_highlighter
@@ -95,7 +88,6 @@ class TextHelperTest < Test::Unit::TestCase
     assert_equal("...is a beautiful morni...", excerpt("This is a beautiful morning", "beautiful", 5))
     assert_equal("This is a...", excerpt("This is a beautiful morning", "this", 5))
     assert_equal("...iful morning", excerpt("This is a beautiful morning", "morning", 5))
-    assert_equal("...iful morning", excerpt("This is a beautiful morning", "morning", 5))
     assert_nil excerpt("This is a beautiful morning", "day")
   end
 
@@ -103,7 +95,15 @@ class TextHelperTest < Test::Unit::TestCase
     assert_equal('...is a beautiful! morn...', excerpt('This is a beautiful! morning', 'beautiful', 5))
     assert_equal('...is a beautiful? morn...', excerpt('This is a beautiful? morning', 'beautiful', 5))
   end
-  
+
+  def test_excerpt_with_utf8
+    with_kcode('u') do
+      assert_equal("...ﬃciency could not be h...", excerpt("That's why eﬃciency could not be helped", 'could', 8))
+    end
+    with_kcode('none') do
+      assert_equal("...\203ciency could not be h...", excerpt("That's why eﬃciency could not be helped", 'could', 8))
+    end
+  end
     
   def test_word_wrap
     assert_equal("my very very\nvery long\nstring", word_wrap("my very very very long string", 15))
@@ -112,6 +112,30 @@ class TextHelperTest < Test::Unit::TestCase
   def test_pluralization
     assert_equal("1 count", pluralize(1, "count"))
     assert_equal("2 counts", pluralize(2, "count"))
+    assert_equal("1 count", pluralize('1', "count"))
+    assert_equal("2 counts", pluralize('2', "count"))
+    assert_equal("1,066 counts", pluralize('1,066', "count"))
+    assert_equal("1.25 counts", pluralize('1.25', "count"))
+    assert_equal("2 counters", pluralize(2, "count", "counters"))
+    assert_equal("0 counters", pluralize(nil, "count", "counters"))
+  end
+
+  def test_auto_link_parsing
+    urls = %w(http://www.rubyonrails.com
+              http://www.rubyonrails.com:80
+              http://www.rubyonrails.com/~minam
+              https://www.rubyonrails.com/~minam
+              http://www.rubyonrails.com/~minam/url%20with%20spaces
+              http://www.rubyonrails.com/foo.cgi?something=here
+              http://www.rubyonrails.com/foo.cgi?something=here&and=here
+              http://www.rubyonrails.com/contact;new
+              http://www.rubyonrails.com/contact;new%20with%20spaces
+              http://www.rubyonrails.com/contact;new?with=query&string=params
+              http://www.rubyonrails.com/~minam/contact;new?with=query&string=params)
+
+    urls.each do |url|
+      assert_equal %(<a href="#{url}">#{url}</a>), auto_link(url)
+    end
   end
 
   def test_auto_linking
@@ -177,6 +201,12 @@ class TextHelperTest < Test::Unit::TestCase
     assert_equal "&lt;form action='/foo/bar' method='post'><input>&lt;/form>", result
   end
 
+  def test_sanitize_plaintext
+    raw = "<plaintext><span>foo</span></plaintext>"
+    result = sanitize(raw)
+    assert_equal "&lt;plaintext><span>foo</span>&lt;/plaintext>", result
+  end
+
   def test_sanitize_script
     raw = "<script language=\"Javascript\">blah blah blah</script>"
     result = sanitize(raw)
@@ -193,6 +223,12 @@ class TextHelperTest < Test::Unit::TestCase
     raw = %{href="javascript:bang" <a href="javascript:bang" name="hello">foo</a>, <span href="javascript:bang">bar</span>}
     result = sanitize(raw)
     assert_equal %{href="javascript:bang" <a name='hello'>foo</a>, <span>bar</span>}, result
+  end
+  
+  def test_sanitize_image_src
+    raw = %{src="javascript:bang" <img src="javascript:bang" width="5">foo</img>, <span src="javascript:bang">bar</span>}
+    result = sanitize(raw)
+    assert_equal %{src="javascript:bang" <img width='5'>foo</img>, <span>bar</span>}, result
   end
   
   def test_cycle_class
@@ -284,7 +320,7 @@ class TextHelperTest < Test::Unit::TestCase
     assert_equal(
     %{This is a test.\n\n\nIt no longer contains any HTML.\n}, strip_tags(
     %{<title>This is <b>a <a href="" target="_blank">test</a></b>.</title>\n\n<!-- it has a comment -->\n\n<p>It no <b>longer <strong>contains <em>any <strike>HTML</strike></em>.</strong></b></p>\n}))
-    assert_equal("This has a  here.", strip_tags("This has a <!-- comment --> here."))
+    assert_equal "This has a  here.", strip_tags("This has a <!-- comment --> here.")
+    [nil, '', '   '].each { |blank| assert_equal blank, strip_tags(blank) }
   end
-
 end
