@@ -7,7 +7,7 @@
     <%= link_to(@line.no, account_edit_url(:account_no => @line.account)) %>
     <%= render :partial => 'shared/delete_line',
           :locals => {:line => @line, :index => index, :fields => %w(no debit credit),
-                      :url => delete_transaction_line_url(:txn_id => txn, :line => @line)} %>
+                      :url => txn && !txn.new_record? ? delete_transaction_line_url(:txn_id => txn, :line => @line) : nil} %>
   </td>
   <td><%= link_to(@line.name, account_edit_url(:account_no => @line.account)) %></td>
   <td class="money">

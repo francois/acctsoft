@@ -22,16 +22,16 @@ class ReportsController < ApplicationController
   end
 
   def etat_resultats
-    @product_accounts = Account.find(:all, :conditions => ['type_id IN (?)', AccountType.produits.map(&:id)], :order => 'no')
-    @charge_accounts  = Account.find(:all, :conditions => ['type_id IN (?)', AccountType.charges.map(&:id)], :order => 'no')
+    @product_accounts = Account.find(:all, :conditions => ['account_type IN (?)', AccountType.incomes], :order => 'no')
+    @charge_accounts  = Account.find(:all, :conditions => ['account_type IN (?)', AccountType.expenses], :order => 'no')
 
     @total_products_amount = @product_accounts.inject(Money.empty) {|sum, accnt| sum + accnt.total_ct_volume(@cutoff_date) - accnt.total_dt_volume(@cutoff_date) }
     @total_charges_amount = @charge_accounts.inject(Money.empty) {|sum, accnt| sum + accnt.total_dt_volume(@cutoff_date) - accnt.total_ct_volume(@cutoff_date) }
   end
 
   def avoir_proprietaire
-    @avoir_accounts = Account.find(:all, :conditions => ['type_id IN (?) AND no NOT IN (?)',
-        AccountType.avoirs.map {|at| at.id}, [3100, 3200]], :order => 'no')
+    @avoir_accounts = Account.find(:all, :conditions => ['account_type IN (?) AND no NOT IN (?)',
+        AccountType.equities, [3100, 3200]], :order => 'no')
     @initial_amount = @avoir_accounts.inject(Money.empty) {|sum, accnt| sum + accnt.total_ct_volume(@cutoff_date) } - @avoir_accounts.inject(Money.empty) {|sum, accnt| sum + accnt.total_dt_volume(@cutoff_date) }
 
     self.etat_resultats
@@ -52,10 +52,10 @@ class ReportsController < ApplicationController
   def bilan
     self.avoir_proprietaire
 
-    @actifs_accounts  = Account.find(:all, :conditions => ['type_id IN (?)', AccountType.actifs.map {|at| at.id}], :order => 'no')
+    @actifs_accounts  = Account.find(:all, :conditions => ['account_type IN (?)', AccountType.assets], :order => 'no')
     @total_actifs = @actifs_accounts.inject(Money.empty) {|total, accnt| total + accnt.total_dt_volume(@cutoff_date) - accnt.total_ct_volume(@cutoff_date) }
 
-    @passifs_accounts = Account.find(:all, :conditions => ['type_id IN (?)', AccountType.passifs.map {|at| at.id}], :order => 'no')
+    @passifs_accounts = Account.find(:all, :conditions => ['account_type IN (?)', AccountType.liabilities], :order => 'no')
     @total_passifs = @passifs_accounts.inject(Money.empty) {|total, accnt| total + accnt.total_ct_volume(@cutoff_date) - accnt.total_dt_volume(@cutoff_date) }
 
     @avoir = @avoir_accounts.first

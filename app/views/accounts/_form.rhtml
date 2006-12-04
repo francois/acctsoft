@@ -13,8 +13,8 @@
     <%= text_field :account, :description, :size => 40 %>
   </div>
   <div class="row">
-    <%= label :account, :type_id, 'Type' %>
-    <%= collection_select :account, :type_id, AccountType.for_select, :id, :name %>
+    <%= label :account, :account_type, 'Type' %>
+    <%= select :account, :account_type, AccountType.for_select, :selected => @account.account_type.designation %>
   </div>
 </fieldset>
 

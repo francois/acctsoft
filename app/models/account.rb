@@ -1,7 +1,7 @@
 class Account < ActiveRecord::Base
   has_many :txn_parts, :class_name => 'TxnAccount', :include => :txn, :order => 'txns.posted_on, txns.id'
 
-  validates_presence_of :no, :name, :account_type_id
+  validates_presence_of :no, :name
   validates_inclusion_of :no, :in => (1 .. 999999)
   validates_uniqueness_of :no
   composed_of :account_type, :mapping => %w(account_type designation)
@@ -29,14 +29,14 @@ class Account < ActiveRecord::Base
   def balance(force=false)
     amount_dt = self.total_dt_volume(Date.today, force)
     amount_ct = self.total_ct_volume(Date.today, force)
-    self.normally_debitor? ? amount_dt - amount_ct : amount_ct - amount_dt
+    self.debitor? ? amount_dt - amount_ct : amount_ct - amount_dt
   end
 
-  def normally_debitor?
+  def debitor?
     self.account_type.debitor?
   end
 
-  def normally_creditor?
+  def creditor?
     self.account_type.creditor?
   end
 
@@ -52,7 +52,7 @@ class Account < ActiveRecord::Base
   end
 
   def to_param
-    self.no
+    self.no.to_s
   end
 
   protected

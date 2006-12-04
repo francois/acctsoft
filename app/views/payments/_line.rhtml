@@ -7,7 +7,7 @@
     <%= hidden_field :line, :no, :index => index %>
     <%= render :partial => 'shared/delete_line',
           :locals => {:line => @line, :index => index, :fields => %w(no amount),
-                      :url => delete_payment_line_url(:payment_id => payment, :line => line)} %>
+                      :url => line && !line.new_record? ? delete_payment_line_url(:payment_id => payment, :line => line) : nil} %>
   </td>
   <td class="money"><%= text_field(:line, :amount, :size => 10, :value => line.amount, :index => index, :class => 'money invoice') %></td>
 </tr>

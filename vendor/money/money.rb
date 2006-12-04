@@ -124,7 +124,7 @@ class Money
   #
   #  Money.ca_dollar(570).format(:html, :with_currency) =>  "$5.70 <span class=\"currency\">CAD</span>"
   def format(*rules)
-    return "free" if cents == 0
+    return "" if cents == 0
 
     rules = rules.flatten
 

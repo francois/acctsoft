@@ -1,10 +1,12 @@
 class AccountsController < ApplicationController
+  before_filter :normalize_account_type, :only => %w(create update)
+
   def index
     @accounts = Account.find(:all, :order => 'no')
   end
 
   def new
-    @account = Account.new
+    @account = Account.new(:account_type => AccountType.asset)
   end
 
   def create
@@ -27,7 +29,7 @@ class AccountsController < ApplicationController
 
   def update
     @account = Account.find(params[:id])
-    if @account.update_attributes(params[:account_no]) then
+    if @account.update_attributes(params[:account]) then
       redirect_to :action => :index
     else
       render :action => 'edit'
@@ -43,14 +45,16 @@ class AccountsController < ApplicationController
     @force = params[:force]
 
     @total = Money.empty
-    @calculator =   case
-                    when  AccountType.actifs.include?(@account.account_type),
-                          AccountType.charges.include?(@account.account_type),
-                          AccountType.avoirs.include?(@account.account_type)
+    @calculator =   if @account.debitor? then
                       Proc.new {|total, line| total + line.amount_dt - line.amount_ct }
                     else
                       Proc.new {|total, line| total + line.amount_ct - line.amount_dt }
                     end
     render :layout => false
+  end
+
+  protected
+  def normalize_account_type
+    params[:account][:account_type] = AccountType.new(params[:account][:account_type]) if params[:account]
   end
 end

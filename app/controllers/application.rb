@@ -19,7 +19,7 @@ class ApplicationController < ActionController::Base
   end
 
   def set_content_type
-    return unless @response.headers['Content-Type'].blank?
-    @response.headers['Content-Type'] = 'text/html; charset=UTF-8'
+    return unless response.headers['Content-Type'].blank?
+    response.headers['Content-Type'] = 'text/html; charset=UTF-8'
   end
 end

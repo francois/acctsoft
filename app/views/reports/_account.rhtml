@@ -6,6 +6,6 @@
 -%>
 <span class="account">
   <span class="title"><%= link_to(account.name, account_edit_url(:account_no => account.no)) %></span>
-  <span class="amount"><%= format_money(account.normally_debitor? ? (dt_volume - ct_volume) : (ct_volume - dt_volume)) %></span>
+  <span class="amount"><%= format_money(account.debitor? ? (dt_volume - ct_volume) : (ct_volume - dt_volume)) %></span>
 </span>
 <% end -%>

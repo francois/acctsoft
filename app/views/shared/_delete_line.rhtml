@@ -2,7 +2,7 @@
   raise "Missing line" unless line
   raise "Missing index" unless index
   raise "Missing fields (must be Array instance)" unless fields and fields.kind_of?(Array)
-  raise "Missing url" unless url
+  raise "Missing url" if !line.new_record? && url.blank?
 -%>
 <% if line.new_record? then -%>
 <%= link_to_function 'X', visual_effect(:fade, "line_#{index}") +
