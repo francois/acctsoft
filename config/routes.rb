@@ -1,5 +1,5 @@
 ActionController::Routing::Routes.draw do |map|
-  NumericRegexp = /\A\d+\Z/.freeze
+  NumericRegexp = /\d+/.freeze
 
   map.summary '/', :controller => 'home', :action => 'index'
 

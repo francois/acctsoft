@@ -8,7 +8,7 @@ class ValidTransactionTest < Test::Unit::TestCase
     @txn.lines.build(:amount_dt => 95.to_money(:CAD), :account => accounts(:cash))
     @txn.lines.build(:amount_ct => 60.to_money(:CAD), :account => accounts(:owner))
     @txn.lines.build(:amount_ct => 35.to_money(:CAD), :account => accounts(:sales))
-    assert_model_saved @txn
+    @txn.save!
   end
 
   def test_transaction_volume_equals_one_side_of_the_equation
@@ -24,7 +24,7 @@ class InvalidTransactionsTest < Test::Unit::TestCase
     @txn.lines.build(:amount_dt => 200.to_money(:CAD), :account => accounts(:cash))
     @txn.lines.build(:amount_ct => 150.to_money(:CAD), :account => accounts(:owner))
     @txn.lines.build(:amount_ct => 55.to_money(:CAD), :account => accounts(:sales))
-    assert_model_not_saved @txn, 'transaction is unbalanced'
+    assert !@txn.save, 'transaction is unbalanced -- should not have saved'
   end
 
   def test_reports_imbalance_on_transaction

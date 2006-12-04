@@ -11,7 +11,7 @@ class TxnAccount < ActiveRecord::Base
   composed_of :amount_ct, :class_name => 'Money',
       :mapping => [%w(amount_ct_cents cents), %w(amount_ct_currency currency)]
 
-  before_validation :normalize_amounts
+  before_validation DebitCreditNormalizer.new
   validate :non_nil_volume
 
   def no
@@ -53,17 +53,6 @@ class TxnAccount < ActiveRecord::Base
   end
 
   protected
-  def normalize_amounts
-    return if self.amount_dt.zero? or self.amount_ct.zero?
-    if self.amount_dt > self.amount_ct then
-      self.amount_dt -= self.amount_ct
-      self.amount_ct = Money.empty
-    else
-      self.amount_ct -= self.amount_dt
-      self.amount_dt = Money.empty
-    end
-  end
-
   def non_nil_volume
     return unless (self.amount_dt - self.amount_ct).zero?
     self.errors.add_to_base('Le volume ne doit pas être nul')

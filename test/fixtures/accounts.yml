@@ -15,3 +15,9 @@ sales:
   'no': 400
   name: Sales
   type_id: 4
+
+supplier:
+  id: 4
+  'no': 500
+  name: Suppliers
+  type_id: 2

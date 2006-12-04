@@ -1,19 +1,19 @@
 class Account < ActiveRecord::Base
   has_many :txn_parts, :class_name => 'TxnAccount', :include => :txn, :order => 'txns.posted_on, txns.id'
 
-  validates_presence_of :no, :name, :account_type
+  validates_presence_of :no, :name, :account_type_id
   validates_inclusion_of :no, :in => (1 .. 999999)
   validates_uniqueness_of :no
 
   belongs_to :account_type, :class_name => 'AccountType', :foreign_key => 'type_id'
 
-  def total_dt_volume(cutoff_date=Date.today)
-    load_total_from_cache(cutoff_date)
+  def total_dt_volume(cutoff_date=Date.today, force=false)
+    load_total_from_cache(cutoff_date, force)
     @total_dt_volume
   end
 
-  def total_ct_volume(cutoff_date=Date.today)
-    load_total_from_cache(cutoff_date)
+  def total_ct_volume(cutoff_date=Date.today, force=false)
+    load_total_from_cache(cutoff_date, force)
     @total_ct_volume
   end
 
@@ -27,12 +27,18 @@ class Account < ActiveRecord::Base
     @force_ct_total = true
   end
 
+  def balance(force=false)
+    amount_dt = self.total_dt_volume(Date.today, force)
+    amount_ct = self.total_ct_volume(Date.today, force)
+    self.normally_debitor? ? amount_dt - amount_ct : amount_ct - amount_dt
+  end
+
   def normally_debitor?
-    !normally_creditor?
+    self.account_type.normally_debitor?
   end
 
   def normally_creditor?
-    (AccountType.passifs + AccountType.avoirs + AccountType.produits).flatten.include?(self.account_type)
+    self.account_type.normally_creditor?
   end
 
   def transactions_between(start_on, end_on)
@@ -51,13 +57,13 @@ class Account < ActiveRecord::Base
   end
 
   protected
-  def load_total_from_cache(cutoff_date)
+  def load_total_from_cache(cutoff_date, force=false)
     return if @force_dt_total and @force_ct_total
-    return if cutoff_date == @total_volume_cutoff_date
+    return if !force && cutoff_date == @total_volume_cutoff_date
     results = self.class.connection.select_one("
       SELECT SUM(amount_dt_cents) / 100 AS total_dt_volume, SUM(amount_ct_cents) / 100 AS total_ct_volume
       FROM txn_accounts INNER JOIN txns ON txns.id = txn_accounts.txn_id
-      WHERE txns.posted_on <= '#{cutoff_date.to_time.strftime('%Y-%m-%d')}' AND txn_accounts.account_id = #{self.id} ")
+      WHERE txns.posted_on <= '#{cutoff_date.to_date.to_s(:db)}' AND txn_accounts.account_id = #{self.id} ")
 
     @total_dt_volume = results['total_dt_volume'].to_money unless @force_dt_total
     @total_ct_volume = results['total_ct_volume'].to_money unless @force_ct_total
