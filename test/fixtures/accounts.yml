@@ -2,22 +2,28 @@ cash:
   id: 1
   'no': 100
   name: Cash
-  type_id: 1
+  account_type: asset
 
 owner:
   id: 2
   'no': 300
   name: Owner Value
-  type_id: 3
+  account_type: equity
 
 sales:
   id: 3
   'no': 400
   name: Sales
-  type_id: 4
+  account_type: income
 
 supplier:
   id: 4
   'no': 500
   name: Suppliers
-  type_id: 2
+  account_type: liability
+
+taxes:
+  id: 5
+  'no': 600
+  name: Taxes
+  account_type: expense

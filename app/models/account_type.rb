@@ -1,42 +1,23 @@
-class AccountType < ActiveRecord::Base
-  acts_as_list
+class AccountType
+  attr_accessor :designation
 
-  validates_presence_of :name, :designation
-  validates_length_of :name, :minimum => 1
-  validates_inclusion_of :designation, :in => %w(actif passif produit charge avoir)
+  DEBITORS = %w(asset expense)
+  CREDITORS = %w(liability income equity)
 
-  DEBITORS = %w(actif charge)
-  CREDITORS = %w(passif produit avoir)
+  def initialize(designation)
+    raise ArgumentError, "Unknown designation: #{designation.inspect}" unless DEBITORS.include?(designation) || CREDITORS.include?(designation)
+    @designation = designation
+  end
 
-  def normally_debitor?
+  def debitor?
     DEBITORS.include?(self.designation)
   end
 
-  def normally_creditor?
+  def creditor?
     CREDITORS.include?(self.designation)
   end
 
-  def self.actifs
-    self.find_all_by_designation('actif')
-  end
-
-  def self.passifs
-    self.find_all_by_designation('passif')
-  end
-
-  def self.avoirs
-    self.find_all_by_designation('avoir')
-  end
-
-  def self.produits
-    self.find_all_by_designation('produit')
-  end
-
-  def self.charges
-    self.find_all_by_designation('charge')
-  end
-
   def self.for_select
-    self.find(:all, :order => 'position')
+    [%w(Actif asset), %w(Passif liability), %w(Avoir equity), %w(Revenu income), %w(Dépense expense)]
   end
 end

@@ -4,8 +4,7 @@ class Account < ActiveRecord::Base
   validates_presence_of :no, :name, :account_type_id
   validates_inclusion_of :no, :in => (1 .. 999999)
   validates_uniqueness_of :no
-
-  belongs_to :account_type, :class_name => 'AccountType', :foreign_key => 'type_id'
+  composed_of :account_type, :mapping => %w(account_type designation)
 
   def total_dt_volume(cutoff_date=Date.today, force=false)
     load_total_from_cache(cutoff_date, force)
@@ -34,11 +33,11 @@ class Account < ActiveRecord::Base
   end
 
   def normally_debitor?
-    self.account_type.normally_debitor?
+    self.account_type.debitor?
   end
 
   def normally_creditor?
-    self.account_type.normally_creditor?
+    self.account_type.creditor?
   end
 
   def transactions_between(start_on, end_on)

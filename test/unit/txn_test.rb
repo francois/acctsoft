@@ -1,7 +1,7 @@
 require File.dirname(__FILE__) + '/../test_helper'
 
 class ValidTransactionTest < Test::Unit::TestCase
-  fixtures :accounts, :companies, :account_types, :txns, :txn_accounts
+  fixtures :accounts, :companies, :txns, :txn_accounts
 
   def setup
     @txn = Txn.new(:description => 'Sale In Progress')
@@ -17,7 +17,7 @@ class ValidTransactionTest < Test::Unit::TestCase
 end
 
 class InvalidTransactionsTest < Test::Unit::TestCase
-  fixtures :accounts, :companies, :account_types, :txns, :txn_accounts
+  fixtures :accounts, :companies, :txns, :txn_accounts
 
   def setup
     @txn = Txn.new(:description => 'Sale In Progress')

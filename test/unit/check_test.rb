@@ -1,7 +1,7 @@
 require File.dirname(__FILE__) + '/../test_helper'
 
 class CheckValidityTest < Test::Unit::TestCase
-  fixtures :accounts, :account_types
+  fixtures :accounts
 
   def setup
     @bank_account = accounts(:cash)
@@ -74,7 +74,7 @@ class CheckValidityTest < Test::Unit::TestCase
 end
 
 class CheckTransferTest < Test::Unit::TestCase
-  fixtures :accounts, :account_types
+  fixtures :accounts
 
   def setup
     @bank_account = accounts(:cash)
