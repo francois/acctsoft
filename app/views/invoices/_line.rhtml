@@ -6,7 +6,7 @@
     <%= text_field 'line[]', :item_no, :size => 6, :index => index %>
     <%= render :partial => 'shared/delete_line',
           :locals => {:line => @line, :index => index, :fields => %w(item_no description quantity unit_price),
-                      :url => delete_invoice_line_url(:invoice_no => invoice, :line => line)} %>
+                      :url => invoice ? delete_invoice_line_url(:invoice_no => invoice, :line => line) : nil} %>
   </td>
   <td><%= text_field 'line[]', :description, :size => 30, :value => @line.description, :index => index %></td>
   <td class="number"><%= text_field 'line[]', :quantity, :size => 6, :value => @line.quantity, :index => index, :class => 'number' %></td>
