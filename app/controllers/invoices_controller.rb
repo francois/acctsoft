@@ -56,7 +56,6 @@ class InvoicesController < ApplicationController
 
   protected
   def update_and_redirect
-    self.parse_dates
     @inv.customer = Customer.find_by_abbreviation(params[:inv][:customer])
     params[:inv].delete(:customer)
     params[:inv].delete('customer')
@@ -83,10 +82,5 @@ class InvoicesController < ApplicationController
     return @inv.lines.count if @inv.new_record?
     count = InvoiceItem.connection.select_value("SELECT MAX(id) FROM #{InvoiceItem.table_name} WHERE invoice_id = #{@inv.id}")
     @line_count = count.to_i rescue 0
-  end
-
-  def parse_dates
-    return unless params[:inv]
-    params[:inv][:invoiced_on] = parse_date(params[:inv][:invoiced_on])
   end
 end

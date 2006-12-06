@@ -64,7 +64,6 @@ class PaymentsController < ApplicationController
 
   protected
   def update_and_redirect
-    self.parse_dates
     params[:payment][:customer] = Customer.find_by_abbreviation(params[:payment][:customer])
     if params[:line] then
       params[:line].each do |id, values|
@@ -90,11 +89,5 @@ class PaymentsController < ApplicationController
     return @payment.invoices.count if @payment.new_record?
     count = InvoicePayment.connection.select_value("SELECT MAX(id) FROM #{InvoicePayment.table_name} WHERE payment_id = #{@payment.id}")
     @line_count = count.to_i rescue 0
-  end
-
-  def parse_dates
-    return unless params[:payment]
-    params[:payment][:paid_on] = parse_date(params[:payment][:paid_on])
-    params[:payment][:received_on] = parse_date(params[:payment][:received_on])
   end
 end

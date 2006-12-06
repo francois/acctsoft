@@ -11,7 +11,6 @@ class ReconciliationsController < ApplicationController
       return redirect_to(:action => :index) if @reconciliation.destroy
     end
 
-    params[:reconciliation][:statement_on] = parse_date(params[:reconciliation][:statement_on])
     @reconciliation.attributes = params[:reconciliation]
     @reconciliation.reconciled_at = Time.now
     if @reconciliation.save then

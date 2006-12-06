@@ -37,7 +37,6 @@ class TransactionsController < ApplicationController
       return redirect_to(transactions_url)
     end
 
-    self.parse_dates
     Txn.transaction do
       @transaction.attributes = params[:transaction]
       @transaction.save!
@@ -63,10 +62,5 @@ class TransactionsController < ApplicationController
     return @transaction.lines.count if @transaction.new_record?
     count = TxnAccount.connection.select_value("SELECT MAX(id) FROM #{TxnAccount.table_name} WHERE txn_id = #{@transaction.id}")
     @line_count = count.to_i rescue 0
-  end
-
-  def parse_dates
-    return unless params[:transaction]
-    params[:transaction][:posted_on] = parse_date(params[:transaction][:posted_on])
   end
 end
