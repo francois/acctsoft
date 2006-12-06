@@ -1,0 +1,19 @@
+<% @title = 'Gestion des chèques' %>
+<div class="filters">
+  <%= link_to 'Nouveau chèque', :action => 'edit' %>
+</div>
+<table class="list" cellspacing="0" cellpadding="0">
+  <caption>Liste des chèques</caption>
+  <col/><col/><col/><col/>
+  <thead id="list-head">
+    <tr>
+      <th>No</th>
+      <th>Date</th>
+      <th>Bénéficiaire</th>
+      <th class="money">Montant</th>
+    </tr>
+  </thead>
+  <tbody id="list-body">
+<%= render :partial => 'check', :collection => @checks %>
+  </tbody>
+</table>

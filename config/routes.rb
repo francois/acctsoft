@@ -24,6 +24,14 @@ ActionController::Routing::Routes.draw do |map|
     m.unconcile '/reconciliations/:reconciliation_id/unconcile/:id', :action => 'unconcile'
   end
 
+  map.with_options(:controller => 'checks') do |m|
+    m.checks '/cheques', :action => 'index'
+    m.check_edit '/cheques/:id/edit', :action => 'edit', :id => /\d+/
+    m.check_new '/cheques/new', :action => 'edit'
+
+    m.delete_check_distribution '/cheques/:check_id/distribution/:id/delete', :action => 'delete_line'
+  end
+
   map.delete_invoice_line '/factures/:invoice_no/delete/:line', :controller => 'invoices', :action => 'delete_line', :invoice_no => NumericRegexp, :line => NumericRegexp
   map.invoice_post '/factures/transfert/:invoice_no', :controller => 'invoices', :action => 'transfer', :invoice_no => NumericRegexp
   map.invoice_edit '/factures/:invoice_no', :controller => 'invoices', :action => 'edit', :invoice_no => NumericRegexp

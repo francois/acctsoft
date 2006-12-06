@@ -1,0 +1,28 @@
+<%
+  @distribution = distribution
+  check = check rescue nil
+  index = @distribution.new_record? ? distribution_counter : @distribution.id -%>
+<tr id="distribution_<%= index %>">
+<% if check && @distribution.account == check.bank_account then -%>
+  <td><%= link_to(@distribution.no, account_edit_url(:account_no => @distribution.account)) %></td>
+  <td><%= link_to(@distribution.name, account_edit_url(:account_no => @distribution.account)) %></td>
+  <td class="money"><%= @distribution.amount_dt.format(:zero => '') %></td>
+  <td class="money"><%= @distribution.amount_ct.format(:zero => '') %></td>
+<% else -%>
+  <td>
+    <%= hidden_field(:distribution, :no, :index => index) %>
+    <%= link_to(@distribution.no, account_edit_url(:account_no => @distribution.account)) %>
+    <%= render :partial => 'shared/delete_line',
+          :locals => {:line => @distribution, :index => index, :fields => %w(no debit credit),
+                      :prefix => "distribution",
+                      :url => check && !check.new_record? ? delete_check_distribution_url(:check_id => check.id, :id => @distribution.id) : nil} %>
+  </td>
+  <td><%= link_to(@distribution.name, account_edit_url(:account_no => @distribution.account)) %></td>
+  <td class="money">
+    <%= text_field :distribution, :debit, :size => 8, :class => 'money debit', :index => index, :value => @distribution.debit.format(:zero => '') %>
+  </td>
+  <td class="money">
+    <%= text_field :distribution, :credit, :size => 8, :class => 'money credit', :index => index, :value => @distribution.credit.format(:zero => '') %>
+  </td>
+<% end -%>
+</tr>

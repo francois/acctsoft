@@ -1,0 +1,6 @@
+<tr>
+  <td><%= link_to(h(check.no), check_edit_url(check)) %></td>
+  <td><%= format_date(check.written_on) %></td>
+  <td><%= h(check.beneficiary) %></td>
+  <td class="money"><%= format_money(check.amount) %></td>
+</tr>

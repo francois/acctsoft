@@ -3,10 +3,11 @@
   raise "Missing index" unless index
   raise "Missing fields (must be Array instance)" unless fields and fields.kind_of?(Array)
   raise "Missing url" if !line.new_record? && url.blank?
+  prefix = "line" if prefix.blank?
 -%>
 <% if line.new_record? then -%>
-<%= link_to_function 'X', visual_effect(:fade, "line_#{index}") +
-        %Q(setTimeout(function() {#{fields.map {|field| "Element.remove('line_#{index}_#{field}')"}.join(';')}}, 1000)),
+<%= link_to_function 'X', visual_effect(:fade, "#{prefix}_#{index}") +
+        %Q(setTimeout(function() {#{fields.map {|field| "Element.remove('#{prefix}_#{index}_#{field}')"}.join(';')}}, 1000)),
         :title => 'Détruire cette ligne' -%>
 <% else -%>
 <%= link_to_remote 'X', :url => url, :html => {:title => 'Détruire cette ligne'} -%>

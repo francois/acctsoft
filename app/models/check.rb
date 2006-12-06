@@ -2,17 +2,25 @@ class Check < ActiveRecord::Base
   belongs_to :bank_account, :class_name => 'Account', :foreign_key => 'bank_account_id'
   belongs_to :txn
   composed_of :amount, :class_name => 'Money', :mapping => [%w(amount_cents cents), %w(amount_currency currency)]
-  has_many :distributions, :class_name => 'CheckDistribution', :order => 'position'
+  has_many :distributions, :class_name => 'CheckDistribution', :order => 'position', :dependent => :delete_all
 
   validates_uniqueness_of :no
-  validates_presence_of :no, :date, :beneficiary, :reason, :bank_account_id, :amount_cents
+  validates_presence_of :no, :written_on, :beneficiary, :reason, :bank_account_id, :amount_cents
   before_validation :add_bank_account_line
-  validate :amount_balances_with_distribution
+
+  def volume_dt
+    self.distributions.map(&:amount_dt).sum(Money.zero)
+  end
+
+  def volume_ct
+    self.distributions.map(&:amount_ct).sum(Money.zero)
+  end
 
   def transfer!
     self.class.transaction do
+      raise UnbalancedCheckException.new(self) unless self.balanced?
       self.save! if self.new_record?
-      self.txn = Txn.create!(:description => "Chèque \##{self.no}: #{self.reason}", :posted_on => self.date)
+      self.txn = Txn.create!(:description => "Chèque \##{self.no}: #{self.reason}", :posted_on => self.written_on)
       self.distributions(true).each do |distribution|
         self.txn.lines.create!(:account => distribution.account,
             :amount_dt => distribution.amount_dt,
@@ -24,14 +32,13 @@ class Check < ActiveRecord::Base
     end
   end
 
-  protected
-  def amount_balances_with_distribution
+  def balanced?
     partial_distribution = self.distributions.reject {|d| d.account == self.bank_account}
-    partial_amount = partial_distribution.map(&:amount_dt).sum - partial_distribution.map(&:amount_ct).sum
-    return if self.amount == partial_amount
-    self.errors.add(:amount, "ne correspond pas à la distribution (#{self.amount} != #{partial_amount})")
+    partial_amount = partial_distribution.map(&:amount_dt).sum(Money.zero) - partial_distribution.map(&:amount_ct).sum(Money.zero)
+    self.amount == partial_amount
   end
 
+  protected
   def add_bank_account_line
     distribution = self.distributions.select {|d| d.account == self.bank_account}.first
     distribution = self.distributions.build(:account => self.bank_account) unless distribution

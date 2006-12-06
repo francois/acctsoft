@@ -1,0 +1,6 @@
+page << "$('line_count').value = #{@line_count}"
+page.visual_effect :fade, "distribution_#{@distribution.id}"
+page.delay(1) do
+  elements = %w(no debit credit).map {|field| "distribution_#{@distribution.id}_#{field}"}
+  page.remove(*elements)
+end
