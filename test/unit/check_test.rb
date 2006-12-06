@@ -7,7 +7,7 @@ class CheckValidityTest < Test::Unit::TestCase
     @bank_account = accounts(:cash)
     @supplier_account = accounts(:supplier)
     @check = Check.new(:amount => 100.to_money, :reason => 'payment',
-        :no => '1031', :date => Date.new(2006, 10, 25),
+        :no => '1031', :written_on => Date.new(2006, 10, 25),
         :beneficiary => 'supplier', :bank_account => @bank_account)
     @check.distributions.build(:amount_dt => @check.amount, :account => @supplier_account)
     @check.valid?
@@ -17,18 +17,13 @@ class CheckValidityTest < Test::Unit::TestCase
     assert @check.errors.empty?, @check.errors.full_messages
   end
 
-  def test_invalid_if_amount_not_same
-    @check.amount = 200.to_money
-    assert_check_invalid
-  end
-
   def test_invalid_if_missing_no
     @check.no = nil
     assert_check_invalid
   end
 
   def test_invalid_if_missing_date
-    @check.date = nil
+    @check.written_on = nil
     assert_check_invalid
   end
 
@@ -44,11 +39,6 @@ class CheckValidityTest < Test::Unit::TestCase
 
   def test_invalid_if_missing_bank_account
     @check.bank_account = nil
-    assert_check_invalid
-  end
-
-  def test_invalid_if_misbalanced_distribution
-    @check.distributions.build(:amount_ct => 15.to_money, :account => @owner_account)
     assert_check_invalid
   end
 
@@ -80,7 +70,7 @@ class CheckTransferTest < Test::Unit::TestCase
     @bank_account = accounts(:cash)
     @supplier_account = accounts(:supplier)
     @check = Check.new(:amount => 111.to_money, :reason => 'payment',
-        :no => '1032', :date => Date.new(2006, 10, 25),
+        :no => '1032', :written_on => Date.new(2006, 10, 25),
         :beneficiary => 'supplier', :bank_account => @bank_account)
     @check.distributions.build(:amount_dt => @check.amount, :account => @supplier_account)
     @check.save!
@@ -102,5 +92,23 @@ class CheckTransferTest < Test::Unit::TestCase
     assert_equal Money.zero, @supplier_account.total_ct_volume(1.day.from_now, true)
     assert_equal @original_supplier_balance - 111.to_money,
         @supplier_account.balance(true)
+  end
+end
+
+class UnbalancedCheckTransferTest < Test::Unit::TestCase
+  fixtures :accounts
+
+  def setup
+    @bank_account = accounts(:cash)
+    @supplier_account = accounts(:supplier)
+    @check = Check.new(:amount => 122.to_money, :reason => 'payment',
+        :no => '1033', :written_on => Date.new(2006, 10, 25),
+        :beneficiary => 'supplier', :bank_account => @bank_account)
+    @check.distributions.build(:amount_dt => @check.amount * 2, :account => @supplier_account)
+    @check.save!
+  end
+
+  def test_rejects_transfer_request
+    assert_raises(UnbalancedCheckException) { @check.transfer! }
   end
 end
