@@ -44,12 +44,10 @@ class AccountType
 
   class << self
     AccountType::ALL_TYPES.each do |type_name|
-      $stderr.puts "==> #{type_name}"
       define_method(type_name) do
         AccountType.new(type_name)
       end
 
-      $stderr.puts "==> #{type_name.pluralize}"
       define_method(type_name.pluralize) do
         [AccountType.const_get(type_name.upcase)]
       end
