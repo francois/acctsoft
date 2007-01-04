@@ -7,8 +7,10 @@ class ReconciliationsController < ApplicationController
     @reconciliation = params[:id] ? Reconciliation.find(params[:id]) : Reconciliation.new
     return render(:action => :form) unless request.post?
 
-    if params[:destroy] then
+    unless params[:destroy].blank? then
       return redirect_to(:action => :index) if @reconciliation.destroy
+      flash_failure :now, "Impossible de détruire la conciliation"
+      return render(:action => :form)
     end
 
     @reconciliation.attributes = params[:reconciliation]

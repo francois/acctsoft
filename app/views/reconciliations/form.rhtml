@@ -1,4 +1,4 @@
-<%= start_form_tag %>
+<%= start_form_tag(@reconciliation.new_record? ? reconciliation_new_url : reconciliation_edit_url(@reconciliation)) %>
 <fieldset id="reconciliation-form">
   <%= error_messages_for 'reconciliation' %>
   <div class="row">
