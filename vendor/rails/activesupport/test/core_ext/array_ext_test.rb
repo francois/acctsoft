@@ -169,4 +169,14 @@ class ArrayToXmlTests < Test::Unit::TestCase
     assert xml.include?(%(<street-address>Paulina</street-address>))
     assert xml.include?(%(<street-address>Evergreen</street-address>))
   end
+
+  def test_to_with_instruct
+    xml = [
+      { :name => "David", :age => 26, :age_in_millis => 820497600000 },
+      { :name => "Jason", :age => 31, :age_in_millis => BigDecimal.new('1.0') }
+    ].to_xml(:skip_instruct => false, :indent => 0)
+
+    assert_match(/^<\?xml [^>]*/, xml)
+    assert_equal 0, xml.rindex(/<\?xml /)
+  end
 end

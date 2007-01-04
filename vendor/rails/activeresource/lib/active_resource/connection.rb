@@ -40,15 +40,16 @@ module ActiveResource
     end
 
     def initialize(site)
-      self.site = site.is_a?(URI) ? site : URI.parse(site)
+      raise ArgumentError, 'Missing site URI' unless site
+      self.site = site
     end
-    
+
     def site=(site)
       @site = site.is_a?(URI) ? site : URI.parse(site)
     end
 
     def get(path)
-      Hash.from_xml(request(:get, path, build_request_headers).body)
+      from_xml_data(Hash.from_xml(request(:get, path, build_request_headers).body).values.first)
     end
 
     def delete(path)
@@ -65,7 +66,7 @@ module ActiveResource
 
     private
       def request(method, path, *arguments)
-        logger.info "requesting #{method.to_s.upcase} #{site.scheme}://#{site.host}:#{site.port}#{path}" if logger
+        logger.info "#{method.to_s.upcase} #{site.scheme}://#{site.host}:#{site.port}#{path}" if logger
         result = nil
         time = Benchmark.realtime { result = http.send(method, path, *arguments) }
         logger.info "--> #{result.code} #{result.message} (#{result.body.length}b %.2fs)" % time if logger
@@ -111,6 +112,26 @@ module ActiveResource
 
       def logger
         ActiveResource::Base.logger
+      end
+
+      # Manipulate from_xml Hash, because xml_simple is not exactly what we
+      # want for ActiveResource.
+      def from_xml_data(data)
+        case data
+          when Hash
+            if data.keys.size == 1
+              case data.values.first
+                when Hash  then [ from_xml_data(data.values.first) ]
+                when Array then from_xml_data(data.values.first)
+                else       data
+              end
+            else
+              data.each_key { |key| data[key] = from_xml_data(data[key]) }
+              data
+            end
+          when Array then data.collect { |val| from_xml_data(val) }
+          else data
+        end
       end
   end
 end

@@ -1,6 +1,7 @@
 require "#{File.dirname(__FILE__)}/abstract_unit"
 require "fixtures/person"
 require "fixtures/street_address"
+require "fixtures/beast"
 
 class BaseTest < Test::Unit::TestCase
   def setup
@@ -42,6 +43,41 @@ class BaseTest < Test::Unit::TestCase
     assert_equal site, Person.site
   end
 
+  def test_should_use_site_prefix_and_credentials
+    assert_equal 'http://foo:bar@beast.caboo.se', Forum.site.to_s
+    assert_equal 'http://foo:bar@beast.caboo.se/forums/:forum_id', Topic.site.to_s
+  end
+
+  def test_site_reader_uses_superclass_site_until_written
+    # Superclass is Object so returns nil.
+    assert_nil ActiveResource::Base.site
+    assert_nil Class.new(ActiveResource::Base).site
+
+    # Subclass uses superclass site.
+    actor = Class.new(Person)
+    assert_equal Person.site, actor.site
+
+    # Subclass returns frozen superclass copy.
+    assert !Person.site.frozen?
+    assert actor.site.frozen?
+
+    # Changing subclass site doesn't change superclass site.
+    actor.site = 'http://localhost:31337'
+    assert_not_equal Person.site, actor.site
+
+    # Changed subclass site is not frozen.
+    assert !actor.site.frozen?
+
+    # Changing superclass site doesn't overwrite subclass site.
+    Person.site = 'http://somewhere.else'
+    assert_not_equal Person.site, actor.site
+
+    # Changing superclass site after subclassing changes subclass site.
+    jester = Class.new(actor)
+    actor.site = 'http://nomad'
+    assert_equal actor.site, jester.site
+    assert jester.site.frozen?
+  end
 
   def test_collection_name
     assert_equal "people", Person.collection_name
@@ -51,12 +87,32 @@ class BaseTest < Test::Unit::TestCase
     assert_equal '/people.xml', Person.collection_path
   end
 
+  def test_collection_path_with_parameters
+    assert_equal '/people.xml?gender=male', Person.collection_path(:gender => 'male')
+    assert_equal '/people.xml?gender=false', Person.collection_path(:gender => false)
+    assert_equal '/people.xml?gender=', Person.collection_path(:gender => nil)
+
+    assert_equal '/people.xml?gender=male', Person.collection_path('gender' => 'male')
+    assert_equal '/people.xml?gender=male&student=true', Person.collection_path(:gender => 'male', :student => true)
+
+    assert_equal '/people.xml?name[]=bob&name[]=your+uncle%2Bme&name[]=&name[]=false', Person.collection_path(:name => ['bob', 'your uncle+me', nil, false])
+  end
+
   def test_custom_element_path
     assert_equal '/people/1/addresses/1.xml', StreetAddress.element_path(1, :person_id => 1)
   end
 
+  def test_custom_element_path_with_parameters
+    assert_equal '/people/1/addresses/1.xml?type=work', StreetAddress.element_path(1, :person_id => 1, :type => 'work')
+    assert_equal '/people/1/addresses/1.xml?type[]=work&type[]=play+time', StreetAddress.element_path(1, :person_id => 1, :type => ['work', 'play time'])
+  end
+
   def test_custom_collection_path
     assert_equal '/people/1/addresses.xml', StreetAddress.collection_path(:person_id => 1)
+  end
+
+  def test_custom_collection_path_with_parameters
+    assert_equal '/people/1/addresses.xml?type=work', StreetAddress.collection_path(:person_id => 1, :type => 'work')
   end
 
   def test_custom_element_name
@@ -67,13 +123,23 @@ class BaseTest < Test::Unit::TestCase
     assert_equal 'addresses', StreetAddress.collection_name
   end
 
+  def test_nested_element_name
+    self.class.const_set :Actor, Class.new(Person)
+    assert_equal 'base_test/actor', Actor.element_name
+  ensure
+    self.class.remove_const :Actor rescue nil
+  end
+
+
   def test_prefix
     assert_equal "/", Person.prefix
+    assert_equal Set.new, Person.send(:prefix_parameters)
   end
 
   def test_custom_prefix
     assert_equal '/people//', StreetAddress.prefix
     assert_equal '/people/1/', StreetAddress.prefix(:person_id => 1)
+    assert_equal [:person_id].to_set, StreetAddress.send(:prefix_parameters)
   end
 
   def test_find_by_id

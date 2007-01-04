@@ -1,5 +1,19 @@
 *SVN*
 
+* Fix Dependencies.autoloaded? to ignore anonymous modules. Closes #6561. [Nicholas Seckar]
+
+* Update load once paths to prevent nested once constants from being detected and claimed by an external non-once load. [Nicholas Seckar]
+
+* Deprecation: silence warnings when reporting test errors.  [Jeremy Kemper]
+
+* Hash#slice(*keys) returns a new hash with only the given keys. #slice! replaces the hash with only the given keys. Works with HashWithIndifferentAccess also.  [Jeremy Kemper]
+
+* HashWithIndifferentAccess#to_hash converts to a Hash with String keys and the same default value.  [Jeremy Kemper]
+
+* Fix remove_constant to correctly handle constant names of the form "::A::...". References #6720. [Nicholas Seckar]
+
+* Fixed Array#to_xml when it contains a series of hashes (each piece would get its own XML declaration) #6610 [thkarcher/cyu]
+
 * Added Time#to_s(:time) which will just return H:M, like 17:44 [DHH]
 
 * Add Module#attr_accessor_with_default to initialize value of attribute before setting it. Closes #6538. [Stuart Halloway, Marcel Molina Jr.]

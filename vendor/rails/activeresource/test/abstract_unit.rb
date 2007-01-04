@@ -1,7 +1,8 @@
-$:.unshift(File.dirname(__FILE__) + '/../lib')
-require 'active_resource'
 require 'test/unit'
+
+$:.unshift "#{File.dirname(__FILE__)}/../lib"
+require 'active_resource'
+require 'active_resource/http_mock'
 require 'active_support/breakpoint'
 
-$:.unshift(File.dirname(__FILE__) + '/.')
-require 'http_mock'
+ActiveResource::Base.logger = Logger.new("#{File.dirname(__FILE__)}/debug.log")

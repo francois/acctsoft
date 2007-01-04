@@ -20,6 +20,13 @@ class RespondToController < ActionController::Base
     end
   end
 
+  def json_or_yaml
+    respond_to do |type|
+      type.json { render :text => "JSON" }
+      type.yaml { render :text => "YAML" }
+    end
+  end
+
   def html_or_xml
     respond_to do |type|
       type.html { render :text => "HTML"    }
@@ -164,6 +171,27 @@ class MimeControllerTest < Test::Unit::TestCase
     assert_response 406
   end
 
+  def test_json_or_yaml
+    get :json_or_yaml
+    assert_equal 'JSON', @response.body
+
+    get :json_or_yaml, :format => 'json'
+    assert_equal 'JSON', @response.body
+
+    get :json_or_yaml, :format => 'yaml'
+    assert_equal 'YAML', @response.body
+
+    { 'YAML' => %w(text/yaml),
+      'JSON' => %w(application/json text/x-json)
+    }.each do |body, content_types|
+      content_types.each do |content_type|
+        @request.env['HTTP_ACCEPT'] = content_type
+        get :json_or_yaml
+        assert_equal body, @response.body
+      end
+    end
+  end
+
   def test_js_or_anything
     @request.env["HTTP_ACCEPT"] = "text/javascript, */*"
     get :js_or_html
@@ -302,6 +330,11 @@ class MimeControllerTest < Test::Unit::TestCase
 
     get :html_xml_or_rss, :format => "rss"
     assert_equal "RSS", @response.body
+  end
+  
+  def test_extension_synonyms
+    get :html_xml_or_rss, :format => "xhtml"
+    assert_equal "HTML", @response.body
   end
 
   def test_render_action_for_html

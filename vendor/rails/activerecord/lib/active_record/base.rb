@@ -763,7 +763,7 @@ module ActiveRecord #:nodoc:
         @columns
       end
 
-      # Returns an array of column objects for the table associated with this class.
+      # Returns a hash of column objects for the table associated with this class.
       def columns_hash
         @columns_hash ||= columns.inject({}) { |hash, column| hash[column.name] = column; hash }
       end
@@ -1054,8 +1054,6 @@ module ActiveRecord #:nodoc:
                 allocate
 
               else
-                require_association_class(subclass_name)
-
                 # Ignore type if no column is present since it was probably
                 # pulled in from a sloppy join.
                 unless columns_hash.include?(inheritance_column)
@@ -1161,7 +1159,7 @@ module ActiveRecord #:nodoc:
           segments = []
           segments << sanitize_sql(scope[:conditions]) if scope && scope[:conditions]
           segments << sanitize_sql(conditions) unless conditions.nil?
-          segments << type_condition unless descends_from_active_record?        
+          segments << type_condition unless descends_from_active_record?
           segments.compact!
           sql << "WHERE (#{segments.join(") AND (")}) " unless segments.empty?
         end
@@ -1189,7 +1187,7 @@ module ActiveRecord #:nodoc:
         # It's even possible to use all the additional parameters to find. For example, the full interface for find_all_by_amount
         # is actually find_all_by_amount(amount, options).
         def method_missing(method_id, *arguments)
-          if match = /find_(all_by|by)_([_a-zA-Z]\w*)/.match(method_id.to_s)
+          if match = /^find_(all_by|by)_([_a-zA-Z]\w*)$/.match(method_id.to_s)
             finder, deprecated_finder = determine_finder(match), determine_deprecated_finder(match)
 
             attribute_names = extract_attribute_names_from_match(match)
@@ -1221,7 +1219,7 @@ module ActiveRecord #:nodoc:
                   send(deprecated_finder, sanitize_sql(attributes), *arguments[attribute_names.length..-1])
                 end
             end
-          elsif match = /find_or_(initialize|create)_by_([_a-zA-Z]\w*)/.match(method_id.to_s)
+          elsif match = /^find_or_(initialize|create)_by_([_a-zA-Z]\w*)$/.match(method_id.to_s)
             instantiator = determine_instantiator(match)
             attribute_names = extract_attribute_names_from_match(match)
             super unless all_attributes_exists?(attribute_names)
@@ -1354,9 +1352,9 @@ module ActiveRecord #:nodoc:
         def compute_type(type_name)
           modularized_name = type_name_with_module(type_name)
           begin
-            instance_eval(modularized_name)
-          rescue NameError => e
-            instance_eval(type_name)
+            class_eval(modularized_name, __FILE__, __LINE__)
+          rescue NameError
+            class_eval(type_name, __FILE__, __LINE__)
           end
         end
 
@@ -1980,7 +1978,13 @@ module ActiveRecord #:nodoc:
           false
         else
           column = self.class.columns_hash[attr_name]
-          if column.number?
+          if column.nil?
+            if Numeric === value || value !~ /[^0-9]/
+              !value.to_i.zero?
+            else
+              !value.blank?
+            end
+          elsif column.number?
             !value.zero?
           else
             !value.blank?

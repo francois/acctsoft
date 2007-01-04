@@ -143,6 +143,8 @@ class RescueTest < Test::Unit::TestCase
 
     assert_equal :not_found, responses[ActionController::RoutingError.name]
     assert_equal :not_found, responses[ActionController::UnknownAction.name]
+    assert_equal :not_found, responses['ActiveRecord::RecordNotFound']
+    assert_equal :bad_request, responses['ActiveRecord::RecordInvalid']
   end
 
   def test_rescue_templates

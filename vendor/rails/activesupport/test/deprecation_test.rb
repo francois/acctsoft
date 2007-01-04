@@ -79,6 +79,10 @@ class DeprecationTest < Test::Unit::TestCase
     assert_deprecated('@request.to_s') { assert_equal @dtc.request.to_s, @dtc.old_request.to_s }
   end
 
+  def test_deprecated_instance_variable_proxy_shouldnt_warn_on_inspect
+    assert_not_deprecated { assert_equal @dtc.request.inspect, @dtc.old_request.inspect }
+  end
+
   def test_assert_deprecation_without_match
     assert_deprecated do
       @dtc.partially
@@ -127,5 +131,21 @@ class DeprecationTest < Test::Unit::TestCase
 
   def test_deprecation_with_explicit_message
     assert_deprecated(/you now need to do something extra for this one/) { @dtc.d }
+  end
+
+  def test_assertion_failed_error_doesnt_spout_deprecation_warnings
+    error_class = Class.new(StandardError) do
+      def message
+        ActiveSupport::Deprecation.warn 'warning in error message'
+        super
+      end
+    end
+
+    raise error_class.new('hmm')
+
+  rescue => e
+    error = Test::Unit::Error.new('testing ur doodz', e)
+    assert_not_deprecated { error.message }
+    assert_nil @last_message
   end
 end

@@ -11,7 +11,9 @@ module ActionController #:nodoc:
     DEFAULT_RESCUE_RESPONSE = :internal_server_error
     DEFAULT_RESCUE_RESPONSES = {
       'ActionController::RoutingError'    => :not_found,
-      'ActionController::UnknownAction'   => :not_found
+      'ActionController::UnknownAction'   => :not_found,
+      'ActiveRecord::RecordNotFound'      => :not_found,
+      'ActiveRecord::RecordInvalid'       => :bad_request
     }
 
     DEFAULT_RESCUE_TEMPLATE = 'diagnostics'
@@ -58,14 +60,16 @@ module ActionController #:nodoc:
 
       # Overwrite to implement custom logging of errors. By default logs as fatal.
       def log_error(exception) #:doc:
-        if ActionView::TemplateError === exception
-          logger.fatal(exception.to_s)
-        else
-          logger.fatal(
-            "\n\n#{exception.class} (#{exception.message}):\n    " +
-            clean_backtrace(exception).join("\n    ") +
-            "\n\n"
-          )
+        ActiveSupport::Deprecation.silence do
+          if ActionView::TemplateError === exception
+            logger.fatal(exception.to_s)
+          else
+            logger.fatal(
+              "\n\n#{exception.class} (#{exception.message}):\n    " +
+              clean_backtrace(exception).join("\n    ") +
+              "\n\n"
+            )
+          end
         end
       end
 

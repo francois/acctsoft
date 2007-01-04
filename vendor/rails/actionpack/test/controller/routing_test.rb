@@ -207,7 +207,14 @@ class LegacyRouteSetTests < Test::Unit::TestCase
       map.path 'file/*path', :controller => 'content', :action => 'show_file'
       map.connect ':controller/:action/:id'
     end
+
+    # No + to space in URI escaping, only for query params.
     results = rs.recognize_path "/file/hello+world/how+are+you%3F"
+    assert results, "Recognition should have succeeded"
+    assert_equal ['hello+world', 'how+are+you?'], results[:path]
+
+    # Use %20 for space instead.
+    results = rs.recognize_path "/file/hello%20world/how%20are%20you%3F"
     assert results, "Recognition should have succeeded"
     assert_equal ['hello world', 'how are you?'], results[:path]
 
@@ -376,7 +383,7 @@ class LegacyRouteSetTests < Test::Unit::TestCase
 
   def test_named_url_with_no_action_specified
     rs.draw do |map|
-      map.root '', :controller => 'content'
+      map.home '', :controller => 'content'
       map.connect ':controller/:action/:id'
     end
     
@@ -384,14 +391,14 @@ class LegacyRouteSetTests < Test::Unit::TestCase
     assert_equal '/', rs.generate(:controller => 'content')
     
     x = setup_for_named_route.new
-    assert_equal({:controller => 'content', :action => 'index', :use_route => :root, :only_path => false},
-                 x.send(:root_url))
+    assert_equal({:controller => 'content', :action => 'index', :use_route => :home, :only_path => false},
+                 x.send(:home_url))
   end
   
   def test_url_generated_when_forgetting_action
     [{:controller => 'content', :action => 'index'}, {:controller => 'content'}].each do |hash| 
       rs.draw do |map|
-        map.root '', hash
+        map.home '', hash
         map.connect ':controller/:action/:id'
       end
       assert_equal '/', rs.generate({:action => nil}, {:controller => 'content', :action => 'hello'})
@@ -1457,11 +1464,11 @@ class RouteSetTest < Test::Unit::TestCase
   
   def test_recognize_with_encoded_id_and_regex
     set.draw do |map|
-      map.connect 'page/:id', :controller => 'pages', :action => 'show', :id => /[a-zA-Z0-9 ]+/
+      map.connect 'page/:id', :controller => 'pages', :action => 'show', :id => /[a-zA-Z0-9\+]+/
     end
 
     assert_equal({:controller => 'pages', :action => 'show', :id => '10'}, set.recognize_path('/page/10'))
-    assert_equal({:controller => 'pages', :action => 'show', :id => 'hello world'}, set.recognize_path('/page/hello+world'))
+    assert_equal({:controller => 'pages', :action => 'show', :id => 'hello+world'}, set.recognize_path('/page/hello+world'))
   end
 
   def test_recognize_with_conditions
@@ -1592,6 +1599,20 @@ class RouteSetTest < Test::Unit::TestCase
     assert_equal "/people/list", url
   end
 
+  def test_root_map
+    Object.const_set(:PeopleController, Class.new)
+
+    set.draw { |map| map.root :controller => "people" }
+
+    request.path = ""
+    request.method = :get
+    assert_nothing_raised { set.recognize(request) }
+    assert_equal("people", request.path_parameters[:controller])
+    assert_equal("index", request.path_parameters[:action])
+  ensure
+    Object.send(:remove_const, :PeopleController)
+  end
+
   def test_generate_finds_best_fit
     set.draw do |map|
       map.connect "/people", :controller => "people", :action => "index"
@@ -1670,6 +1691,17 @@ class RouteSetTest < Test::Unit::TestCase
     assert_equal '/post', set.generate(
       {:controller => 'post', :action => 'index'},
       {:controller => 'post', :action => 'show', :id => '10'}
+    )
+  end
+  
+  def test_query_params_will_be_shown_when_recalled
+    set.draw do |map|
+      map.connect 'show_post/:parameter', :controller => 'post', :action => 'show'
+      map.connect ':controller/:action/:id'
+    end
+    assert_equal '/post/edit?parameter=1', set.generate(
+      {:action => 'edit', :parameter => 1},
+      {:controller => 'post', :action => 'show', :parameter => 1}
     )
   end
   

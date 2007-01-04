@@ -1,5 +1,80 @@
 *SVN*
 
+* Make sure html_document is reset between integration test requests. [ctm]
+
+* Set session to an empty hash if :new_session => false and no session cookie or param is present. CGI::Session was raising an unrescued ArgumentError.  [Josh Susser]
+
+* Routing uses URI escaping for path components and CGI escaping for query parameters.  [darix, Jeremy Kemper]
+
+* Fix assert_redirected_to bug where redirecting from a nested to to a top-level controller incorrectly added the current controller's nesting.  Closes #6128.  [Rick Olson]
+
+* Singleton resources: POST /singleton => create, GET /singleton/new => new.  [Jeremy Kemper]
+
+* Use 400 Bad Request status for unrescued ActiveRecord::RecordInvalid exceptions.  [Jeremy Kemper]
+
+* Silence log_error deprecation warnings from inspecting deprecated instance variables.  [Nate Wiger]
+
+* Only cache GET requests with a 200 OK response.  #6514, #6743 [RSL, anamba]
+
+* Add a 'referer' attribute to TestRequest. [Jamis Buck]
+
+* Ensure render :json => ... skips the layout.  Closes #6808 [Josh Peek]
+
+* Fix HTML::Node to output double quotes instead of single quotes.  Closes #6845 [mitreandy]
+
+* Correctly report which filter halted the chain.  #6699 [Martin Emde]
+
+* Fix a bug in Routing where a parameter taken from the path of the current request could not be used as a query parameter for the next. Closes #6752. [Nicholas Seckar]
+
+* Unrescued ActiveRecord::RecordNotFound responds with 404 instead of 500.  [Jeremy Kemper]
+
+* Improved auto_link to match more valid urls correctly [Tobias Luetke]
+
+* Add singleton resources. [Rick Olson]
+
+  map.resource :account
+  
+  GET /account
+  GET /account;edit
+  UPDATE /account
+  DELETE /account
+
+* respond_to recognizes JSON. render :json => @person.to_json automatically sets the content type and takes a :callback option to specify a client-side function to call using the rendered JSON as an argument.  #4185 [Scott Raymond, eventualbuddha]
+    # application/json response with body 'Element.show({:name: "David"})'
+    respond_to do |format|
+      format.json { render :json => { :name => "David" }.to_json, :callback => 'Element.show' }
+    end
+
+* Makes :discard_year work without breaking multi-attribute parsing in AR.  #1260, #3800 [sean@ardismg.com, jmartin@desertflood.com, stephen@touset.org, Bob Silva]
+
+* Adds html id attribute to date helper elements.  #1050, #1382 [mortonda@dgrmm.net, David North, Bob Silva]
+
+* Add :index and @auto_index capability to model driven date/time selects.  #847, #2655 [moriq, Doug Fales, Bob Silva]
+
+* Add :order to datetime_select, select_datetime, and select_date.  #1427 [Timothee Peignier, patrick@lenz.sh, Bob Silva]
+
+* Added time_select to work with time values in models. Update scaffolding.  #2489, #2833 [Justin Palmer, Andre Caum, Bob Silva]
+
+* Added :include_seconds to select_datetime, datetime_select and time_select.  #2998 [csn, Bob Silva]
+
+* All date/datetime selects can now accept an array of month names with :use_month_names. Allows for localization.  #363 [tomasj, Bob Silva]
+
+* Adds :time_separator to select_time and :date_separator to select_datetime. Preserves BC.  #3811 [Bob Silva]
+
+* Added map.root as an alias for map.connect '' [DHH]
+
+* Added Request#format to return the format used for the request as a mime type. If no format is specified, the first Request#accepts type is used. This means you can stop using respond_to for anything else than responses [DHH]. Examples:
+
+    GET /posts/5.xml   | request.format => Mime::XML
+    GET /posts/5.xhtml | request.format => Mime::HTML
+    GET /posts/5       | request.format => request.accepts.first (usually Mime::HTML for browsers)
+
+* Added the option for extension aliases to mime type registration [DHH]. Example (already in the default routes):
+
+    Mime::Type.register "text/html", :html, %w( application/xhtml+xml ), %w( xhtml )
+  
+  ...will respond on both .html and .xhtml.
+
 * @response.redirect_url works with 201 Created responses: just return headers['Location'] rather than checking the response status.  [Jeremy Kemper]
 
 * Added CSV to Mime::SET so that respond_to csv will work [Cody Fauser]

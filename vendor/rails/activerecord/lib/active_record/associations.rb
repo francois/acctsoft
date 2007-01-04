@@ -947,10 +947,6 @@ module ActiveRecord
           end
         end
 
-        def require_association_class(class_name)
-          require_association(Inflector.underscore(class_name)) if class_name
-        end
-
         def add_multiple_associated_save_callbacks(association_name)
           method_name = "validate_associated_records_for_#{association_name}".to_sym
           define_method(method_name) do
@@ -1172,6 +1168,7 @@ module ActiveRecord
  
           add_order!(sql, options[:order], scope)
           add_limit!(sql, options, scope) if using_limitable_reflections?(join_dependency.reflections)
+          add_lock!(sql, options, scope)
  
           return sanitize_sql(sql)
         end
@@ -1568,7 +1565,7 @@ module ActiveRecord
               end || ''
               join << %(AND %s.%s = %s ) % [
                 aliased_table_name, 
-                reflection.active_record.connection.quote_column_name(reflection.active_record.inheritance_column), 
+                reflection.active_record.connection.quote_column_name(klass.inheritance_column), 
                 klass.quote_value(klass.name.demodulize)] unless klass.descends_from_active_record?
 
               [through_reflection, reflection].each do |ref|

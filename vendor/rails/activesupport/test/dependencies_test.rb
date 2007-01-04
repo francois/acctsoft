@@ -305,6 +305,13 @@ class DependenciesTest < Test::Unit::TestCase
       assert Dependencies.autoloaded?("::ModuleFolder")
       assert Dependencies.autoloaded?(:ModuleFolder)
 
+      # Anonymous modules aren't autoloaded.
+      assert !Dependencies.autoloaded?(Module.new)
+
+      nil_name = Module.new
+      def nil_name.name() nil end
+      assert !Dependencies.autoloaded?(nil_name)
+
       Object.send :remove_const, :ModuleFolder
     end
   end
@@ -691,4 +698,44 @@ class DependenciesTest < Test::Unit::TestCase
   ensure
     Object.send(:remove_const, :RaisesNameError) if defined?(::RaisesNameError)
   end
+  
+  def test_remove_constant_handles_double_colon_at_start
+    Object.const_set 'DeleteMe', Module.new
+    DeleteMe.const_set 'OrMe', Module.new
+    Dependencies.send :remove_constant, "::DeleteMe::OrMe"
+    assert ! defined?(DeleteMe::OrMe)
+    assert defined?(DeleteMe)
+    Dependencies.send :remove_constant, "::DeleteMe"
+    assert ! defined?(DeleteMe)
+  end
+  
+  def test_load_once_constants_should_not_be_unloaded
+    with_loading 'autoloading_fixtures' do
+      Dependencies.load_once_paths = Dependencies.load_paths
+      ::A.to_s
+      assert defined?(A)
+      Dependencies.clear
+      assert defined?(A)
+    end
+  ensure
+    Dependencies.load_once_paths = []
+    Object.send :remove_const, :A rescue nil
+  end
+  
+  def test_load_once_paths_should_behave_when_recursively_loading
+    with_loading 'dependencies', 'autoloading_fixtures' do
+      Dependencies.load_once_paths = [Dependencies.load_paths.last]
+      assert !defined?(CrossSiteDependency)
+      assert_nothing_raised { CrossSiteDepender.nil? }
+      assert defined?(CrossSiteDependency)
+      assert !Dependencies.autoloaded?(CrossSiteDependency),
+        "CrossSiteDependency shouldn't be marked as autoloaded!"
+      Dependencies.clear
+      assert defined?(CrossSiteDependency),
+        "CrossSiteDependency shouldn't have been unloaded!"
+    end
+  ensure
+    Dependencies.load_once_paths = []
+  end
+  
 end

@@ -1,5 +1,28 @@
 *SVN*
 
+* Query string support.  [untext, Jeremy Kemper]
+    # GET /forums/1/topics.xml?sort=created_at
+    Topic.find(:all, :forum_id => 1, :sort => 'created_at')
+
+* Base#==, eql?, and hash methods. == returns true if its argument is identical to self or if it's an instance of the same class, is not new?, and has the same id. eql? is an alias for ==. hash delegates to id.  [Jeremy Kemper]
+
+* Allow subclassed resources to share the site info [Rick, Jeremy Kemper]
+
+    class BeastResource < ActiveResource::Base
+      self.site = 'http://beast.caboo.se'
+    end
+
+    class Forum < BeastResource
+      # taken from BeastResource
+      # self.site = 'http://beast.caboo.se'
+    end
+
+    class Topic < BeastResource
+      self.site += '/forums/:forum_id'
+    end
+
+* Fix issues with ActiveResource collection handling.  Closes #6291. [bmilekic]
+
 * Use attr_accessor_with_default to dry up attribute initialization. References #6538. [Stuart Halloway]
 
 * Add basic logging support for logging outgoing requests. [Jamis Buck]
