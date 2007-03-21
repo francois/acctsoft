@@ -1,6 +1,11 @@
 <% @title = 'Journal Général' %>
 <div class="filters">
   <%= link_to 'Ajouter une transaction', transaction_new_url %>
+  <form action="<%= transactions_path %>" method="get">
+    <%= text_field_tag :q, @q, :size => 30 %>
+    <input type="submit" value="Rechercher"/>
+    <%= link_to("Toute la liste", transactions_path)unless @q.blank?  %>
+  </form>
 </div>
 <div class="pager">
   <%= link_to('&lt;&lt;', :page => @transaction_pages.current.previous) if @transaction_pages.current.previous %>

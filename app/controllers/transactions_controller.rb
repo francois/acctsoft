@@ -1,6 +1,9 @@
 class TransactionsController < ApplicationController
   def index
-    @transaction_pages, @transactions = paginate(:txn, :per_page => 30, :order => 'posted_on DESC, id DESC')
+    @q = params[:q]
+    options = {:per_page => 30, :order => "posted_on DESC, id DESC"}
+    options[:conditions] = ["LOWER(description) LIKE ?", "%#{@q.downcase}%"] unless @q.blank?
+    @transaction_pages, @transactions = paginate(:txn, options)
   end
 
   def new
