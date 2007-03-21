@@ -1,8 +1,39 @@
 class TransactionsController < ApplicationController
   def index
-    @q = params[:q]
+    @q = params[:q].dup
     options = {:per_page => 30, :order => "posted_on DESC, id DESC"}
-    options[:conditions] = ["LOWER(description) LIKE ?", "%#{@q.downcase}%"] unless @q.blank?
+    unless @q.blank? then
+      conditions = []
+      values = {}
+      @q.gsub!(/\b[-\d]+\b/) do |partial_date|
+        returning "" do
+          conditions << "posted_on BETWEEN :start AND :end"
+          case partial_date.gsub("-", "")
+          when /(\d{4})(\d{2})(\d{2})/
+            values[:start] = values[:end] = Date.new($1.to_i, $2.to_i, $3.to_i)
+          when /(\d{4})(\d{2})/
+            values[:start] = Date.new($1.to_i, $2.to_i, 1)
+            values[:end] = values[:start] >> 1
+          when /(\d{4})/
+            values[:start] = Date.new($1.to_i, 1, 1)
+            values[:end] = values[:start] >> 12
+          else
+            flash_failure :now, "Impossible de lire la date dans: #{partial_date.inspect}"
+            conditions.pop
+          end
+        end
+      end
+
+      @q.strip!
+      unless @q.blank? then
+        conditions << "LOWER(description) LIKE :description"
+        values[:description] = "%#{@q.downcase}%"
+      end
+
+      options[:conditions] = ["(#{conditions.join(") AND (")})", values] unless conditions.empty?
+    end
+
+    @q = params[:q]
     @transaction_pages, @transactions = paginate(:txn, options)
   end
 
