@@ -56,15 +56,15 @@ module ActionView
       def capture(*args, &block)
         # execute the block
         begin
-          buffer = eval(ActionView::Base.erb_variable, block.binding)
+          buffer = eval("_erbout", block.binding)
         rescue
           buffer = nil
         end
         
         if buffer.nil?
-          capture_block(*args, &block).to_s
+          capture_block(*args, &block)
         else
-          capture_erb_with_buffer(buffer, *args, &block).to_s
+          capture_erb_with_buffer(buffer, *args, &block)
         end
       end
       
@@ -99,7 +99,7 @@ module ActionView
         end
       
         def capture_erb(*args, &block)
-          buffer = eval(ActionView::Base.erb_variable, block.binding)
+          buffer = eval("_erbout", block.binding)
           capture_erb_with_buffer(buffer, *args, &block)
         end
       

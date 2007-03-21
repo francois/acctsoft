@@ -520,6 +520,7 @@ module ActiveRecord
       # * <tt>message</tt> - Specifies a custom error message (default is: "has already been taken")
       # * <tt>scope</tt> - One or more columns by which to limit the scope of the uniquness constraint.
       # * <tt>case_sensitive</tt> - Looks for an exact match.  Ignored by non-text columns (true by default).
+      # * <tt>allow_nil</tt> - If set to true, skips this validation if the attribute is null (default is: false)
       # * <tt>if</tt> - Specifies a method, proc or string to call to determine if the validation should
       # occur (e.g. :if => :allow_validation, or :if => Proc.new { |user| user.signup_step > 2 }).  The
       # method, proc or string should return or evaluate to a true or false value.
@@ -717,10 +718,12 @@ module ActiveRecord
       # so an exception is raised if the record is invalid.
       def create!(attributes = nil)
         if attributes.is_a?(Array)
-          attributes.collect { |attr| create(attr) }
+          attributes.collect { |attr| create!(attr) }
         else
+          attributes ||= {}
+          attributes.reverse_merge!(scope(:create)) if scoped?(:create)
+
           object = new(attributes)
-          scope(:create).each { |att,value| object.send("#{att}=", value) } if scoped?(:create)
           object.save!
           object
         end
@@ -730,7 +733,7 @@ module ActiveRecord
       private
         def write_inheritable_set(key, methods)
           existing_methods = read_inheritable_attribute(key) || []
-          write_inheritable_attribute(key, existing_methods | methods)
+          write_inheritable_attribute(key, methods | existing_methods)
         end
 
         def validation_method(on)

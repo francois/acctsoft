@@ -1,4 +1,4 @@
-irb = RUBY_PLATFORM =~ /mswin32/ ? 'irb.bat' : 'irb'
+irb = RUBY_PLATFORM =~ /(:?mswin|mingw)/ ? 'irb.bat' : 'irb'
 
 require 'optparse'
 options = { :sandbox => false, :irb => irb }
@@ -15,14 +15,7 @@ libs << " -r console_app"
 libs << " -r console_sandbox" if options[:sandbox]
 libs << " -r console_with_helpers"
 
-ENV['RAILS_ENV'] = case ARGV.first
-  when "p": "production"
-  when "d": "development"
-  when "t": "test"
-  else
-    ARGV.first || ENV['RAILS_ENV'] || 'development'
-end
-
+ENV['RAILS_ENV'] = ARGV.first || ENV['RAILS_ENV'] || 'development'
 if options[:sandbox]
   puts "Loading #{ENV['RAILS_ENV']} environment in sandbox."
   puts "Any modifications you make will be rolled back on exit."

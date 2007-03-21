@@ -183,9 +183,6 @@ module ActionView #:nodoc:
     # that alert()s the caught exception (and then re-raises it). 
     @@debug_rjs = false
     cattr_accessor :debug_rjs
-    
-    @@erb_variable = '_erbout'
-    cattr_accessor :erb_variable
 
     @@template_handlers = HashWithIndifferentAccess.new
  
@@ -279,7 +276,8 @@ module ActionView #:nodoc:
       elsif options == :update
         update_page(&block)
       elsif options.is_a?(Hash)
-        options = options.reverse_merge(:type => :rhtml, :locals => {}, :use_full_path => true)
+        options[:locals] ||= {}
+        options[:use_full_path] = options[:use_full_path].nil? ? true : options[:use_full_path]
 
         if options[:file]
           render_file(options[:file], options[:use_full_path], options[:locals])
@@ -288,7 +286,7 @@ module ActionView #:nodoc:
         elsif options[:partial]
           render_partial(options[:partial], ActionView::Base::ObjectWrapper.new(options[:object]), options[:locals])
         elsif options[:inline]
-          render_template(options[:type], options[:inline], nil, options[:locals])
+          render_template(options[:type] || :rhtml, options[:inline], nil, options[:locals] || {})
         end
       end
     end
@@ -432,25 +430,19 @@ module ActionView #:nodoc:
       # Check whether compilation is necessary.
       # Compile if the inline template or file has not been compiled yet.
       # Or if local_assigns has a new key, which isn't supported by the compiled code yet.
-      # Or if the file has changed on disk and checking file mods hasn't been disabled.
+      # Or if the file has changed on disk and checking file mods hasn't been disabled. 
       def compile_template?(template, file_name, local_assigns)
         method_key    = file_name || template
         render_symbol = @@method_names[method_key]
 
         if @@compile_time[render_symbol] && supports_local_assigns?(render_symbol, local_assigns)
-          if file_name && !@@cache_template_loading
-            template_changed_since?(file_name, @@compile_time[render_symbol])
+          if file_name && !@@cache_template_loading 
+            @@compile_time[render_symbol] < File.mtime(file_name) ||
+              (File.symlink?(file_name) && (@@compile_time[render_symbol] < File.lstat(file_name).mtime))
           end
         else
           true
         end
-      end
-
-      # handles checking if template changed since last compile, isolated so that templates
-      # not stored on the file system can hook and extend appropriately
-      def template_changed_since?(file_name, compile_time)
-        compile_time < File.mtime(file_name) ||
-          (File.symlink?(file_name) && (compile_time < File.lstat(file_name).mtime))
       end
 
       # Create source code for given template

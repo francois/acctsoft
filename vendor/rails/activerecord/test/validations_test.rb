@@ -1,7 +1,6 @@
 require 'abstract_unit'
 require 'fixtures/topic'
 require 'fixtures/reply'
-require 'fixtures/person'
 require 'fixtures/developer'
 
 # The following methods in Topic are used in test_conditional_validation_*
@@ -13,12 +12,6 @@ class Topic
   def condition_is_true_but_its_not
     return false
   end
-end
-
-class ProtectedPerson < ActiveRecord::Base
-  set_table_name 'people'
-  attr_accessor :addon
-  attr_protected :first_name
 end
 
 class ValidationsTest < Test::Unit::TestCase
@@ -100,24 +93,6 @@ class ValidationsTest < Test::Unit::TestCase
       assert_raises(ActiveRecord::RecordInvalid) { Reply.create! }
     end
   end
-
-  def test_create_with_exceptions_using_scope_for_protected_attributes
-    assert_nothing_raised do
-      ProtectedPerson.with_scope( :create => { :first_name => "Mary" } ) do
-        person = ProtectedPerson.create! :addon => "Addon"
-        assert_equal person.first_name, "Mary", "scope should ignore attr_protected"
-      end
-    end
-  end
-
-  def test_create_with_exceptions_using_scope_and_empty_attributes
-    assert_nothing_raised do
-      ProtectedPerson.with_scope( :create => { :first_name => "Mary" } ) do        
-        person = ProtectedPerson.create!
-        assert_equal person.first_name, "Mary", "should be ok when no attributes are passed to create!"
-      end
-    end
- end
 
   def test_single_error_per_attr_iteration
     r = Reply.new
@@ -902,7 +877,7 @@ class ValidationsTest < Test::Unit::TestCase
     d = Developer.new
     d.salary = "0"
     assert !d.valid?
-    assert_equal "This string contains 'single' and \"double\" quotes", d.errors.on(:salary).last
+    assert_equal d.errors.on(:salary).first, "This string contains 'single' and \"double\" quotes"
   end
 
   def test_validates_confirmation_of_with_custom_error_using_quotes
@@ -927,7 +902,7 @@ class ValidationsTest < Test::Unit::TestCase
     d = Developer.new
     d.salary = "90,000"
     assert !d.valid?
-    assert_equal "This string contains 'single' and \"double\" quotes", d.errors.on(:salary).last
+    assert_equal "This string contains 'single' and \"double\" quotes", d.errors.on(:salary).first
   end
 
   def test_validates_length_of_with_custom_too_long_using_quotes
@@ -935,7 +910,7 @@ class ValidationsTest < Test::Unit::TestCase
     d = Developer.new
     d.name = "Jeffrey"
     assert !d.valid?
-    assert_equal "This string contains 'single' and \"double\" quotes", d.errors.on(:name).last
+    assert_equal "This string contains 'single' and \"double\" quotes", d.errors.on(:name).first
   end
 
   def test_validates_length_of_with_custom_too_short_using_quotes
@@ -943,7 +918,7 @@ class ValidationsTest < Test::Unit::TestCase
     d = Developer.new
     d.name = "Joe"
     assert !d.valid?
-    assert_equal "This string contains 'single' and \"double\" quotes", d.errors.on(:name).last
+    assert_equal "This string contains 'single' and \"double\" quotes", d.errors.on(:name).first
   end
 
   def test_validates_length_of_with_custom_message_using_quotes
@@ -951,7 +926,7 @@ class ValidationsTest < Test::Unit::TestCase
     d = Developer.new
     d.name = "Joe"
     assert !d.valid?
-    assert_equal "This string contains 'single' and \"double\" quotes", d.errors.on(:name).last
+    assert_equal "This string contains 'single' and \"double\" quotes", d.errors.on(:name).first
   end
 
   def test_validates_presence_of_with_custom_message_using_quotes
@@ -967,7 +942,7 @@ class ValidationsTest < Test::Unit::TestCase
     d = Developer.new
     d.name = "David"
     assert !d.valid?
-    assert_equal "This string contains 'single' and \"double\" quotes", d.errors.on(:name).last
+    assert_equal "This string contains 'single' and \"double\" quotes", d.errors.on(:name).first
   end
 
   def test_validates_associated_with_custom_message_using_quotes
@@ -976,7 +951,7 @@ class ValidationsTest < Test::Unit::TestCase
     r = Reply.create("title" => "A reply", "content" => "with content!")
     r.topic = Topic.create("title" => "uhohuhoh")
     assert !r.valid?
-    assert_equal "This string contains 'single' and \"double\" quotes", r.errors.on(:topic).last
+    assert_equal "This string contains 'single' and \"double\" quotes", r.errors.on(:topic).first
   end
 
   def test_conditional_validation_using_method_true
@@ -1050,15 +1025,6 @@ class ValidationsTest < Test::Unit::TestCase
     assert xml.include?("<error>Title is Wrong Create</error>")
     assert xml.include?("<error>Content Empty</error>")
   end
-
- def test_validation_order
-    Topic.validates_presence_of :title
-    Topic.validates_length_of :title, :minimum => 2
-
-    t = Topic.new("title" => "")
-    assert !t.valid?
-    assert_equal "can't be blank", t.errors.on("title").first
- end
 end
 
 

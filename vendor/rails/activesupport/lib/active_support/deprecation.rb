@@ -1,7 +1,7 @@
 require 'yaml'
 
 module ActiveSupport
-  module Deprecation
+  module Deprecation #:nodoc:
     mattr_accessor :debug
     self.debug = false
 
@@ -13,8 +13,9 @@ module ActiveSupport
                          $stderr.puts callstack.join("\n  ") if debug
                        },
       'development' => Proc.new { |message, callstack|
-                         RAILS_DEFAULT_LOGGER.warn message
-                         RAILS_DEFAULT_LOGGER.debug callstack.join("\n  ") if debug
+                         logger = defined?(::RAILS_DEFAULT_LOGGER) ? ::RAILS_DEFAULT_LOGGER : Logger.new($stderr)
+                         logger.warn message
+                         logger.debug callstack.join("\n  ") if debug
                        }
     }
 
@@ -81,7 +82,7 @@ module ActiveSupport
     # Warnings are not silenced by default.
     self.silenced = false
 
-    module ClassMethods
+    module ClassMethods #:nodoc:
       # Declare that a method has been deprecated.
       def deprecate(*method_names)
         options = method_names.last.is_a?(Hash) ? method_names.pop : {}
@@ -112,7 +113,7 @@ module ActiveSupport
       end
     end
 
-    module Assertions
+    module Assertions #:nodoc:
       def assert_deprecated(match = nil, &block)
         result, warnings = collect_deprecations(&block)
         assert !warnings.empty?, "Expected a deprecation warning within the block but received none"
@@ -145,7 +146,7 @@ module ActiveSupport
 
     # Stand-in for @request, @attributes, @params, etc which emits deprecation
     # warnings on any method call (except #inspect).
-    class DeprecatedInstanceVariableProxy
+    class DeprecatedInstanceVariableProxy #:nodoc:
       instance_methods.each { |m| undef_method m unless m =~ /^__/ }
 
       def initialize(instance, method, var = "@#{method}")

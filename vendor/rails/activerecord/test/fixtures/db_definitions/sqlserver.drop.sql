@@ -30,3 +30,5 @@ DROP TABLE fk_test_has_pk;
 DROP TABLE keyboards;
 DROP TABLE legacy_things;
 DROP TABLE numeric_data;
+DROP TABLE [order];
+DROP TABLE mixed_case_monkeys;

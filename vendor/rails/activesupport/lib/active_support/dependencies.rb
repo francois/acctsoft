@@ -47,7 +47,6 @@ module Dependencies #:nodoc:
   mattr_accessor :log_activity
   self.log_activity = false
   
-  # :nodoc:
   # An internal stack used to record which constants are loaded by any block.
   mattr_accessor :constant_watch_stack
   self.constant_watch_stack = []
@@ -319,13 +318,13 @@ module Dependencies #:nodoc:
     watch_frames = descs.collect do |desc|
       if desc.is_a? Module
         mod_name = desc.name
-        initial_constants = desc.constants
+        initial_constants = desc.local_constants
       elsif desc.is_a?(String) || desc.is_a?(Symbol)
         mod_name = desc.to_s
         
         # Handle the case where the module has yet to be defined.
         initial_constants = if qualified_const_defined?(mod_name)
-          mod_name.constantize.constants
+          mod_name.constantize.local_constants
         else
          []
         end
@@ -350,7 +349,7 @@ module Dependencies #:nodoc:
         
         mod = mod_name.constantize
         next [] unless mod.is_a? Module
-        new_constants = mod.constants - prior_constants
+        new_constants = mod.local_constants - prior_constants
         
         # Make sure no other frames takes credit for these constants.
         constant_watch_stack.each do |frame_name, constants|
@@ -382,7 +381,7 @@ module Dependencies #:nodoc:
     end
   end
   
-  class LoadingModule
+  class LoadingModule #:nodoc:
     # Old style environment.rb referenced this method directly.  Please note, it doesn't
     # actualy *do* anything any more.
     def self.root(*args)

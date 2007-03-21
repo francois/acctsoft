@@ -57,7 +57,7 @@ class ActiveRecordTestConnector
           ActiveRecord::Base.configurations = { 'sqlite3_ar_integration' => connection_options } 
           ActiveRecord::Base.connection
         rescue Exception  # errors from establishing a connection
-          $stderr.puts 'SQLite 3 unavailable; trying SQLite 2.'
+          $stderr.puts 'SQLite 3 unavailable; falling to SQLite 2.'
           connection_options = {:adapter => 'sqlite', :dbfile => ':memory:'}
           ActiveRecord::Base.establish_connection(connection_options)
           ActiveRecord::Base.configurations = { 'sqlite2_ar_integration' => connection_options } 
@@ -95,13 +95,22 @@ class ActiveRecordTestCase < Test::Unit::TestCase
     super if ActiveRecordTestConnector.connected
   end
 
-  def run(*args)
-    super if ActiveRecordTestConnector.connected
+  def setup
+    abort_tests unless ActiveRecordTestConnector.connected
   end
 
   # Default so Test::Unit::TestCase doesn't complain
   def test_truth
   end
+
+  private
+    # If things go wrong, we don't want to run our test cases. We'll just define them to test nothing.
+    def abort_tests
+      $stderr.puts 'No Active Record connection, aborting tests.'
+      self.class.public_instance_methods.grep(/^test./).each do |method|
+        self.class.class_eval { define_method(method.to_sym){} }
+      end
+    end
 end
 
 ActiveRecordTestConnector.setup

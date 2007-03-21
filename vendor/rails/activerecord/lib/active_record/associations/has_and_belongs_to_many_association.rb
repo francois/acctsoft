@@ -86,6 +86,16 @@ module ActiveRecord
       alias :concat_with_attributes :push_with_attributes
 
       protected
+        def method_missing(method, *args, &block)
+          if @target.respond_to?(method) || (!@reflection.klass.respond_to?(method) && Class.respond_to?(method))
+            super
+          else
+            @reflection.klass.with_scope(:find => { :conditions => @finder_sql, :joins => @join_sql, :readonly => false }) do
+              @reflection.klass.send(method, *args, &block)
+            end
+          end
+        end
+
         def count_records
           load_target.size
         end
@@ -146,10 +156,6 @@ module ActiveRecord
           end
 
           @join_sql = "INNER JOIN #{@reflection.options[:join_table]} ON #{@reflection.klass.table_name}.#{@reflection.klass.primary_key} = #{@reflection.options[:join_table]}.#{@reflection.association_foreign_key}"
-        end
-
-        def construct_scope
-          { :find => { :conditions => @finder_sql, :joins => @join_sql, :readonly => false } }
         end
 
         # Join tables with additional columns on top of the two foreign keys must be considered ambigious unless a select

@@ -276,6 +276,8 @@ class Fixtures < YAML::Omap
     @class_name = class_name || 
                   (ActiveRecord::Base.pluralize_table_names ? @table_name.singularize.camelize : @table_name.camelize)
     @table_name = ActiveRecord::Base.table_name_prefix + @table_name + ActiveRecord::Base.table_name_suffix
+    @table_name = class_name.table_name if class_name.respond_to?(:table_name)
+    @connection = class_name.connection if class_name.respond_to?(:connection)
     read_fixture_files
   end
 
@@ -299,18 +301,30 @@ class Fixtures < YAML::Omap
           yaml_string << IO.read(subfixture_path)
         end
         yaml_string << IO.read(yaml_file_path)
+
         begin
           yaml = YAML::load(erb_render(yaml_string))
         rescue Exception=>boom
           raise Fixture::FormatError, "a YAML error occurred parsing #{yaml_file_path}. Please note that YAML must be consistently indented using spaces. Tabs are not allowed. Please have a look at http://www.yaml.org/faq.html\nThe exact error was:\n  #{boom.class}: #{boom}"
-        end         
+        end
+
         if yaml
-          yaml = yaml.value if yaml.respond_to?(:type_id) and yaml.respond_to?(:value)
-          yaml.each do |name, data|
-            unless data
-              raise Fixture::FormatError, "Bad data for #{@class_name} fixture named #{name} (nil)"
+          # If the file is an ordered map, extract its children.
+          yaml_value =
+            if yaml.respond_to?(:type_id) && yaml.respond_to?(:value)
+              yaml.value
+            else
+              [yaml]
             end
-            self[name] = Fixture.new(data, @class_name)
+
+          yaml_value.each do |fixture|
+            fixture.each do |name, data|
+              unless data
+                raise Fixture::FormatError, "Bad data for #{@class_name} fixture named #{name} (nil)"
+              end
+
+              self[name] = Fixture.new(data, @class_name)
+            end
           end
         end
       elsif File.file?(csv_file_path)
@@ -436,7 +450,7 @@ end
 module Test #:nodoc:
   module Unit #:nodoc:
     class TestCase #:nodoc:
-      class_inheritable_accessor :fixture_path
+      cattr_accessor :fixture_path
       class_inheritable_accessor :fixture_table_names
       class_inheritable_accessor :fixture_class_names
       class_inheritable_accessor :use_transactional_fixtures

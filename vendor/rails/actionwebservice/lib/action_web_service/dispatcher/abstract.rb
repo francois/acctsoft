@@ -3,10 +3,6 @@ require 'benchmark'
 module ActionWebService # :nodoc:
   module Dispatcher # :nodoc:
     class DispatcherError < ActionWebService::ActionWebServiceError # :nodoc:
-      def initialize(*args)
-        super
-        set_backtrace(caller)
-      end
     end
 
     def self.included(base) # :nodoc:

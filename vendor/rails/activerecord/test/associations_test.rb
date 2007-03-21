@@ -87,35 +87,6 @@ class AssociationProxyTest < Test::Unit::TestCase
     david.posts_with_extension.first   # force load target
     assert_equal  david.posts_with_extension, david.posts_with_extension.testing_proxy_target
   end
-
-  def test_inspect_does_not_load_target
-    david = authors(:david)
-    not_loaded_string = '<posts not loaded yet>'
-    not_loaded_re = Regexp.new(not_loaded_string)
-
-    2.times do
-      assert !david.posts.loaded?, "Posts should not be loaded yet"
-      assert_match not_loaded_re, david.inspect
-      assert_equal not_loaded_string, david.posts.inspect
-
-      assert !david.posts.empty?, "There should be more than one post"
-      assert !david.posts.loaded?, "Posts should still not be loaded yet"
-      assert_match not_loaded_re, david.inspect
-      assert_equal not_loaded_string, david.posts.inspect
-
-      assert !david.posts.find(:all).empty?, "There should be more than one post"
-      assert !david.posts.loaded?, "Posts should still not be loaded yet"
-      assert_match not_loaded_re, david.inspect
-      assert_equal not_loaded_string, david.posts.inspect
-
-      assert !david.posts(true).empty?, "There should be more than one post"
-      assert david.posts.loaded?, "Posts should be loaded now"
-      assert_no_match  not_loaded_re, david.inspect
-      assert_not_equal not_loaded_string, david.posts.inspect
-
-      david.reload
-    end
-  end
 end
 
 class HasOneAssociationsTest < Test::Unit::TestCase
@@ -345,13 +316,6 @@ class HasOneAssociationsTest < Test::Unit::TestCase
     firm.destroy
   end
 
-  def test_dependence_with_missing_association_and_nullify
-    Account.destroy_all
-    firm = DependentFirm.find(:first)
-    assert firm.account.nil?
-    firm.destroy
-  end
-
   def test_assignment_before_parent_saved
     firm = Firm.new("name" => "GlobalMegaCorp")
     firm.account = a = Account.find(1)
@@ -508,9 +472,7 @@ class HasManyAssociationsTest < Test::Unit::TestCase
 
   def test_counting_using_sql
     assert_equal 1, Firm.find(:first).clients_using_counter_sql.size
-    assert Firm.find(:first).clients_using_counter_sql.any?
     assert_equal 0, Firm.find(:first).clients_using_zero_counter_sql.size
-    assert !Firm.find(:first).clients_using_zero_counter_sql.any?
   end
 
   def test_counting_non_existant_items_using_sql
@@ -637,15 +599,12 @@ class HasManyAssociationsTest < Test::Unit::TestCase
   def test_adding_before_save
     no_of_firms = Firm.count
     no_of_clients = Client.count
-
     new_firm = Firm.new("name" => "A New Firm, Inc")
-    c = Client.new("name" => "Apple")
-
     new_firm.clients_of_firm.push Client.new("name" => "Natural Company")
-    assert_equal 1, new_firm.clients_of_firm.size
-    new_firm.clients_of_firm << c
+    new_firm.clients_of_firm << (c = Client.new("name" => "Apple"))
+    assert new_firm.new_record?
+    assert c.new_record?
     assert_equal 2, new_firm.clients_of_firm.size
-
     assert_equal no_of_firms, Firm.count      # Firm was not saved to database.
     assert_equal no_of_clients, Client.count  # Clients were not saved to database.
     assert new_firm.save
@@ -654,7 +613,6 @@ class HasManyAssociationsTest < Test::Unit::TestCase
     assert_equal new_firm, c.firm
     assert_equal no_of_firms+1, Firm.count      # Firm was saved to database.
     assert_equal no_of_clients+2, Client.count  # Clients were saved to database.
-
     assert_equal 2, new_firm.clients_of_firm.size
     assert_equal 2, new_firm.clients_of_firm(true).size
   end

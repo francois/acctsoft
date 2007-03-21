@@ -191,11 +191,11 @@ module ActiveRecord
     cattr_accessor :verbose
 
     class << self
-      def up_with_benchmarks #:nodoc:
+      def up_using_benchmarks #:nodoc:
         migrate(:up)
       end
 
-      def down_with_benchmarks #:nodoc:
+      def down_using_benchmarks #:nodoc:
         migrate(:down)
       end
 
@@ -209,7 +209,7 @@ module ActiveRecord
         end
         
         result = nil
-        time = Benchmark.measure { result = send("#{direction}_without_benchmarks") }
+        time = Benchmark.measure { result = send("real_#{direction}") }
 
         case direction
           when :up   then announce "migrated (%.4fs)" % time.real; write
@@ -231,7 +231,8 @@ module ActiveRecord
           case sym
             when :up, :down
               klass = (class << self; self; end)
-              klass.send(:alias_method_chain, sym, "benchmarks")
+              klass.send(:alias_method, "real_#{sym}", sym)
+              klass.send(:alias_method, sym, "#{sym}_using_benchmarks")
           end
         ensure
           @ignore_new_methods = false

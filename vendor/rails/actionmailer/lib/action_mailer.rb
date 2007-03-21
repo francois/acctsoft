@@ -27,7 +27,7 @@ unless defined?(ActionController)
     require 'action_controller'
   rescue LoadError
     require 'rubygems'
-    require_gem 'actionpack', '>= 1.12.5'
+    gem 'actionpack', '>= 1.12.5'
   end
 end
 
@@ -37,7 +37,6 @@ require 'action_mailer/base'
 require 'action_mailer/helpers'
 require 'action_mailer/mail_helper'
 require 'action_mailer/quoting'
-require 'action_mailer/test_helper'
 require 'tmail'
 require 'net/smtp'
 

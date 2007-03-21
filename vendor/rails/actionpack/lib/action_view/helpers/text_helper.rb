@@ -23,7 +23,7 @@ module ActionView
       # is equivalent to using:
       #   <%= "hello" %>
       def concat(string, binding)
-        eval(ActionView::Base.erb_variable, binding) << string
+        eval("_erbout", binding).concat(string)
       end
 
       # If +text+ is longer than +length+, +text+ will be truncated to the length of 
@@ -85,7 +85,7 @@ module ActionView
       #   pluralize(2, 'person')  => 2 people
       #   pluralize(3, 'person', 'users')  => 3 users
       def pluralize(count, singular, plural = nil)
-         "#{count || 0} " + if count == 1 || count == '1'
+         "#{count} " + if count == 1 || count == '1'
           singular
         elsif plural
           plural
@@ -354,26 +354,26 @@ module ActionView
           @_cycles = Hash.new unless defined?(@_cycles)
           @_cycles[name] = cycle_object
         end
-      
+
         AUTO_LINK_RE = %r{
-                        (                         # leading text
-                          <\w+.*?>|               # leading HTML tag, or
-                          [^=!:'"/]|              # leading punctuation, or 
-                          ^                       # beginning of line
+                        (                          # leading text
+                          <\w+.*?>|                # leading HTML tag, or
+                          [^=!:'"/]|               # leading punctuation, or 
+                          ^                        # beginning of line
                         )
                         (
-                          (?:https?://)|          # protocol spec, or
-                          (?:www\.)               # www.*
+                          (?:https?://)|           # protocol spec, or
+                          (?:www\.)                # www.*
                         ) 
                         (
-                          [-\w]+                  # subdomain or domain
-                          (?:\.[-\w]+)*           # remaining subdomains or domain
-                          (?::\d+)?               # port
-                          (?:/(?:[~\w\+%.;-]+)?)* # path
-                          (?:\?[\w\+%&=.;-]+)?    # query string
-                          (?:\#[\w\-]*)?          # trailing anchor
+                          [-\w]+                   # subdomain or domain
+                          (?:\.[-\w]+)*            # remaining subdomains or domain
+                          (?::\d+)?                # port
+                          (?:/(?:(?:[~\w\+%-]|(?:[,.;:][^\s$]))+)?)* # path
+                          (?:\?[\w\+%&=.;-]+)?     # query string
+                          (?:\#[\w\-]*)?           # trailing anchor
                         )
-                        ([[:punct:]]|\s|<|$)      # trailing text
+                        ([[:punct:]]|\s|<|$)       # trailing text
                        }x unless const_defined?(:AUTO_LINK_RE)
 
         # Turns all urls into clickable links.  If a block is given, each url

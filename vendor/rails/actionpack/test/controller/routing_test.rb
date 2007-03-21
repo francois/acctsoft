@@ -207,14 +207,7 @@ class LegacyRouteSetTests < Test::Unit::TestCase
       map.path 'file/*path', :controller => 'content', :action => 'show_file'
       map.connect ':controller/:action/:id'
     end
-
-    # No + to space in URI escaping, only for query params.
     results = rs.recognize_path "/file/hello+world/how+are+you%3F"
-    assert results, "Recognition should have succeeded"
-    assert_equal ['hello+world', 'how+are+you?'], results[:path]
-
-    # Use %20 for space instead.
-    results = rs.recognize_path "/file/hello%20world/how%20are%20you%3F"
     assert results, "Recognition should have succeeded"
     assert_equal ['hello world', 'how are you?'], results[:path]
 
@@ -243,7 +236,39 @@ class LegacyRouteSetTests < Test::Unit::TestCase
       map.connect ':controller/:action/:id'
     end
   end
+  
+  def test_should_list_options_diff_when_routing_requirements_dont_match
+    rs.draw do |map|
+      map.post 'post/:id', :controller=> 'post', :action=> 'show', :requirements => {:id => /\d+/}
+    end
+    exception = assert_raise(ActionController::RoutingError) { rs.generate(:controller => 'post', :action => 'show', :bad_param => "foo", :use_route => "post") }
+    assert_match /^post_url failed to generate/, exception.message
+    from_match = exception.message.match(/from \{[^\}]+\}/).to_s
+    assert_match /:bad_param=>"foo"/,   from_match
+    assert_match /:action=>"show"/,     from_match
+    assert_match /:controller=>"post"/, from_match
+    
+    expected_match = exception.message.match(/expected: \{[^\}]+\}/).to_s
+    assert_no_match /:bad_param=>"foo"/,   expected_match
+    assert_match    /:action=>"show"/,     expected_match
+    assert_match    /:controller=>"post"/, expected_match
 
+    diff_match = exception.message.match(/diff: \{[^\}]+\}/).to_s
+    assert_match    /:bad_param=>"foo"/,   diff_match
+    assert_no_match /:action=>"show"/,     diff_match
+    assert_no_match /:controller=>"post"/, diff_match
+  end
+
+  # this specifies the case where your formerly would get a very confusing error message with an empty diff
+  def test_should_have_better_error_message_when_options_diff_is_empty
+    rs.draw do |map|
+      map.content '/content/:query', :controller => 'content', :action => 'show'
+    end
+    exception = assert_raise(ActionController::RoutingError) { rs.generate(:controller => 'content', :action => 'show', :use_route => "content") }
+    expected_message = %[content_url failed to generate from {:action=>"show", :controller=>"content"} - you may have ambiguous routes, or you may need to supply additional parameters for this route.  content_url has the following required parameters: ["content", :query] - are they all satisifed?]
+    assert_equal expected_message, exception.message
+  end
+  
   def test_dynamic_path_allowed
     rs.draw do |map|
       map.connect '*path', :controller => 'content', :action => 'show_file'
@@ -1464,11 +1489,11 @@ class RouteSetTest < Test::Unit::TestCase
   
   def test_recognize_with_encoded_id_and_regex
     set.draw do |map|
-      map.connect 'page/:id', :controller => 'pages', :action => 'show', :id => /[a-zA-Z0-9\+]+/
+      map.connect 'page/:id', :controller => 'pages', :action => 'show', :id => /[a-zA-Z0-9 ]+/
     end
 
     assert_equal({:controller => 'pages', :action => 'show', :id => '10'}, set.recognize_path('/page/10'))
-    assert_equal({:controller => 'pages', :action => 'show', :id => 'hello+world'}, set.recognize_path('/page/hello+world'))
+    assert_equal({:controller => 'pages', :action => 'show', :id => 'hello world'}, set.recognize_path('/page/hello+world'))
   end
 
   def test_recognize_with_conditions
@@ -1589,6 +1614,18 @@ class RouteSetTest < Test::Unit::TestCase
     Object.send(:remove_const, :PeopleController)
   end
 
+  def test_deprecation_warning_for_root_route
+    Object.const_set(:PeopleController, Class.new)
+
+    set.draw do |map|
+      assert_deprecated do
+        map.root('', :controller => "people")
+      end    
+    end
+  ensure
+    Object.send(:remove_const, :PeopleController)
+  end
+
   def test_generate_with_default_action
     set.draw do |map|
       map.connect "/people", :controller => "people"
@@ -1597,20 +1634,6 @@ class RouteSetTest < Test::Unit::TestCase
 
     url = set.generate(:controller => "people", :action => "list")
     assert_equal "/people/list", url
-  end
-
-  def test_root_map
-    Object.const_set(:PeopleController, Class.new)
-
-    set.draw { |map| map.root :controller => "people" }
-
-    request.path = ""
-    request.method = :get
-    assert_nothing_raised { set.recognize(request) }
-    assert_equal("people", request.path_parameters[:controller])
-    assert_equal("index", request.path_parameters[:action])
-  ensure
-    Object.send(:remove_const, :PeopleController)
   end
 
   def test_generate_finds_best_fit

@@ -174,48 +174,54 @@ class RequestTest < Test::Unit::TestCase
     assert_equal "/path/of/some/uri?mapped=1", @request.request_uri
     assert_equal "/path/of/some/uri", @request.path
 
+    @request.set_REQUEST_URI nil
     @request.relative_url_root = nil
     @request.env['PATH_INFO'] = "/path/of/some/uri?mapped=1"
     @request.env['SCRIPT_NAME'] = "/path/dispatch.rb"
     assert_equal "/path/of/some/uri?mapped=1", @request.request_uri
     assert_equal "/of/some/uri", @request.path
 
+    @request.set_REQUEST_URI nil
     @request.relative_url_root = nil
     @request.env['PATH_INFO'] = "/path/of/some/uri"
     @request.env['SCRIPT_NAME'] = nil
     assert_equal "/path/of/some/uri", @request.request_uri
     assert_equal "/path/of/some/uri", @request.path
 
+    @request.set_REQUEST_URI nil
     @request.relative_url_root = nil
     @request.env['PATH_INFO'] = "/"
     assert_equal "/", @request.request_uri
     assert_equal "/", @request.path
 
+    @request.set_REQUEST_URI nil
     @request.relative_url_root = nil
     @request.env['PATH_INFO'] = "/?m=b"
     assert_equal "/?m=b", @request.request_uri
     assert_equal "/", @request.path
-    
+
+    @request.set_REQUEST_URI nil
     @request.relative_url_root = nil
     @request.env['PATH_INFO'] = "/"
     @request.env['SCRIPT_NAME'] = "/dispatch.cgi"
     assert_equal "/", @request.request_uri
-    assert_equal "/", @request.path    
+    assert_equal "/", @request.path
 
+    @request.set_REQUEST_URI nil
     @request.relative_url_root = nil
     @request.env['PATH_INFO'] = "/hieraki/"
     @request.env['SCRIPT_NAME'] = "/hieraki/dispatch.cgi"
     assert_equal "/hieraki/", @request.request_uri
-    assert_equal "/", @request.path    
-                                              
+    assert_equal "/", @request.path
+
     @request.set_REQUEST_URI '/hieraki/dispatch.cgi'
     @request.relative_url_root = '/hieraki'
-    assert_equal "/dispatch.cgi", @request.path    
+    assert_equal "/dispatch.cgi", @request.path
     @request.relative_url_root = nil
 
     @request.set_REQUEST_URI '/hieraki/dispatch.cgi'
     @request.relative_url_root = '/foo'
-    assert_equal "/hieraki/dispatch.cgi", @request.path    
+    assert_equal "/hieraki/dispatch.cgi", @request.path
     @request.relative_url_root = nil
 
     # This test ensures that Rails uses REQUEST_URI over PATH_INFO
@@ -226,7 +232,7 @@ class RequestTest < Test::Unit::TestCase
     assert_equal "/some/path", @request.request_uri
     assert_equal "/some/path", @request.path
   end
-  
+
 
   def test_host_with_port
     @request.host = "rubyonrails.org"
@@ -301,18 +307,6 @@ class RequestTest < Test::Unit::TestCase
     assert_equal :get, @request.method
     assert @request.get?
     assert @request.head?
-  end
-
-  def test_format
-    @request.instance_eval { @parameters = { :format => 'xml' } }
-    assert_equal Mime::XML, @request.format
-
-    @request.instance_eval { @parameters = { :format => 'xhtml' } }
-    assert_equal Mime::HTML, @request.format
-
-    @request.instance_eval { @parameters = { :format => nil } }
-    @request.env["HTTP_ACCEPT"] = "text/javascript"
-    assert_equal Mime::JS, @request.format
   end
 
   protected

@@ -1,5 +1,4 @@
 require 'cgi'
-require 'uri'
 
 class Object
   def to_param
@@ -25,7 +24,7 @@ class NilClass
   end
 end
 
-class Regexp
+class Regexp #:nodoc:
   def number_of_captures
     Regexp.new("|#{source}").match('').captures.length
   end
@@ -127,7 +126,8 @@ module ActionController
   # == Named routes
   #
   # Routes can be named with the syntax <tt>map.name_of_route options</tt>,
-  # allowing for easy reference within your source as +name_of_route_url+.
+  # allowing for easy reference within your source as +name_of_route_url+
+  # for the full URL and +name_of_route_path+ for the URI path.
   #
   # Example:
   #   # In routes.rb
@@ -138,29 +138,39 @@ module ActionController
   #
   # Arguments can be passed as well.
   #
-  #   redirect_to show_item_url(:id => 25)
+  #   redirect_to show_item_path(:id => 25)
   #
-  # When using +with_options+, the name goes after the item passed to the block.
+  # Use <tt>map.root</tt> as a shorthand to name a route for the root path ""
   #
-  #  ActionController::Routing::Routes.draw do |map| 
-  #    map.with_options :controller => 'blog' do |blog|
-  #      blog.show    '',            :action  => 'list'
-  #      blog.delete  'delete/:id',  :action  => 'delete',
-  #      blog.edit    'edit/:id',    :action  => 'edit'
-  #    end
-  #    map.connect ':controller/:action/:view 
-  #  end
+  #   # In routes.rb
+  #   map.root :controller => 'blogs'
   #
-  # You would then use the named routes in your views:
+  #   # would recognize http://www.example.com/ as
+  #   params = { :controller => 'blogs', :action => 'index' }
   #
-  #   link_to @article.title, show_url(:id => @article.id) 
+  #   # and provide these named routes
+  #   root_url   # => 'http://www.example.com/'
+  #   root_path  # => ''
   #
-  # == Pretty URL's
+  # Note: when using +with_options+, the route is simply named after the
+  # method you call on the block parameter rather than map.
+  #
+  #   # In routes.rb
+  #   map.with_options :controller => 'blog' do |blog|
+  #     blog.show    '',            :action  => 'list'
+  #     blog.delete  'delete/:id',  :action  => 'delete',
+  #     blog.edit    'edit/:id',    :action  => 'edit'
+  #   end
+  #
+  #   # provides named routes for show, delete, and edit
+  #   link_to @article.title, show_path(:id => @article.id) 
+  #
+  # == Pretty URLs
   #
   # Routes can generate pretty URLs. For example:
   #
   #  map.connect 'articles/:year/:month/:day',
-  #   	         :controller => 'articles', 
+  #              :controller => 'articles', 
   #              :action     => 'find_by_date',
   #              :year       => /\d{4}/,
   #              :month => /\d{1,2}/, 
@@ -306,7 +316,7 @@ module ActionController
       end     
     end
   
-    class Route
+    class Route #:nodoc:
       attr_accessor :segments, :requirements, :conditions
       
       def initialize
@@ -537,7 +547,7 @@ module ActionController
   
     end
 
-    class Segment
+    class Segment #:nodoc:
       attr_accessor :is_optional
       alias_method :optional?, :is_optional
 
@@ -592,7 +602,7 @@ module ActionController
       end
     end
 
-    class StaticSegment < Segment
+    class StaticSegment < Segment #:nodoc:
       attr_accessor :value, :raw
       alias_method :raw?, :raw
   
@@ -602,7 +612,7 @@ module ActionController
       end
   
       def interpolation_chunk
-        raw? ? value : URI.escape(value)
+        raw? ? value : CGI.escape(value)
       end
   
       def regexp_chunk
@@ -626,7 +636,7 @@ module ActionController
       end
     end
 
-    class DividerSegment < StaticSegment
+    class DividerSegment < StaticSegment #:nodoc:
       def initialize(value = nil)
         super(value)
         self.raw = true
@@ -638,7 +648,7 @@ module ActionController
       end
     end
 
-    class DynamicSegment < Segment
+    class DynamicSegment < Segment #:nodoc:
       attr_accessor :key, :default, :regexp
   
       def initialize(key = nil, options = {})
@@ -683,7 +693,7 @@ module ActionController
       end
   
       def interpolation_chunk
-        "\#{URI.escape(#{local_name}.to_s)}"
+        "\#{CGI.escape(#{local_name}.to_s)}"
       end
   
       def string_structure(prior_segments)
@@ -726,13 +736,13 @@ module ActionController
   
     end
 
-    class ControllerSegment < DynamicSegment
+    class ControllerSegment < DynamicSegment #:nodoc:
       def regexp_chunk
         possible_names = Routing.possible_controllers.collect { |name| Regexp.escape name }
         "(?i-:(#{(regexp || Regexp.union(*possible_names)).source}))"
       end
 
-      # Don't URI.escape the controller name, since it may have slashes in it,
+      # Don't CGI.escape the controller name, since it may have slashes in it,
       # like admin/foo.
       def interpolation_chunk
         "\#{#{local_name}.to_s}"
@@ -753,10 +763,10 @@ module ActionController
       end
     end
 
-    class PathSegment < DynamicSegment
-      EscapedSlash = URI.escape("/")
+    class PathSegment < DynamicSegment #:nodoc:
+      EscapedSlash = CGI.escape("/")
       def interpolation_chunk
-        "\#{URI.escape(#{local_name}.to_s).gsub(#{EscapedSlash.inspect}, '/')}"
+        "\#{CGI.escape(#{local_name}.to_s).gsub(#{EscapedSlash.inspect}, '/')}"
       end
 
       def default
@@ -778,12 +788,12 @@ module ActionController
       class Result < ::Array #:nodoc:
         def to_s() join '/' end 
         def self.new_escaped(strings)
-          new strings.collect {|str| URI.unescape str}
+          new strings.collect {|str| CGI.unescape str}
         end     
       end     
     end
 
-    class RouteBuilder
+    class RouteBuilder #:nodoc:
       attr_accessor :separators, :optional_separators
   
       def initialize
@@ -959,13 +969,13 @@ module ActionController
       end
     end
 
-    class RouteSet
+    class RouteSet #:nodoc:
       # Mapper instances are used to build routes. The object passed to the draw
       # block in config/routes.rb is a Mapper instance.
       # 
       # Mapper instances have relatively few instance methods, in order to avoid
       # clashes with named routes.
-      class Mapper
+      class Mapper #:nodoc:
         def initialize(set)
           @set = set
         end
@@ -976,14 +986,17 @@ module ActionController
           @set.add_route(path, options)
         end
 
-        # Creates a named route called "root" for matching the root level request.
-        def root(options = {})
-          named_route("root", '', options)
-        end
-
         def named_route(name, path, options = {})
           @set.add_named_route(name, path, options)
         end
+
+        # Added deprecation notice for anyone who already added a named route called "root".
+        # It'll be used as a shortcut for map.connect '' in Rails 2.0.
+        def root(*args, &proc)
+          super unless args.length >= 1 && proc.nil?
+          @set.add_named_route("root", *args)
+        end
+        deprecate :root => "(as the the label for a named route) will become a shortcut for map.connect '', so find another name"
 
         def method_missing(route_name, *args, &proc)
           super unless args.length >= 1 && proc.nil?
@@ -994,7 +1007,7 @@ module ActionController
       # A NamedRouteCollection instance is a collection of named routes, and also
       # maintains an anonymous module that can be used to install helpers for the
       # named routes.
-      class NamedRouteCollection
+      class NamedRouteCollection #:nodoc:
         include Enumerable
 
         attr_reader :routes, :helpers
@@ -1228,8 +1241,11 @@ module ActionController
 
         if named_route
           path = named_route.generate(options, merged, expire_on)
-          raise RoutingError, "#{named_route_name}_url failed to generate from #{options.inspect}, expected: #{named_route.requirements.inspect}, diff: #{named_route.requirements.diff(options).inspect}" if path.nil?
-          return path
+          if path.nil? 
+            raise_named_route_error(options, named_route, named_route_name)
+          else
+            return path
+          end
         else
           merged[:action] ||= 'index'
           options[:action] ||= 'index'
@@ -1249,6 +1265,18 @@ module ActionController
     
         raise RoutingError, "No route matches #{options.inspect}"
       end
+      
+      # try to give a helpful error message when named route generation fails
+      def raise_named_route_error(options, named_route, named_route_name)
+        diff = named_route.requirements.diff(options)
+        unless diff.empty?
+          raise RoutingError, "#{named_route_name}_url failed to generate from #{options.inspect}, expected: #{named_route.requirements.inspect}, diff: #{named_route.requirements.diff(options).inspect}"
+        else
+          required_segments = named_route.segments.select {|seg| (!seg.optional?) && (!seg.is_a?(DividerSegment)) }
+          required_keys_or_values = required_segments.map { |seg| seg.key rescue seg.value } # we want either the key or the value from the segment
+          raise RoutingError, "#{named_route_name}_url failed to generate from #{options.inspect} - you may have ambiguous routes, or you may need to supply additional parameters for this route.  content_url has the following required parameters: #{required_keys_or_values.inspect} - are they all satisifed?"
+        end
+      end
   
       def recognize(request)
         params = recognize_path(request.path, extract_request_environment(request))
@@ -1257,7 +1285,7 @@ module ActionController
       end
   
       def recognize_path(path, environment={})
-        path = URI.unescape(path)
+        path = CGI.unescape(path)
         routes.each do |route|
           result = route.recognize(path, environment) and return result
         end

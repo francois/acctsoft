@@ -1,15 +1,6 @@
 # Don't change this file. Configuration is done in config/environment.rb and config/environments/*.rb
 
-unless defined?(RAILS_ROOT)
-  root_path = File.join(File.dirname(__FILE__), '..')
-
-  unless RUBY_PLATFORM =~ /mswin32/
-    require 'pathname'
-    root_path = Pathname.new(root_path).cleanpath(true).to_s
-  end
-
-  RAILS_ROOT = root_path
-end
+RAILS_ROOT = "#{File.dirname(__FILE__)}/.." unless defined?(RAILS_ROOT)
 
 unless defined?(Rails::Initializer)
   if File.directory?("#{RAILS_ROOT}/vendor/rails")
@@ -26,7 +17,7 @@ unless defined?(Rails::Initializer)
       rails_gem = Gem.cache.search('rails', "~>#{version}.0").sort_by { |g| g.version.version }.last
 
       if rails_gem
-        require_gem "rails", "=#{rails_gem.version.version}"
+        gem "rails", "=#{rails_gem.version.version}"
         require rails_gem.full_gem_path + '/lib/initializer'
       else
         STDERR.puts %(Cannot find gem for Rails ~>#{version}.0:
@@ -36,7 +27,7 @@ unless defined?(Rails::Initializer)
         exit 1
       end
     else
-      require_gem "rails"
+      gem "rails"
       require 'initializer'
     end
   end

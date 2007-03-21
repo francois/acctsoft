@@ -126,28 +126,11 @@ module ActiveRecord
     end
 
     def save_with_transactions(perform_validation = true) #:nodoc:
-      rollback_active_record_state { transaction { save_without_transactions(perform_validation) } }
+      transaction { save_without_transactions(perform_validation) }
     end
 
     def save_with_transactions! #:nodoc:
-      rollback_active_record_state { transaction { save_without_transactions! } }
-    end
-    
-    # stores the current id and @new_record values so that they are reset
-    # after rolling the transaction back.
-    def rollback_active_record_state
-      previous_new_record = @new_record
-      previous_id = self.id
-      response = yield
-    rescue
-      response = false
-      raise
-    ensure
-      unless response
-        @new_record = previous_new_record
-        self.id = previous_id
-      end
-      response
+      transaction { save_without_transactions! }
     end
   end
 end

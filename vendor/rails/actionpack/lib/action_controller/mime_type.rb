@@ -1,8 +1,4 @@
 module Mime
-  SET              = []
-  EXTENSION_LOOKUP = Hash.new { |h, k| h[k] = Type.new(k) unless k == "" }
-  LOOKUP           = Hash.new { |h, k| h[k] = Type.new(k) unless k == "" }
-
   # Encapsulates the notion of a mime type. Can be used at render time, for example, with:
   #
   #   class PostsController < ActionController::Base
@@ -48,17 +44,10 @@ module Mime
         LOOKUP[string]
       end
 
-      def lookup_by_extension(extension)
-        EXTENSION_LOOKUP[extension]
-      end
-
-      def register(string, symbol, mime_type_synonyms = [], extension_synonyms = [])
-        Mime.send :const_set, symbol.to_s.upcase, Type.new(string, symbol, mime_type_synonyms)
-
+      def register(string, symbol, synonyms = [])
+        Mime.send :const_set, symbol.to_s.upcase, Type.new(string, symbol, synonyms)
         SET << Mime.send(:const_get, symbol.to_s.upcase)
-
-        ([string] + mime_type_synonyms).each { |string| LOOKUP[string] = SET.last }
-        ([symbol.to_s] + extension_synonyms).each { |ext| EXTENSION_LOOKUP[ext] = SET.last }
+        LOOKUP[string] = EXTENSION_LOOKUP[symbol.to_s] = SET.last        
       end
 
       def parse(accept_header)
@@ -140,6 +129,72 @@ module Mime
       (@synonyms + [ self ]).any? { |synonym| synonym.to_s == mime_type.to_s } if mime_type
     end
   end
-end
 
-require File.dirname(__FILE__) + "/mime_types"
+  ALL   = Type.new "*/*", :all
+  TEXT  = Type.new "text/plain", :text
+  HTML  = Type.new "text/html", :html, %w( application/xhtml+xml )
+  JS    = Type.new "text/javascript", :js, %w( application/javascript application/x-javascript )
+  ICS   = Type.new "text/calendar", :ics
+  CSV   = Type.new "text/csv", :csv
+  XML   = Type.new "application/xml", :xml, %w( text/xml application/x-xml )
+  RSS   = Type.new "application/rss+xml", :rss
+  ATOM  = Type.new "application/atom+xml", :atom
+  YAML  = Type.new "application/x-yaml", :yaml, %w( text/yaml )
+  JSON  = Type.new "application/json", :json, %w( text/x-json )
+
+  SET   = [ ALL, TEXT, HTML, JS, ICS, XML, RSS, ATOM, YAML, JSON ]
+
+  LOOKUP = Hash.new { |h, k| h[k] = Type.new(k) unless k == "" }
+
+  LOOKUP["*/*"]                      = ALL
+
+  LOOKUP["text/plain"]               = TEXT
+
+  LOOKUP["text/html"]                = HTML
+  LOOKUP["application/xhtml+xml"]    = HTML
+
+  LOOKUP["text/javascript"]          = JS
+  LOOKUP["application/javascript"]   = JS
+  LOOKUP["application/x-javascript"] = JS
+
+  LOOKUP["text/calendar"]            = ICS
+
+  LOOKUP["text/csv"]                 = CSV
+
+  LOOKUP["application/xml"]          = XML
+  LOOKUP["text/xml"]                 = XML
+  LOOKUP["application/x-xml"]        = XML
+
+  LOOKUP["text/yaml"]                = YAML
+  LOOKUP["application/x-yaml"]       = YAML
+
+  LOOKUP["application/rss+xml"]      = RSS
+  LOOKUP["application/atom+xml"]     = ATOM
+
+  LOOKUP["application/json"]         = JSON
+  LOOKUP["text/x-json"]              = JSON
+
+
+  EXTENSION_LOOKUP = Hash.new { |h, k| h[k] = Type.new(k) unless k == "" }
+
+  EXTENSION_LOOKUP["html"]  = HTML
+  EXTENSION_LOOKUP["xhtml"] = HTML
+
+  EXTENSION_LOOKUP["txt"]   = TEXT
+
+  EXTENSION_LOOKUP["xml"]   = XML
+
+  EXTENSION_LOOKUP["js"]    = JS
+
+  EXTENSION_LOOKUP["ics"]   = ICS
+
+  EXTENSION_LOOKUP["csv"]   = CSV
+
+  EXTENSION_LOOKUP["yml"]   = YAML
+  EXTENSION_LOOKUP["yaml"]  = YAML
+
+  EXTENSION_LOOKUP["rss"]   = RSS
+  EXTENSION_LOOKUP["atom"]  = ATOM
+
+  EXTENSION_LOOKUP["json"]  = JSON
+end

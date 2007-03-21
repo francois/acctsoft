@@ -69,7 +69,7 @@ class BasicsTest < Test::Unit::TestCase
     assert_equal("Jason", topic.author_name)
     assert_equal(topics(:first).author_email_address, Topic.find(1).author_email_address)
   end
-  
+
   def test_integers_as_nil
     test = AutoId.create('value' => '')
     assert_nil AutoId.find(test.id).value
@@ -156,7 +156,24 @@ class BasicsTest < Test::Unit::TestCase
     reply = Reply.new
     assert_raise(ActiveRecord::RecordInvalid) { reply.save! }
   end
-  
+
+  def test_save_null_string_attributes
+    topic = Topic.find(1)
+    topic.attributes = { "title" => "null", "author_name" => "null" }
+    topic.save!
+    topic.reload
+    assert_equal("null", topic.title)
+    assert_equal("null", topic.author_name)
+  end
+
+  def test_save_nil_string_attributes
+    topic = Topic.find(1)
+    topic.title = nil
+    topic.save!
+    topic.reload
+    assert_nil topic.title
+  end
+
   def test_hashes_not_mangled
     new_topic = { :title => "New Topic" }
     new_topic_values = { :title => "AnotherTopic" }
@@ -271,54 +288,6 @@ class BasicsTest < Test::Unit::TestCase
     # puts topic.inspect
     assert topic.approved?, "approved should be true"
     # puts ""
-  end
-  
-  def test_query_attribute_string
-    [nil, "", " "].each do |value|
-      assert_equal false, Topic.new(:author_name => value).author_name?
-    end
-    
-    assert_equal true, Topic.new(:author_name => "Name").author_name?
-  end
-  
-  def test_query_attribute_number
-    [nil, 0, "0"].each do |value|
-      assert_equal false, Developer.new(:salary => value).salary?
-    end
-    
-    assert_equal true, Developer.new(:salary => 1).salary?
-    assert_equal true, Developer.new(:salary => "1").salary?
-  end
-  
-  def test_query_attribute_boolean
-    [nil, "", false, "false", "f", 0].each do |value|
-      assert_equal false, Topic.new(:approved => value).approved?
-    end
-    
-    [true, "true", "1", 1].each do |value|
-      assert_equal true, Topic.new(:approved => value).approved?
-    end
-  end
-
-  def test_query_attribute_with_custom_fields
-    object = Company.find_by_sql(<<-SQL).first
-      SELECT c1.*, c2.ruby_type as string_value, c2.rating as int_value
-        FROM companies c1, companies c2
-       WHERE c1.firm_id = c2.id
-         AND c1.id = 2
-    SQL
-
-    assert_equal "Firm", object.string_value
-    assert object.string_value?
-
-    object.string_value = "  "
-    assert !object.string_value?
-
-    assert_equal 1, object.int_value.to_i
-    assert object.int_value?
-
-    object.int_value = "0"
-    assert !object.int_value?
   end
 
   def test_reader_generation
@@ -622,8 +591,8 @@ class BasicsTest < Test::Unit::TestCase
     end
   end
 
-  # Oracle and SQLServer do not have a TIME datatype.
-  unless current_adapter?(:SQLServerAdapter, :OracleAdapter)
+  # Oracle, SQLServer, and Sybase do not have a TIME datatype.
+  unless current_adapter?(:SQLServerAdapter, :OracleAdapter, :SybaseAdapter)
     def test_utc_as_time_zone
       Topic.default_timezone = :utc
       attributes = { "bonus_time" => "5:42:00AM" }
@@ -739,6 +708,16 @@ class BasicsTest < Test::Unit::TestCase
     firm.attributes = { "name" => "Next Angle", "rating" => 5 }
     assert_equal 1, firm.rating
   end
+  
+  def test_mass_assignment_protection_against_class_attribute_writers
+    [:logger, :configurations, :primary_key_prefix_type, :table_name_prefix, :table_name_suffix, :pluralize_table_names, :colorize_logging,
+      :default_timezone, :allow_concurrency, :generate_read_methods, :schema_format, :verification_timeout, :lock_optimistically, :record_timestamps].each do |method|
+      assert  Task.respond_to?(method)
+      assert  Task.respond_to?("#{method}=")
+      assert  Task.new.respond_to?(method)
+      assert !Task.new.respond_to?("#{method}=")
+    end
+  end
 
   def test_customized_primary_key_remains_protected
     subscriber = Subscriber.new(:nick => 'webster123', :name => 'nice try')
@@ -852,8 +831,8 @@ class BasicsTest < Test::Unit::TestCase
   end
 
   def test_attributes_on_dummy_time
-    # Oracle and SQL Server do not have a TIME datatype.
-    return true if current_adapter?(:SQLServerAdapter, :OracleAdapter)
+    # Oracle, SQL Server, and Sybase do not have a TIME datatype.
+    return true if current_adapter?(:SQLServerAdapter, :OracleAdapter, :SybaseAdapter)
 
     attributes = {
       "bonus_time" => "5:42:00AM"
@@ -1075,7 +1054,7 @@ class BasicsTest < Test::Unit::TestCase
   end
 
   def test_sql_injection_via_find
-    assert_raises(ActiveRecord::RecordNotFound) do
+    assert_raises(ActiveRecord::RecordNotFound, ActiveRecord::StatementInvalid) do
       Topic.find("123456 OR id > 0")
     end
   end
@@ -1282,17 +1261,15 @@ class BasicsTest < Test::Unit::TestCase
 
     assert_equal res4, res5 
 
-    unless current_adapter?(:SQLite2Adapter, :DeprecatedSQLiteAdapter)
-      res6 = Post.count_by_sql "SELECT COUNT(DISTINCT p.id) FROM posts p, comments co WHERE p.#{QUOTED_TYPE} = 'Post' AND p.id=co.post_id"
-      res7 = nil
-      assert_nothing_raised do
-        res7 = Post.count(:conditions => "p.#{QUOTED_TYPE} = 'Post' AND p.id=co.post_id",
-                          :joins => "p, comments co",
-                          :select => "p.id",
-                          :distinct => true)
-      end
-      assert_equal res6, res7
+    res6 = Post.count_by_sql "SELECT COUNT(DISTINCT p.id) FROM posts p, comments co WHERE p.#{QUOTED_TYPE} = 'Post' AND p.id=co.post_id"
+    res7 = nil
+    assert_nothing_raised do
+      res7 = Post.count(:conditions => "p.#{QUOTED_TYPE} = 'Post' AND p.id=co.post_id",
+                        :joins => "p, comments co",
+                        :select => "p.id",
+                        :distinct => true)
     end
+    assert_equal res6, res7
   end
   
   def test_clear_association_cache_stored     
@@ -1309,12 +1286,12 @@ class BasicsTest < Test::Unit::TestCase
      client_new      = Client.new
      client_new.name = "The Joneses"
      clients         = [ client_stored, client_new ]
-
+     
      firm.clients    << clients
-     assert_equal clients.map(&:name).to_set, firm.clients.map(&:name).to_set
 
      firm.clear_association_cache
-     assert_equal clients.map(&:name).to_set, firm.clients.map(&:name).to_set
+
+     assert_equal    firm.clients.collect{ |x| x.name }.sort, clients.collect{ |x| x.name }.sort
   end
 
   def test_interpolate_sql
