@@ -1,17 +1,17 @@
 development:
   adapter: mysql
   database: acctsoft_development
-  username: acctsoftdev
+  username: francois
   password:
-  host: localhost
+  host: ubuntu
   port: 3306
   
 test:
   adapter: mysql
   database: acctsoft_test
-  username: acctsoftdev
+  username: francois
   password:
-  host: localhost
+  host: ubuntu
   port: 3306
 
 production:
