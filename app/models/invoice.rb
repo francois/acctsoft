@@ -40,7 +40,7 @@ class Invoice < ActiveRecord::Base
 
       self.txn = Txn.new
       self.txn.posted_on = self.invoiced_on
-      self.txn.description = "Facture #{self.no}"
+      self.txn.description = "Facture \##{self.no}"
 
       self.txn.lines.build(:account => ar_account, :amount_dt => self.total)
       lines.each do |account, amount|
