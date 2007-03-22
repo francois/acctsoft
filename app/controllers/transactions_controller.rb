@@ -5,7 +5,7 @@ class TransactionsController < ApplicationController
     unless @q.blank? then
       conditions = []
       values = {}
-      @q.gsub!(/\b[-\d]+\b/) do |partial_date|
+      @q.gsub!(/(?:^|\s)[-\d]+(\s|$)/) do |partial_date|
         returning "" do
           conditions << "posted_on BETWEEN :start AND :end"
           case partial_date.gsub("-", "")
