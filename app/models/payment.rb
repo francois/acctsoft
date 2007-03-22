@@ -37,7 +37,7 @@ class Payment < ActiveRecord::Base
 
       self.txn = Txn.new
       self.txn.posted_on = self.received_on
-      self.txn.description = "Encaissement facture#{'s' if self.invoices.size > 1} #{self.invoices.map {|i| i.no}.to_sentence}."
+      self.txn.description = "Encaissement facture#{'s' if self.invoices.size > 1} \##{self.invoices.map {|i| i.no}.to_sentence}."
       self.txn.lines.build(:account => encaisse_account, :amount_dt => self.amount)
       self.txn.lines.build(:account => ar_account, :amount_ct => self.amount)
       self.txn.save!
