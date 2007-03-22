@@ -73,13 +73,12 @@ class TransactionsController < ApplicationController
 
     Txn.transaction do
       @transaction.attributes = params[:transaction]
-      @transaction.save!
-
       (params[:line] || []).each do |id, values|
         @line = @transaction.lines.find_by_id(id) || @transaction.lines.build
         @line.attributes = values
-        @line.save!
       end
+
+      @transaction.save! # Final balance verification
     end
 
     if params[:commit] =~ /nouveau/i then
