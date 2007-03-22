@@ -8,13 +8,13 @@
   </form>
 </div>
 <div class="pager">
-  <%= link_to('&lt;&lt;', :page => @transaction_pages.current.previous) if @transaction_pages.current.previous %>
-  <%= pagination_links @transaction_pages, :always_show_anchors => true, :window_size => 4 %>
-  <%= link_to('&gt;&gt;', :page => @transaction_pages.current.next) if @transaction_pages.current.next %>
+  <%= link_to('&lt;&lt;', :q = @q, :page => @transaction_pages.current.previous )if @transaction_pages.current.previous %>
+  <%= pagination_links @transaction_pages, :always_show_anchors => true, :window_size => 4, :params => {:q = @q} %>
+  <%= link_to('&gt;&gt;', :q = @q, :page => @transaction_pages.current.next) if @transaction_pages.current.next %>
 </div>
 <%= render :partial => 'list', :object => @transactions %>
 <div class="pager">
-  <%= link_to('&lt;&lt;', :page => @transaction_pages.current.previous )if @transaction_pages.current.previous %>
-  <%= pagination_links @transaction_pages, :always_show_anchors => true, :window_size => 4 %>
-  <%= link_to('&gt;&gt;', :page => @transaction_pages.current.next) if @transaction_pages.current.next %>
+  <%= link_to('&lt;&lt;', :q = @q, :page => @transaction_pages.current.previous )if @transaction_pages.current.previous %>
+  <%= pagination_links @transaction_pages, :always_show_anchors => true, :window_size => 4, :params => {:q = @q} %>
+  <%= link_to('&gt;&gt;', :q = @q, :page => @transaction_pages.current.next) if @transaction_pages.current.next %>
 </div>
