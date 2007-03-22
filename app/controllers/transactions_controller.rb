@@ -1,6 +1,6 @@
 class TransactionsController < ApplicationController
   def index
-    @q = params[:q].dup
+    @q = (params[:q] || "").dup
     options = {:per_page => 30, :order => "posted_on DESC, id DESC"}
     unless @q.blank? then
       conditions = []
