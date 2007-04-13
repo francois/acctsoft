@@ -18,8 +18,11 @@ class ApplicationController < ActionController::Base
   end
 
   def parse_date(date)
-    return date unless date =~ /^(?:(\d{4})(\d{2})(\d{2}))(\d{4}).(\d{1,2}).(\d{1,2})$/
-    Date.new($1.to_i, $2.to_i, $3.to_i)
+    return date unless date =~ /^(?:(\d{4})(\d{2})(\d{2}))|(?:(\d{4}).(\d{1,2}).(\d{1,2}))$/
+    y, m, d = $1, $2, $3 unless $1.blank?
+    y, m, d = $4, $5, $6 if y.blank?
+    logger.debug {"Date.new(#{y.inspect}, #{m.inspect}, #{d.inspect})"}
+    Date.new(y.to_i, m.to_i, d.to_i)
   end
 
   def pagination_handler
