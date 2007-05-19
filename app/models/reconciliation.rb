@@ -15,7 +15,7 @@ class Reconciliation < ActiveRecord::Base
 
   def find_potential_transactions
     return [] if self.new_record?
-    self.account.txn_parts.find(:all, :order => 'txn_accounts.id', :conditions => ['reconciliation_id IS NULL'])
+    self.account.txn_parts.find(:all, :conditions => ['reconciliation_id IS NULL'])
   end
 
   def amount_dt
