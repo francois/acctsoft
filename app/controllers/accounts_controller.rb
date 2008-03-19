@@ -2,7 +2,7 @@ class AccountsController < ApplicationController
   before_filter :normalize_account_type, :only => %w(create update)
 
   def index
-    @accounts = Account.find(:all, :order => 'no')
+    @accounts = Account.paginate(:all, :order => 'no', :page => params[:page])
   end
 
   def new

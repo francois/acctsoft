@@ -1,6 +1,6 @@
 class ReconciliationsController < ApplicationController
   def index
-    @reconciliation_pages, @reconciliations = paginate(:reconciliations, :order => 'statement_on DESC')
+    @reconciliations = Reconciliation.paginate(:all, :order => "statement_on DESC", :page => params[:page])
   end
 
   def edit

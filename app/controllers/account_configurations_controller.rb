@@ -1,6 +1,6 @@
 class AccountConfigurationsController < ApplicationController
   def index
-    @account_configurations = AccountConfiguration.find(:all, :order => 'name')
+    @account_configurations = AccountConfiguration.paginate(:all, :order => 'name', :page => params[:page])
   end
 
   def new

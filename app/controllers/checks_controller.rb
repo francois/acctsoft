@@ -7,7 +7,7 @@ class ChecksController < ApplicationController
       @order = 'no DESC'
     end
 
-    @checks = Check.find(:all, :order => @order)
+    @checks = Check.paginate(:all, :order => @order, :page => params[:page])
   end
 
   def edit
