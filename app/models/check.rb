@@ -1,12 +1,13 @@
 class Check < ActiveRecord::Base
   belongs_to :bank_account, :class_name => 'Account', :foreign_key => 'bank_account_id'
   belongs_to :txn
-  composed_of :amount, :class_name => 'Money', :mapping => [%w(amount_cents cents), %w(amount_currency currency)]
   has_many :distributions, :class_name => 'CheckDistribution', :order => 'position', :dependent => :delete_all
 
   validates_uniqueness_of :no
   validates_presence_of :no, :written_on, :beneficiary, :reason, :bank_account_id, :amount_cents
   before_validation :add_bank_account_line
+
+  acts_as_money :amount
 
   def volume_dt
     self.distributions.map(&:amount_dt).sum(Money.zero)

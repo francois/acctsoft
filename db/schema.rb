@@ -9,7 +9,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 18) do
+ActiveRecord::Schema.define(:version => 19) do
 
   create_table "account_configurations", :force => true do |t|
     t.string  "name",       :default => "", :null => false
@@ -84,11 +84,12 @@ ActiveRecord::Schema.define(:version => 18) do
   end
 
   create_table "invoice_payments", :force => true do |t|
-    t.integer  "payment_id",   :default => 0, :null => false
-    t.integer  "invoice_id",   :default => 0, :null => false
-    t.integer  "amount_cents", :default => 0, :null => false
-    t.datetime "created_at",                  :null => false
-    t.datetime "updated_at",                  :null => false
+    t.integer  "payment_id",                   :default => 0,     :null => false
+    t.integer  "invoice_id",                   :default => 0,     :null => false
+    t.integer  "amount_cents",                 :default => 0,     :null => false
+    t.datetime "created_at",                                      :null => false
+    t.datetime "updated_at",                                      :null => false
+    t.string   "amount_currency", :limit => 4, :default => "CAD"
   end
 
   create_table "invoices", :force => true do |t|
@@ -110,15 +111,16 @@ ActiveRecord::Schema.define(:version => 18) do
   end
 
   create_table "payments", :force => true do |t|
-    t.integer  "customer_id",  :default => 0,  :null => false
+    t.integer  "customer_id",                  :default => 0,     :null => false
     t.date     "paid_on"
-    t.date     "received_on",                  :null => false
-    t.string   "reference",    :default => "", :null => false
-    t.integer  "amount_cents", :default => 0,  :null => false
-    t.datetime "created_at",                   :null => false
-    t.datetime "updated_at",                   :null => false
+    t.date     "received_on",                                     :null => false
+    t.string   "reference",                    :default => "",    :null => false
+    t.integer  "amount_cents",                 :default => 0,     :null => false
+    t.datetime "created_at",                                      :null => false
+    t.datetime "updated_at",                                      :null => false
     t.integer  "txn_id"
     t.datetime "posted_at"
+    t.string   "amount_currency", :limit => 4, :default => "CAD"
   end
 
   create_table "reconciliations", :force => true do |t|
