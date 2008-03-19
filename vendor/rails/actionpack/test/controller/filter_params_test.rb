@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/../abstract_unit'
+require 'abstract_unit'
 
 class FilterParamController < ActionController::Base
 end
@@ -16,6 +16,7 @@ class FilterParamTest < Test::Unit::TestCase
     assert @controller.respond_to?(:filter_parameters)
     
     test_hashes = [[{},{},[]],
+    [{'foo'=>nil},{'foo'=>nil},[]],
     [{'foo'=>'bar'},{'foo'=>'bar'},[]],
     [{'foo'=>'bar'},{'foo'=>'bar'},%w'food'],
     [{'foo'=>'bar'},{'foo'=>'[FILTERED]'},%w'foo'],

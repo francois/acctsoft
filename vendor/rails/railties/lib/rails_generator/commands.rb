@@ -70,7 +70,7 @@ module Rails
           end
 
           def current_migration_number
-            Dir.glob("#{@migration_directory}/[0-9]*.rb").inject(0) do |max, file_path|
+            Dir.glob("#{RAILS_ROOT}/#{@migration_directory}/[0-9]*_*.rb").inject(0) do |max, file_path|
               n = File.basename(file_path).split('_', 2).first.to_i
               if n > max then n else max end
             end
@@ -93,9 +93,9 @@ module Rails
         private
           # Ask the user interactively whether to force collision.
           def force_file_collision?(destination, src, dst, file_options = {}, &block)
-            $stdout.print "overwrite #{destination}? [Ynaqd] "
-            case $stdin.gets
-              when /d/i
+            $stdout.print "overwrite #{destination}? (enter \"h\" for help) [Ynaqdh] "
+            case $stdin.gets.chomp
+              when /\Ad\z/i
                 Tempfile.open(File.basename(destination), File.dirname(dst)) do |temp|
                   temp.write render_file(src, file_options, &block)
                   temp.rewind
@@ -103,14 +103,24 @@ module Rails
                 end
                 puts "retrying"
                 raise 'retry diff'
-              when /a/i
+              when /\Aa\z/i
                 $stdout.puts "forcing #{spec.name}"
                 options[:collision] = :force
-              when /q/i
+              when /\Aq\z/i
                 $stdout.puts "aborting #{spec.name}"
                 raise SystemExit
-              when /n/i then :skip
-              else :force
+              when /\An\z/i then :skip
+              when /\Ay\z/i then :force
+              else
+                $stdout.puts <<-HELP
+Y - yes, overwrite
+n - no, do not overwrite
+a - all, overwrite this and all others
+q - quit, abort
+d - diff, show the differences between the old and the new
+h - help, show this help
+HELP
+                raise 'retry'
             end
           rescue
             retry
@@ -197,7 +207,7 @@ module Rails
           # Determine full paths for source and destination files.
           source              = source_path(relative_source)
           destination         = destination_path(relative_destination)
-          destination_exists  = File.exists?(destination)
+          destination_exists  = File.exist?(destination)
 
           # If source and destination are identical then we're done.
           if destination_exists and identical?(source, destination, &block)
@@ -245,8 +255,9 @@ module Rails
             FileUtils.chmod(file_options[:chmod], destination)
           end
 
-          # Optionally add file to subversion
+          # Optionally add file to subversion or git
           system("svn add #{destination}") if options[:svn]
+          system("git add -v #{relative_destination}") if options[:git]
         end
 
         # Checks if the source and the destination file are identical. If
@@ -260,7 +271,7 @@ module Rails
         end
 
         # Generate a file for a Rails application using an ERuby template.
-        # Looks up and evalutes a template by name and writes the result.
+        # Looks up and evaluates a template by name and writes the result.
         #
         # The ERB template uses explicit trim mode to best control the
         # proliferation of whitespace in generated code.  <%- trims leading
@@ -293,33 +304,35 @@ module Rails
         end
 
         # Create a directory including any missing parent directories.
-        # Always directories which exist.
+        # Always skips directories which exist.
         def directory(relative_path)
           path = destination_path(relative_path)
-          if File.exists?(path)
+          if File.exist?(path)
             logger.exists relative_path
           else
             logger.create relative_path
-	    unless options[:pretend]
-	      FileUtils.mkdir_p(path)
+	          unless options[:pretend]
+	            FileUtils.mkdir_p(path)
+	            # git doesn't require adding the paths, adding the files later will
+	            # automatically do a path add.
 	      
-	      # Subversion doesn't do path adds, so we need to add
-	      # each directory individually.
-	      # So stack up the directory tree and add the paths to
-	      # subversion in order without recursion.
-	      if options[:svn]
-		stack=[relative_path]
-		until File.dirname(stack.last) == stack.last # dirname('.') == '.'
-		  stack.push File.dirname(stack.last)
-		end
-		stack.reverse_each do |rel_path|
-		  svn_path = destination_path(rel_path)
-		  system("svn add -N #{svn_path}") unless File.directory?(File.join(svn_path, '.svn'))
-		end
-	      end
-	    end
-	  end
-	end
+	            # Subversion doesn't do path adds, so we need to add
+	            # each directory individually.
+	            # So stack up the directory tree and add the paths to
+	            # subversion in order without recursion.
+	            if options[:svn]
+		            stack=[relative_path]
+		            until File.dirname(stack.last) == stack.last # dirname('.') == '.'
+		              stack.push File.dirname(stack.last)
+		            end
+		            stack.reverse_each do |rel_path|
+		              svn_path = destination_path(rel_path)
+		              system("svn add -N #{svn_path}") unless File.directory?(File.join(svn_path, '.svn'))
+		            end
+	            end
+            end
+          end
+        end
 
         # Display a README.
         def readme(*relative_sources)
@@ -381,7 +394,7 @@ end_message
             raise UsageError, message
           end
 
-          SYNONYM_LOOKUP_URI = "http://wordnet.princeton.edu/cgi-bin/webwn2.0?stage=2&word=%s&posnumber=1&searchtypenumber=2&senses=&showglosses=1"
+          SYNONYM_LOOKUP_URI = "http://wordnet.princeton.edu/perl/webwn?s=%s"
 
           # Look up synonyms on WordNet.  Thanks to Florian Gross (flgr).
           def find_synonyms(word)
@@ -389,8 +402,8 @@ end_message
             require 'timeout'
             timeout(5) do
               open(SYNONYM_LOOKUP_URI % word) do |stream|
-                data = stream.read.gsub("&nbsp;", " ").gsub("<BR>", "")
-                data.scan(/^Sense \d+\n.+?\n\n/m)
+                # Grab words linked to dictionary entries as possible synonyms
+                data = stream.read.gsub("&nbsp;", " ").scan(/<a href="webwn.*?">([\w ]*?)<\/a>/s).uniq
               end
             end
           rescue Exception
@@ -405,7 +418,7 @@ end_message
         # Remove a file if it exists and is a file.
         def file(relative_source, relative_destination, file_options = {})
           destination = destination_path(relative_destination)
-          if File.exists?(destination)
+          if File.exist?(destination)
             logger.rm relative_destination
             unless options[:pretend]
               if options[:svn]
@@ -418,7 +431,20 @@ end_message
                 # If the directory is not in the status list, it
                 # has no modifications so we can simply remove it
                   system("svn rm #{destination}")
-                end  
+                end
+              elsif options[:git]
+                if options[:git][:new][relative_destination]
+                  # file has been added, but not committed
+                  system("git reset HEAD #{relative_destination}")
+                  FileUtils.rm(destination)
+                elsif options[:git][:modified][relative_destination]
+                  # file is committed and modified
+                  system("git rm -f #{relative_destination}")
+                else
+                  # If the directory is not in the status list, it
+                  # has no modifications so we can simply remove it
+                  system("git rm #{relative_destination}")
+                end
               else
                 FileUtils.rm(destination)
               end
@@ -440,7 +466,7 @@ end_message
           until parts.empty?
             partial = File.join(parts)
             path = destination_path(partial)
-            if File.exists?(path)
+            if File.exist?(path)
               if Dir[File.join(path, '*')].empty?
                 logger.rmdir partial
                 unless options[:pretend]
@@ -455,6 +481,8 @@ end_message
                     # has no modifications so we can simply remove it
                       system("svn rm #{path}")
                     end
+                  # I don't think git needs to remove directories?..
+                  # or maybe they have special consideration...
                   else
                     FileUtils.rmdir(path)
                   end
@@ -559,7 +587,7 @@ end_message
              return
            end
 
-           logger.refreshing "#{template_options[:insert].gsub(/\.rhtml/,'')} inside #{relative_destination}"
+           logger.refreshing "#{template_options[:insert].gsub(/\.erb/,'')} inside #{relative_destination}"
 
            begin_mark = Regexp.quote(template_part_mark(template_options[:begin_mark], template_options[:mark_id]))
            end_mark = Regexp.quote(template_part_mark(template_options[:end_mark], template_options[:mark_id]))

@@ -47,8 +47,15 @@ module Inflector
     #   irregular 'octopus', 'octopi'
     #   irregular 'person', 'people'
     def irregular(singular, plural)
-      plural(Regexp.new("(#{singular[0,1]})#{singular[1..-1]}$", "i"), '\1' + plural[1..-1])
-      singular(Regexp.new("(#{plural[0,1]})#{plural[1..-1]}$", "i"), '\1' + singular[1..-1])
+      if singular[0,1].upcase == plural[0,1].upcase
+        plural(Regexp.new("(#{singular[0,1]})#{singular[1..-1]}$", "i"), '\1' + plural[1..-1])
+        singular(Regexp.new("(#{plural[0,1]})#{plural[1..-1]}$", "i"), '\1' + singular[1..-1])
+      else
+        plural(Regexp.new("#{singular[0,1].upcase}(?i)#{singular[1..-1]}$"), plural[0,1].upcase + plural[1..-1])
+        plural(Regexp.new("#{singular[0,1].downcase}(?i)#{singular[1..-1]}$"), plural[0,1].downcase + plural[1..-1])
+        singular(Regexp.new("#{plural[0,1].upcase}(?i)#{plural[1..-1]}$"), singular[0,1].upcase + singular[1..-1])
+        singular(Regexp.new("#{plural[0,1].downcase}(?i)#{plural[1..-1]}$"), singular[0,1].downcase + singular[1..-1])       
+      end
     end
 
     # Add uncountable words that shouldn't be attempted inflected.
@@ -99,7 +106,7 @@ module Inflector
   def pluralize(word)
     result = word.to_s.dup
 
-    if inflections.uncountables.include?(result.downcase)
+    if word.empty? || inflections.uncountables.include?(result.downcase)
       result
     else
       inflections.plurals.each { |(rule, replacement)| break if result.gsub!(rule, replacement) }
@@ -139,7 +146,7 @@ module Inflector
   #   "active_record/errors".camelize(:lower) #=> "activeRecord::Errors"
   def camelize(lower_case_and_underscored_word, first_letter_in_uppercase = true)
     if first_letter_in_uppercase
-      lower_case_and_underscored_word.to_s.gsub(/\/(.?)/) { "::" + $1.upcase }.gsub(/(^|_)(.)/) { $2.upcase }
+      lower_case_and_underscored_word.to_s.gsub(/\/(.?)/) { "::#{$1.upcase}" }.gsub(/(?:^|_)(.)/) { $1.upcase }
     else
       lower_case_and_underscored_word.first + camelize(lower_case_and_underscored_word)[1..-1]
     end
@@ -155,7 +162,7 @@ module Inflector
   #   "man from the boondocks".titleize #=> "Man From The Boondocks"
   #   "x-men: the last stand".titleize #=> "X Men: The Last Stand"
   def titleize(word)
-    humanize(underscore(word)).gsub(/\b([a-z])/) { $1.capitalize }
+    humanize(underscore(word)).gsub(/\b('?[a-z])/) { $1.capitalize }
   end
 
   # The reverse of +camelize+. Makes an underscored form from the expression in the string.
@@ -211,13 +218,16 @@ module Inflector
     pluralize(underscore(class_name))
   end
 
-  # Create a class name from a table name like Rails does for table names to models.
+  # Create a class name from a plural table name like Rails does for table names to models.
   # Note that this returns a string and not a Class. (To convert to an actual class
   # follow classify with constantize.)
   #
   # Examples
   #   "egg_and_hams".classify #=> "EggAndHam"
-  #   "post".classify #=> "Post"
+  #   "posts".classify #=> "Post"
+  #
+  # Singular names are not handled correctly
+  #   "business".classify #=> "Busines"
   def classify(table_name)
     # strip out any leading schema name
     camelize(singularize(table_name.to_s.sub(/.*\./, '')))
@@ -263,9 +273,9 @@ module Inflector
       "#{number}th"
     else
       case number.to_i % 10
-        when 1: "#{number}st"
-        when 2: "#{number}nd"
-        when 3: "#{number}rd"
+        when 1; "#{number}st"
+        when 2; "#{number}nd"
+        when 3; "#{number}rd"
         else    "#{number}th"
       end
     end

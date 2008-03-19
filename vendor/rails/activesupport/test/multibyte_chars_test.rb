@@ -1,4 +1,7 @@
-require File.dirname(__FILE__) + '/abstract_unit'
+# encoding: utf-8
+require 'abstract_unit'
+
+if RUBY_VERSION < '1.9'
 
 $KCODE = 'UTF8'
 
@@ -81,18 +84,24 @@ class CharsTest < Test::Unit::TestCase
     with_kcode('UTF8') do
       assert_equal 9, (@s[:utf8].chars =~ /ﬃ/),
         "Regex matching should be unicode aware"
+      assert_nil((''.chars =~ /\d+/),
+        "Non-matching regular expressions should return nil")
     end
   end
-  
+
   def test_pragma
-    with_kcode('UTF8') do
-      assert " ".chars.send(:utf8_pragma?), "UTF8 pragma should be on because KCODE is UTF8"
-    end
-    with_kcode('none') do
-      assert !" ".chars.send(:utf8_pragma?), "UTF8 pragma should be off"
+    if RUBY_VERSION < '1.9'
+      with_kcode('UTF8') do
+        assert " ".chars.send(:utf8_pragma?), "UTF8 pragma should be on because KCODE is UTF8"
+      end
+      with_kcode('none') do
+        assert !" ".chars.send(:utf8_pragma?), "UTF8 pragma should be off because KCODE is not UTF8"
+      end
+    else
+      assert !" ".chars.send(:utf8_pragma?), "UTF8 pragma should be off in Ruby 1.9"
     end
   end
-  
+
   def test_handler_setting
     handler = ''.chars.handler
     
@@ -118,7 +127,7 @@ class CharsTest < Test::Unit::TestCase
   
   def test_passthrough_on_kcode
     # The easiest way to check if the passthrough is in place is through #size
-    with_kcode('nonce') do
+    with_kcode('none') do
       assert_equal 26, @s[:utf8].chars.size
     end
     with_kcode('UTF8') do
@@ -151,6 +160,13 @@ class CharsTest < Test::Unit::TestCase
     end
   end
   
+  def test_duck_typing
+    assert_equal true,  'test'.chars.respond_to?(:strip)
+    assert_equal true,  'test'.chars.respond_to?(:normalize)
+    assert_equal true,  'test'.chars.respond_to?(:normalize!)
+    assert_equal false, 'test'.chars.respond_to?(:a_method_that_doesnt_exist)
+  end
+  
   protected
 
   def with_kcode(kcode)
@@ -161,4 +177,6 @@ class CharsTest < Test::Unit::TestCase
       $KCODE = old_kcode
     end
   end
+end
+
 end

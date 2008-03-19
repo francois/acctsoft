@@ -15,9 +15,9 @@ module Enumerable
   #   "2006-02-24 -> Transcript, Transcript"
   #   "2006-02-23 -> Transcript"
   def group_by
-    inject({}) do |groups, element|
-      (groups[yield(element)] ||= []) << element
-      groups
+    inject ActiveSupport::OrderedHash.new do |grouped, element|
+      (grouped[yield(element)] ||= []) << element
+      grouped
     end
   end if RUBY_VERSION < '1.9'
 
@@ -38,6 +38,7 @@ module Enumerable
   #
   def sum(identity = 0, &block)
     return identity unless size > 0
+
     if block_given?
       map(&block).sum
     else
@@ -58,5 +59,4 @@ module Enumerable
       accum
     end
   end
-  
 end

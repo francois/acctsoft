@@ -1,16 +1,30 @@
-require File.dirname(__FILE__) + '/../abstract_unit'
-require File.dirname(__FILE__) + '/fake_controllers'
+require 'abstract_unit'
+require 'controller/fake_controllers'
 
 class TestTest < Test::Unit::TestCase
   class TestController < ActionController::Base
+    def no_op
+      render :text => 'dummy'
+    end
+
     def set_flash
       flash["test"] = ">#{flash["test"]}<"
       render :text => 'ignore me'
     end
 
+    def set_session
+      session['string'] = 'A wonder'
+      session[:symbol] = 'it works'
+      render :text => 'Success'
+    end
+
     def render_raw_post
       raise Test::Unit::AssertionFailedError, "#raw_post is blank" if request.raw_post.blank?
       render :text => request.raw_post
+    end
+
+    def render_body
+      render :text => request.body.read
     end
 
     def test_params
@@ -19,6 +33,10 @@ class TestTest < Test::Unit::TestCase
 
     def test_uri
       render :text => request.request_uri
+    end
+
+    def test_query_string
+      render :text => request.query_string
     end
 
     def test_html_output
@@ -41,6 +59,16 @@ class TestTest < Test::Unit::TestCase
 </html>
 HTML
     end
+    
+    def test_xml_output
+      response.content_type = "application/xml"
+      render :text => <<XML
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+  <area>area is an empty tag in HTML, raising an error if not in xml mode</area>
+</root>
+XML
+    end
 
     def test_only_one_param
       render :text => (params[:left] && params[:right]) ? "EEP, Both here!" : "OK"
@@ -54,8 +82,8 @@ HTML
       render :text => params[:file].size
     end
 
-    def redirect_to_symbol
-      redirect_to :generate_url, :id => 5
+    def test_send_file
+      send_file(File.expand_path(__FILE__))
     end
 
     def redirect_to_same_controller
@@ -67,8 +95,7 @@ HTML
     end
 
     def create
-      headers['Location'] = 'created resource'
-      head :created
+      head :created, :location => 'created resource'
     end
 
     private
@@ -95,10 +122,17 @@ HTML
 
   def test_raw_post_handling
     params = {:page => {:name => 'page name'}, 'some key' => 123}
-    get :render_raw_post, params.dup
+    post :render_raw_post, params.dup
 
-    raw_post = params.map {|k,v| [CGI::escape(k.to_s), CGI::escape(v.to_s)].join('=')}.sort.join('&')
-    assert_equal raw_post, @response.body
+    assert_equal params.to_query, @response.body
+  end
+
+  def test_body_stream
+    params = { :page => { :name => 'page name' }, 'some key' => 123 }
+
+    post :render_body, params.dup
+
+    assert_equal params.to_query, @response.body
   end
 
   def test_process_without_flash
@@ -109,6 +143,22 @@ HTML
   def test_process_with_flash
     process :set_flash, nil, nil, { "test" => "value" }
     assert_equal '>value<', flash['test']
+  end
+
+  def test_process_with_session
+    process :set_session
+    assert_equal 'A wonder', session['string'], "A value stored in the session should be available by string key"
+    assert_equal 'A wonder', session[:string], "Test session hash should allow indifferent access"
+    assert_equal 'it works', session['symbol'], "Test session hash should allow indifferent access"
+    assert_equal 'it works', session[:symbol], "Test session hash should allow indifferent access"
+  end
+
+  def test_process_with_session_arg
+    process :no_op, nil, { 'string' => 'value1', :symbol => 'value2' }
+    assert_equal 'value1', session['string']
+    assert_equal 'value1', session[:string]
+    assert_equal 'value2', session['symbol']
+    assert_equal 'value2', session[:symbol]
   end
 
   def test_process_with_request_uri_with_no_params
@@ -125,6 +175,17 @@ HTML
     @request.set_REQUEST_URI "/explicit/uri"
     process :test_uri, :id => 7
     assert_equal "/explicit/uri", @response.body
+  end
+
+  def test_process_with_query_string
+    process :test_query_string, :q => 'test'
+    assert_equal "q=test", @response.body
+  end
+
+  def test_process_with_query_string_with_explicit_uri
+    @request.set_REQUEST_URI "/explicit/uri?q=test?extra=question"
+    process :test_query_string
+    assert_equal "q=test?extra=question", @response.body
   end
 
   def test_multiple_calls
@@ -182,7 +243,7 @@ HTML
   def test_assert_tag_descendant
     process :test_html_output
 
-    # there is a tag with a decendant 'li' tag
+    # there is a tag with a descendant 'li' tag
     assert_tag :descendant => { :tag => "li" }
     # there is no tag with a descendant 'html' tag
     assert_no_tag :descendant => { :tag => "html" }
@@ -209,9 +270,9 @@ HTML
   def test_assert_tag_before
     process :test_html_output
 
-    # there is a tag preceeding a tag with id 'bar'
+    # there is a tag preceding a tag with id 'bar'
     assert_tag :before => { :attributes => { :id => "bar" } }
-    # there is no tag preceeding a 'form' tag
+    # there is no tag preceding a 'form' tag
     assert_no_tag :before => { :tag => "form" }
   end
 
@@ -295,6 +356,20 @@ HTML
           :children => { :count => 1,
             :only => { :tag => "img" } } } }
   end
+  
+  def test_should_not_impose_childless_html_tags_in_xml
+    process :test_xml_output
+
+    begin
+      $stderr = StringIO.new
+      assert_select 'area' #This will cause a warning if content is processed as HTML
+      $stderr.rewind && err = $stderr.read
+    ensure
+      $stderr = STDERR
+    end
+
+    assert err.empty?
+  end
 
   def test_assert_tag_attribute_matching
     @response.body = '<input type="text" name="my_name">'
@@ -323,6 +398,13 @@ HTML
 
   def test_assert_routing
     assert_routing 'content', :controller => 'content', :action => 'index'
+  end
+
+  def test_assert_routing_with_method
+    with_routing do |set|
+    	set.draw { |map| map.resources(:content) }
+      assert_routing({ :method => 'post', :path => 'content' }, { :controller => 'content', :action => 'create' })
+    end
   end
 
   def test_assert_routing_in_module
@@ -430,24 +512,38 @@ HTML
     assert_equal file.path, file.local_path
     assert_equal File.read(path), file.read
   end
+  
+  def test_test_uploaded_file_with_binary
+    filename = 'mona_lisa.jpg'
+    path = "#{FILES_DIR}/#{filename}"
+    content_type = 'image/png'
+    
+    binary_uploaded_file = ActionController::TestUploadedFile.new(path, content_type, :binary)
+    assert_equal File.open(path, 'rb').read, binary_uploaded_file.read
+    
+    plain_uploaded_file = ActionController::TestUploadedFile.new(path, content_type)
+    assert_equal File.open(path, 'r').read, plain_uploaded_file.read
+  end
+
+  def test_fixture_file_upload_with_binary
+    filename = 'mona_lisa.jpg'
+    path = "#{FILES_DIR}/#{filename}"
+    content_type = 'image/jpg'
+    
+    binary_file_upload = fixture_file_upload(path, content_type, :binary)
+    assert_equal File.open(path, 'rb').read, binary_file_upload.read
+    
+    plain_file_upload = fixture_file_upload(path, content_type)
+    assert_equal File.open(path, 'r').read, plain_file_upload.read
+  end
 
   def test_fixture_file_upload
     post :test_file_upload, :file => fixture_file_upload(FILES_DIR + "/mona_lisa.jpg", "image/jpg")
-    assert_equal 159528, @response.body
+    assert_equal '159528', @response.body
   end
 
   def test_test_uploaded_file_exception_when_file_doesnt_exist
     assert_raise(RuntimeError) { ActionController::TestUploadedFile.new('non_existent_file') }
-  end
-
-  def test_assert_redirected_to_symbol
-    with_foo_routing do |set|
-      assert_deprecated(/generate_url.*redirect_to/) do
-        get :redirect_to_symbol
-      end
-      assert_response :redirect
-      assert_redirected_to :generate_url
-    end
   end
 
   def test_assert_follow_redirect_to_same_controller
@@ -482,6 +578,11 @@ HTML
     end
   end
 
+  def test_binary_content_works_with_send_file
+    get :test_send_file
+    assert_nothing_raised(NoMethodError) { @response.binary_content }
+  end
+  
   protected
     def with_foo_routing
       with_routing do |set|
@@ -492,4 +593,74 @@ HTML
         yield set
       end
     end
+end
+
+
+class CleanBacktraceTest < Test::Unit::TestCase
+  def test_should_reraise_the_same_object
+    exception = Test::Unit::AssertionFailedError.new('message')
+    clean_backtrace { raise exception }
+  rescue => caught
+    assert_equal exception.object_id, caught.object_id
+    assert_equal exception.message, caught.message
+  end
+
+  def test_should_clean_assertion_lines_from_backtrace
+    path = File.expand_path("#{File.dirname(__FILE__)}/../../lib/action_controller")
+    exception = Test::Unit::AssertionFailedError.new('message')
+    exception.set_backtrace ["#{path}/abc", "#{path}/assertions/def"]
+    clean_backtrace { raise exception }
+  rescue => caught
+    assert_equal ["#{path}/abc"], caught.backtrace
+  end
+
+  def test_should_only_clean_assertion_failure_errors
+    clean_backtrace do
+      raise "can't touch this", [File.expand_path("#{File.dirname(__FILE__)}/../../lib/action_controller/assertions/abc")]
+    end
+  rescue => caught
+    assert !caught.backtrace.empty?
+  end
+end
+
+class InferringClassNameTest < Test::Unit::TestCase
+  def test_determine_controller_class
+    assert_equal ContentController, determine_class("ContentControllerTest")
+  end
+
+  def test_determine_controller_class_with_nonsense_name
+    assert_raises ActionController::NonInferrableControllerError do
+      determine_class("HelloGoodBye")
+    end
+  end
+
+  def test_determine_controller_class_with_sensible_name_where_no_controller_exists
+    assert_raises ActionController::NonInferrableControllerError do
+      determine_class("NoControllerWithThisNameTest")
+    end
+  end
+
+  private
+    def determine_class(name)
+      ActionController::TestCase.determine_default_controller_class(name)
+    end
+end
+
+class CrazyNameTest < ActionController::TestCase
+  tests ContentController
+
+  def test_controller_class_can_be_set_manually_not_just_inferred
+    assert_equal ContentController, self.class.controller_class
+  end
+end
+
+class NamedRoutesControllerTest < ActionController::TestCase
+  tests ContentController
+  
+  def test_should_be_able_to_use_named_routes_before_a_request_is_done
+    with_routing do |set|
+      set.draw { |map| map.resources :contents }
+      assert_equal 'http://test.host/contents/new', new_content_url
+    end
+  end
 end
