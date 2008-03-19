@@ -26,6 +26,31 @@
       <li><%= link_to 'Infos Compagnie', config_url %></li>
     </ul>
   </div>
+  <% form_tag(quick_txn_path, :id => "quicktxn") do %>
+    <%= hidden_field_tag "rt", request.url %>
+    <table class="dead">
+      <caption>Ajout rapide de transaction</caption>
+      <tr>
+        <th scope="column"><label for="quicktxn_posted_on">Date</label></th>
+        <th scope="column"><label for="quicktxn_debit_account">Débiter</label></th>
+        <th scope="column"><label for="quicktxn_credit_account">Créditer</label></th>
+        <th scope="column"><label for="quicktxn_amount">Montant</label></th>
+        <th scope="column"><label for="quicktxn_description">Description</label></th>
+        <td rowspan="2" valign="middle"><%= submit_tag "Enregister" %></td>
+      </tr>
+      <tr>
+        <td><%= text_field_tag "quicktxn[posted_on]", @quicktxn.posted_on, :id => "quicktxn_posted_on" %></td>
+        <td>
+          <%= text_field_tag "quicktxn[debit_account]", @quicktxn.debit_account.name, :id => "quicktxn_debit_account" %>
+        </td>
+        <td>
+          <%= text_field_tag "quicktxn[credit_account]", @quicktxn.credit_account.name, :id => "quicktxn_credit_account" %>
+        </td>
+        <td><%= text_field_tag "quicktxn[amount]", @quicktxn.amount.format, :id => "quicktxn_amount" %></td>
+        <td><%= text_field_tag "quicktxn[description]", @quicktxn.description, :id => "quicktxn_description" %></td>
+      </tr>
+    </table>
+  <% end %>
   <div id="content">
 <% unless @title.blank? -%>
     <h1><%= @title %></h1>

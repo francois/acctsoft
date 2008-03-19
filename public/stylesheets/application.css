@@ -112,3 +112,10 @@ span.money .symbol { display: none; }
 #transactions { clear: none; margin-right: 35em; }
 
 .amount { font-weight: bold; }
+
+#quicktxn { clear: both; border: 1px solid black; padding: .2em; margin: 0 auto; background: #F5F8FF; border: 3px double #C9CFFF; width: 69em; }
+#quicktxn caption { font-weight: bold; font-size: 110%; }
+#quicktxn #quicktxn_posted_on { width: 8em; }
+#quicktxn_debit_account, #quicktxn_credit_account { width: 12em; }
+#quicktxn_description { width: 20em; }
+#quicktxn_amount { width: 6em; }

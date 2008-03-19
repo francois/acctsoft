@@ -2,6 +2,7 @@ class ApplicationController < ActionController::Base
   before_filter :load_company
   before_filter :pagination_handler, :only => [:index]
   before_filter :transform_parameters
+  before_filter :quicktxn
   after_filter :set_content_type
 
   protected
@@ -33,5 +34,12 @@ class ApplicationController < ActionController::Base
   def set_content_type
     return unless response.headers['Content-Type'].blank?
     response.headers['Content-Type'] = 'text/html; charset=UTF-8'
+  end
+
+  def quicktxn
+    @quicktxn = QuickTxn.new
+    @quicktxn.debit_account = Account.find(:first)
+    @quicktxn.credit_account = @quicktxn.debit_account
+    @quicktxn.amount = Money.zero
   end
 end
