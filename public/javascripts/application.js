@@ -39,3 +39,7 @@ function updateLinePrice(object) {
   var unit_price = toNumber($F(object + '_unit_price'), 4);
   $(object + '_extension').value = toMoney(quantity * unit_price, 2);
 }
+
+$(document).ready(function() {
+  $(".notice").hide().slideDown("slow");
+});

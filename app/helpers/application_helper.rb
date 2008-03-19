@@ -1,4 +1,9 @@
 module ApplicationHelper
+  def show_flash(key)
+    return nil if flash[key].blank?
+    content_tag(:div, content_tag(:div, textilize(flash[key]), :class => "notice"), :id => "messages")
+  end
+
   def label(object, field, label=nil)
     %Q(<label for="#{object}_#{field}">#{label ? label : field.to_s.humanize}</label>)
   end

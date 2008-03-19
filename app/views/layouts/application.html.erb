@@ -3,9 +3,11 @@
 <html>
 <head>
   <title><%= [@title, 'Comptabilit&eacute;'].compact.join(' | ') %></title>
+  <%= javascript_include_tag "jquery.js" if RAILS_ENV == "development" %>
+  <%= javascript_include_tag "jquery.min.js" if RAILS_ENV != "development" %>
+  <%= javascript_include_tag "application" %>
   <%= stylesheet_link_tag 'application', :media => 'all' %>
   <%= stylesheet_link_tag 'print', :media => 'print' %>
-  <%= javascript_include_tag :defaults %>
 </head>
 <body>
   <div id="header">
@@ -55,9 +57,8 @@
 <% unless @title.blank? -%>
     <h1><%= @title %></h1>
 <% end -%>
-    <%= msgs = show_flash_messages :textilize => true %>
-    <%= javascript_tag visual_effect(:shake, 'messages') if msgs %>
-    <%= @content_for_layout %>
+    <%= show_flash :notice %>
+    <%= yield %>
   </div>
   <div id="footer">
     <ul id="bottomnav" class="navigation">
