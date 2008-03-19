@@ -10,6 +10,14 @@ module XlSuite
         self.cents.zero?
       end
 
+      def nonzero?
+        !self.zero?
+      end
+
+      def round_to_nearest_dollar
+        self.class.new((cents / 100.0).ceil * 100, self.currency)
+      end
+
       def to_f
         self.cents / 100.0
       end
