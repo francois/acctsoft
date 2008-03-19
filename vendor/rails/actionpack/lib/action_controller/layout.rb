@@ -29,20 +29,18 @@ module ActionController #:nodoc:
     #
     #   // The header part of this layout
     #   <%= yield %>
-    #   // The footer part of this layout
+    #   // The footer part of this layout -->
     #
     # And then you have content pages that look like this:
     #
     #    hello world
     #
-    # At rendering time, the content page is computed and then inserted in the layout, like this:
+    # Not a word about common structures. At rendering time, the content page is computed and then inserted in the layout, 
+    # like this:
     #
     #   // The header part of this layout
     #   hello world
-    #   // The footer part of this layout
-    #
-    # NOTE: The old notation for rendering the view from a layout was to expose the magic <tt>@content_for_layout</tt> instance
-    # variable. The preferred notation now is to use <tt>yield</tt>, as documented above.
+    #   // The footer part of this layout -->
     #
     # == Accessing shared variables
     #
@@ -126,7 +124,7 @@ module ActionController #:nodoc:
     #   class WeblogController < ActionController::Base
     #     layout "weblog_standard"
     #
-    # If no directory is specified for the template name, the template will by default be looked for in <tt>app/views/layouts/</tt>.
+    # If no directory is specified for the template name, the template will by default be looked for in +app/views/layouts/+. 
     # Otherwise, it will be looked up relative to the template root.
     #
     # == Conditional layouts
@@ -151,20 +149,23 @@ module ActionController #:nodoc:
     # == Using a different layout in the action render call
     # 
     # If most of your actions use the same layout, it makes perfect sense to define a controller-wide layout as described above.
-    # Sometimes you'll have exceptions where one action wants to use a different layout than the rest of the controller.
-    # You can do this by passing a <tt>:layout</tt> option to the <tt>render</tt> call. For example:
+    # Some times you'll have exceptions, though, where one action wants to use a different layout than the rest of the controller.
+    # This is possible using the <tt>render</tt> method. It's just a bit more manual work as you'll have to supply fully
+    # qualified template and layout names as this example shows:
     #
     #   class WeblogController < ActionController::Base
-    #     layout "weblog_standard"
-    #
     #     def help
-    #       render :action => "help", :layout => "help"
+    #       render :action => "help/index", :layout => "help"
     #     end
     #   end
     #
-    # This will render the help action with the "help" layout instead of the controller-wide "weblog_standard" layout.
+    # As you can see, you pass the template as the first parameter, the status code as the second ("200" is OK), and the layout
+    # as the third.
+    #
+    # NOTE: The old notation for rendering the view from a layout was to expose the magic <tt>@content_for_layout</tt> instance 
+    # variable. The preferred notation now is to use <tt>yield</tt>, as documented above.
     module ClassMethods
-      # If a layout is specified, all rendered actions will have their result rendered
+      # If a layout is specified, all rendered actions will have their result rendered  
       # when the layout <tt>yield</tt>s. This layout can itself depend on instance variables assigned during action
       # performance and have access to them as any normal template would.
       def layout(template_name, conditions = {}, auto = false)
@@ -208,6 +209,12 @@ module ActionController #:nodoc:
           conditions.inject({}) {|hash, (key, value)| hash.merge(key => [value].flatten.map {|action| action.to_s})}
         end
         
+        def layout_directory_exists_cache
+          @@layout_directory_exists_cache ||= Hash.new do |h, dirname|
+            h[dirname] = File.directory? dirname
+          end
+        end
+        
         def default_layout_with_format(format, layout)
           list = layout_list
           if list.grep(%r{layouts/#{layout}\.#{format}(\.[a-z][0-9a-z]*)+$}).empty?
@@ -243,7 +250,7 @@ module ActionController #:nodoc:
     end
 
     protected
-      def render_with_a_layout(options = nil, extra_options = {}, &block) #:nodoc:
+      def render_with_a_layout(options = nil, &block) #:nodoc:
         template_with_options = options.is_a?(Hash)
         
         if apply_layout?(template_with_options, options) && (layout = pick_layout(template_with_options, options))
@@ -252,7 +259,7 @@ module ActionController #:nodoc:
           options = options.merge :layout => false if template_with_options
           logger.info("Rendering template within #{layout}") if logger
 
-          content_for_layout = render_with_no_layout(options, extra_options, &block)
+          content_for_layout = render_with_no_layout(options, &block)
           erase_render_results
           add_variables_to_assigns
           @template.instance_variable_set("@content_for_layout", content_for_layout)
@@ -260,7 +267,7 @@ module ActionController #:nodoc:
           status = template_with_options ? options[:status] : nil
           render_for_text(@template.render_file(layout, true), status)
         else
-          render_with_no_layout(options, extra_options, &block)
+          render_with_no_layout(options, &block)
         end
       end
 
@@ -307,8 +314,13 @@ module ActionController #:nodoc:
         end
       end
       
+      # Does a layout directory for this class exist?
+      # we cache this info in a class level hash
       def layout_directory?(layout_name)
-        @template.finder.find_template_extension_from_handler(File.join('layouts', layout_name))
+        view_paths.find do |path| 
+          next unless template_path = Dir[File.join(path, 'layouts', layout_name) + ".*"].first
+          self.class.send!(:layout_directory_exists_cache)[File.dirname(template_path)]
+        end
       end
   end
 end

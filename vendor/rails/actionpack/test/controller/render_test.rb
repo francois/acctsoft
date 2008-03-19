@@ -1,5 +1,5 @@
-require 'abstract_unit'
-require 'controller/fake_models'
+require File.dirname(__FILE__) + '/../abstract_unit'
+require File.dirname(__FILE__) + '/fake_models'
 
 module Fun
   class GamesController < ActionController::Base
@@ -9,7 +9,6 @@ module Fun
 end
 
 
-# FIXME: crashes Ruby 1.9
 class TestController < ActionController::Base
   layout :determine_layout
 
@@ -18,10 +17,6 @@ class TestController < ActionController::Base
 
   def render_hello_world
     render :template => "test/hello_world"
-  end
-
-  def render_hello_world_with_forward_slash
-    render :template => "/test/hello_world"
   end
 
   def render_hello_world_from_variable
@@ -61,20 +56,6 @@ class TestController < ActionController::Base
     render :text => "hello world", :status => 404
   end
 
-  def render_custom_code_rjs
-    render :update, :status => 404 do |page|
-      page.replace :foo, :partial => 'partial'
-    end
-  end
-
-  def render_text_with_nil
-    render :text => nil
-  end
-
-  def render_text_with_false
-    render :text => false
-  end
-
   def render_nothing_with_appendix
     render :text => "appended"
   end
@@ -90,15 +71,6 @@ class TestController < ActionController::Base
 
   def render_xml_with_custom_content_type
     render :xml => "<blah/>", :content_type => "application/atomsvc+xml"
-  end
-
-  def render_line_offset
-    begin
-      render :inline => '<% raise %>', :locals => {:foo => 'bar'}
-    rescue => exc
-    end
-    line = exc.backtrace.first
-    render :text => line
   end
 
   def heading
@@ -144,6 +116,14 @@ class TestController < ActionController::Base
     name = params[:local_name]
     render :inline => "<%= 'Goodbye, ' + local_name %>",
            :locals => { :local_name => name }
+  end
+
+  def accessing_local_assigns_in_inline_template_with_string_keys
+    name = params[:local_name]
+    ActionView::Base.local_assigns_support_string_keys = true
+    render :inline => "<%= 'Goodbye, ' + local_name %>",
+           :locals => { "local_name" => name }
+    ActionView::Base.local_assigns_support_string_keys = false
   end
 
   def formatted_html_erb
@@ -232,18 +212,6 @@ class RenderTest < Test::Unit::TestCase
     assert_template "test/hello_world"
   end
 
-  def test_line_offset
-    get :render_line_offset
-    line = @response.body
-    assert(line =~ %r{:(\d+):})
-    assert_equal "1", $1
-  end
-
-  def test_render_with_forward_slash
-    get :render_hello_world_with_forward_slash
-    assert_template "test/hello_world"
-  end
-
   def test_render_from_variable
     get :render_hello_world_from_variable
     assert_equal "hello david", @response.body
@@ -292,23 +260,6 @@ class RenderTest < Test::Unit::TestCase
     get :render_custom_code
     assert_response 404
     assert_equal 'hello world', @response.body
-  end
-
-  def test_render_custom_code_rjs
-    get :render_custom_code_rjs
-    assert_response 404
-    assert_equal %(Element.replace("foo", "partial html");), @response.body
-  end
-
-  def test_render_text_with_nil
-    get :render_text_with_nil
-    assert_response 200
-    assert_equal '', @response.body
-  end
-
-  def test_render_text_with_false
-    get :render_text_with_false
-    assert_equal 'false', @response.body
   end
 
   def test_render_nothing_with_appendix
@@ -388,6 +339,11 @@ class RenderTest < Test::Unit::TestCase
 
   def test_accessing_local_assigns_in_inline_template
     get :accessing_local_assigns_in_inline_template, :local_name => "Local David"
+    assert_equal "Goodbye, Local David", @response.body
+  end
+
+  def test_accessing_local_assigns_in_inline_template_with_string_keys
+    get :accessing_local_assigns_in_inline_template_with_string_keys, :local_name => "Local David"
     assert_equal "Goodbye, Local David", @response.body
   end
 

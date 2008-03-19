@@ -52,76 +52,77 @@ module ActionController #:nodoc:
         end
       end
 
-      # Given a key (as described in <tt>expire_fragment</tt>), returns a key suitable for use in reading, 
-      # writing, or expiring a cached fragment. If the key is a hash, the generated key is the return
-      # value of url_for on that hash (without the protocol). All keys are prefixed with "views/" and uses
-      # ActiveSupport::Cache.expand_cache_key for the expansion.
-      def fragment_cache_key(key)
-        ActiveSupport::Cache.expand_cache_key(key.is_a?(Hash) ? url_for(key).split("://").last : key, :views)
-      end
-
-      def fragment_for(block, name = {}, options = nil) #:nodoc:
-        unless perform_caching then block.call; return end
-
-        buffer = yield
-
-        if cache = read_fragment(name, options)
-          buffer.concat(cache)
-        else
-          pos = buffer.length
-          block.call
-          write_fragment(name, buffer[pos..-1], options)
-        end
-      end
-
-      # Writes <tt>content</tt> to the location signified by <tt>key</tt> (see <tt>expire_fragment</tt> for acceptable formats)
-      def write_fragment(key, content, options = nil)
-        return unless cache_configured?
-
-        key = fragment_cache_key(key)
-
-        self.class.benchmark "Cached fragment miss: #{key}" do
-          cache_store.write(key, content, options)
+      protected
+        # Given a key (as described in <tt>expire_fragment</tt>), returns a key suitable for use in reading, 
+        # writing, or expiring a cached fragment. If the key is a hash, the generated key is the return
+        # value of url_for on that hash (without the protocol).
+        def fragment_cache_key(key)
+          ActiveSupport::Cache.expand_cache_key(key.is_a?(Hash) ? url_for(key).split("://").last : key, :fragments)
         end
 
-        content
-      end
+        # Called by CacheHelper#cache
+        def cache_erb_fragment(block, key = {}, options = nil)
+          unless cache_configured? then block.call; return end
 
-      # Reads a cached fragment from the location signified by <tt>key</tt> (see <tt>expire_fragment</tt> for acceptable formats)
-      def read_fragment(key, options = nil)
-        return unless cache_configured?
+          buffer = eval(ActionView::Base.erb_variable, block.binding)
 
-        key = fragment_cache_key(key)
-
-        self.class.benchmark "Cached fragment hit: #{key}" do
-          cache_store.read(key, options)
-        end
-      end
-
-      # Name can take one of three forms:
-      # * String: This would normally take the form of a path like "pages/45/notes"
-      # * Hash: Is treated as an implicit call to url_for, like { :controller => "pages", :action => "notes", :id => 45 }
-      # * Regexp: Will destroy all the matched fragments, example:
-      #     %r{pages/\d*/notes}
-      #   Ensure you do not specify start and finish in the regex (^$) because
-      #   the actual filename matched looks like ./cache/filename/path.cache
-      #   Regexp expiration is only supported on caches that can iterate over
-      #   all keys (unlike memcached).
-      def expire_fragment(key, options = nil)
-        return unless cache_configured?
-
-        key = key.is_a?(Regexp) ? key : fragment_cache_key(key)
-
-        if key.is_a?(Regexp)
-          self.class.benchmark "Expired fragments matching: #{key.source}" do
-            cache_store.delete_matched(key, options)
-          end
-        else
-          self.class.benchmark "Expired fragment: #{key}" do
-            cache_store.delete(key, options)
+          if cache = read_fragment(key, options)
+            buffer.concat(cache)
+          else
+            pos = buffer.length
+            block.call
+            write_fragment(key, buffer[pos..-1], options)
           end
         end
-      end
+
+        # Writes <tt>content</tt> to the location signified by <tt>key</tt> (see <tt>expire_fragment</tt> for acceptable formats)
+        def write_fragment(key, content, options = nil)
+          return unless cache_configured?
+
+          key = fragment_cache_key(key)
+
+          self.class.benchmark "Cached fragment miss: #{key}" do
+            cache_store.write(key, content, options)
+          end
+
+          content
+        end
+
+        # Reads a cached fragment from the location signified by <tt>key</tt> (see <tt>expire_fragment</tt> for acceptable formats)
+        def read_fragment(key, options = nil)
+          return unless cache_configured?
+
+          key = fragment_cache_key(key)
+
+          self.class.benchmark "Cached fragment hit: #{key}" do
+            cache_store.read(key, options)
+          end
+        end
+
+        # Name can take one of three forms:
+        # * String: This would normally take the form of a path like "pages/45/notes"
+        # * Hash: Is treated as an implicit call to url_for, like { :controller => "pages", :action => "notes", :id => 45 }
+        # * Regexp: Will destroy all the matched fragments, example:
+        #     %r{pages/\d*/notes}
+        #   Ensure you do not specify start and finish in the regex (^$) because
+        #   the actual filename matched looks like ./cache/filename/path.cache
+        #   Regexp expiration is only supported on caches that can iterate over
+        #   all keys (unlike memcached).
+        def expire_fragment(key, options = nil)
+          return unless cache_configured?
+
+          key = fragment_cache_key(key)
+
+          if key.is_a?(Regexp)
+            self.class.benchmark "Expired fragments matching: #{key.source}" do
+              cache_store.delete_matched(key, options)
+            end
+          else
+            self.class.benchmark "Expired fragment: #{key}" do
+              cache_store.delete(key, options)
+            end
+          end
+        end
     end
   end
 end

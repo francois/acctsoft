@@ -1,5 +1,5 @@
 print "Using native PostgreSQL\n"
-require_dependency 'models/course'
+require_dependency 'fixtures/course'
 require 'logger'
 
 ActiveRecord::Base.logger = Logger.new("debug.log")
@@ -7,11 +7,13 @@ ActiveRecord::Base.logger = Logger.new("debug.log")
 ActiveRecord::Base.configurations = {
   'arunit' => {
     :adapter  => 'postgresql',
+    :username => 'postgres',
     :database => 'activerecord_unittest',
     :min_messages => 'warning'
   },
   'arunit2' => {
     :adapter  => 'postgresql',
+    :username => 'postgres',
     :database => 'activerecord_unittest2',
     :min_messages => 'warning'
   }

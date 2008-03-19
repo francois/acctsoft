@@ -1,4 +1,5 @@
-require 'abstract_unit'
+require File.dirname(__FILE__) + '/../../abstract_unit'
+require 'test/unit'
 
 class TagNodeTest < Test::Unit::TestCase
   def test_open_without_attributes

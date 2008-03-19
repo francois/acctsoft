@@ -1,4 +1,4 @@
-require 'abstract_unit'
+require "#{File.dirname(__FILE__)}/../abstract_unit"
 
 uses_mocha 'dispatcher tests' do
 
@@ -11,12 +11,12 @@ class DispatcherTest < Test::Unit::TestCase
     @output = StringIO.new
     ENV['REQUEST_METHOD'] = 'GET'
 
-    Dispatcher.instance_variable_set("@prepare_dispatch_callbacks", ActiveSupport::Callbacks::CallbackChain.new)
+    Dispatcher.callbacks[:prepare].clear
     @dispatcher = Dispatcher.new(@output)
   end
 
   def teardown
-    ENV.delete 'REQUEST_METHOD'
+    ENV['REQUEST_METHOD'] = nil
   end
 
   def test_clears_dependencies_after_dispatch_if_in_loading_mode

@@ -155,10 +155,7 @@ module InflectorTestCases
     'Action Web Service'  => 'Action Web Service',
     'Action web service'  => 'Action Web Service',
     'actionwebservice'    => 'Actionwebservice',
-    'Actionwebservice'    => 'Actionwebservice',
-    "david's code"        => "David's Code",
-    "David's code"        => "David's Code",
-    "david's Code"        => "David's Code"
+    'Actionwebservice'    => 'Actionwebservice'
   }
 
   OrdinalNumbers = {

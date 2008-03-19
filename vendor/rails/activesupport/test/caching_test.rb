@@ -1,6 +1,10 @@
-require 'abstract_unit'
+require File.dirname(__FILE__) + '/abstract_unit'
 
 class CacheStoreSettingTest < Test::Unit::TestCase
+  def teardown
+    ActiveSupport::Cache.lookup_store ActiveSupport::Cache::MemoryStore.new
+  end
+  
   def test_file_fragment_cache_store
     store = ActiveSupport::Cache.lookup_store :file_store, "/path/to/cache/directory"
     assert_kind_of(ActiveSupport::Cache::FileStore, store)
@@ -23,31 +27,5 @@ class CacheStoreSettingTest < Test::Unit::TestCase
     store = ActiveSupport::Cache.lookup_store ActiveSupport::Cache::FileStore.new("/path/to/cache/directory")
     assert_kind_of(ActiveSupport::Cache::FileStore, store)
     assert_equal "/path/to/cache/directory", store.cache_path
-  end
-end
-
-uses_mocha 'high-level cache store tests' do
-  class CacheStoreTest < Test::Unit::TestCase
-    def setup
-      @cache = ActiveSupport::Cache.lookup_store(:memory_store)
-    end
-
-    def test_fetch_without_cache_miss
-      @cache.stubs(:read).with('foo', {}).returns('bar')
-      @cache.expects(:write).never
-      assert_equal 'bar', @cache.fetch('foo') { 'baz' }
-    end
-
-    def test_fetch_with_cache_miss
-      @cache.stubs(:read).with('foo', {}).returns(nil)
-      @cache.expects(:write).with('foo', 'baz', {})
-      assert_equal 'baz', @cache.fetch('foo') { 'baz' }
-    end
-
-    def test_fetch_with_forced_cache_miss
-      @cache.expects(:read).never
-      @cache.expects(:write).with('foo', 'bar', :force => true)
-      @cache.fetch('foo', :force => true) { 'bar' }
-    end
   end
 end

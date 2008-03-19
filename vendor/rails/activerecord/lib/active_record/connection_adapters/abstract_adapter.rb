@@ -30,7 +30,6 @@ module ActiveRecord
         @connection, @logger = connection, logger
         @runtime = 0
         @last_verification = 0
-        @query_cache_enabled = false
       end
 
       # Returns the human-readable name of the adapter.  Use mixed case - one
@@ -66,9 +65,9 @@ module ActiveRecord
 
       # QUOTING ==================================================
 
-      # Override to return the quoted table name. Defaults to column quoting.
+      # Override to return the quoted table name if the database needs it
       def quote_table_name(name)
-        quote_column_name(name)
+        name
       end
 
       # REFERENTIAL INTEGRITY ====================================

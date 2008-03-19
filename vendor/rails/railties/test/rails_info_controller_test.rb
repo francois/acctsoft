@@ -1,4 +1,4 @@
-require 'abstract_unit'
+require "#{File.dirname(__FILE__)}/abstract_unit"
 require 'action_controller'
 require 'action_controller/test_process'
 

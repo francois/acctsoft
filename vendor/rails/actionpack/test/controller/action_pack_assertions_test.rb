@@ -1,4 +1,4 @@
-require 'abstract_unit'
+require File.dirname(__FILE__) + '/../abstract_unit'
 
 # a controller class to facilitate the tests
 class ActionPackAssertionsController < ActionController::Base
@@ -122,15 +122,6 @@ class ActionPackAssertionsController < ActionController::Base
 
   # 911
   def rescue_action(e) raise; end
-end
-
-# Used to test that assert_response includes the exception message
-# in the failure message when an action raises and assert_response
-# is expecting something other than an error.
-class AssertResponseWithUnexpectedErrorController < ActionController::Base
-  def index
-    raise 'FAIL'
-  end
 end
 
 module Admin
@@ -473,15 +464,6 @@ class ActionPackAssertionsControllerTest < Test::Unit::TestCase
       assert false
     rescue Test::Unit::AssertionFailedError => e
     end
-  end
-
-  def test_assert_response_uses_exception_message
-    @controller = AssertResponseWithUnexpectedErrorController.new
-    get :index
-    assert_response :success
-    flunk 'Expected non-success response'
-  rescue Test::Unit::AssertionFailedError => e
-    assert e.message.include?('FAIL')
   end
 end
 

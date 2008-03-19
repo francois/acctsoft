@@ -1,4 +1,4 @@
-require 'abstract_unit'
+require File.dirname(__FILE__) + '/../abstract_unit'
 
 class ExceptionExtTests < Test::Unit::TestCase
 
@@ -60,9 +60,5 @@ class ExceptionExtTests < Test::Unit::TestCase
     e = get_exception RuntimeError, 'RAWR', ['vendor/file.rb some stuff', 'generated/bhal.rb', ' vendor/file.rb some stuff', 'generated/almost all']
     assert_kind_of Exception, e
     assert_equal [], e.application_backtrace
-  end
-
-  def test_frozen_error
-    assert_raise(ActiveSupport::FrozenObjectError) { "foo".freeze.gsub!(/oo/,'aa') }
   end
 end

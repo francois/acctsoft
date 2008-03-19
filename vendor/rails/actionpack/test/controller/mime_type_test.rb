@@ -1,4 +1,4 @@
-require 'abstract_unit'
+require File.dirname(__FILE__) + '/../abstract_unit'
 
 class MimeTypeTest < Test::Unit::TestCase
   Mime::Type.register "image/png", :png
@@ -39,11 +39,6 @@ class MimeTypeTest < Test::Unit::TestCase
     Mime.module_eval { remove_const :GIF if const_defined?(:GIF) }
   end
   
-  def test_type_should_be_equal_to_symbol
-    assert_equal Mime::HTML, 'application/xhtml+xml'
-    assert_equal Mime::HTML, :html
-  end
-
   def test_type_convenience_methods
     types = [:html, :xml, :png, :pdf, :yaml, :url_encoded_form]
     types.each do |type|

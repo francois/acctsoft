@@ -26,12 +26,6 @@ module ActiveSupport
       def values
         collect { |key, value| value }
       end
-
-      def to_hash
-        returning({}) do |hash|
-          each { |array| hash[array[0]] = array[1] }
-        end
-      end
     end
   end
 end

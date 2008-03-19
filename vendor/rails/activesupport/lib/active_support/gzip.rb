@@ -2,7 +2,7 @@ require 'zlib'
 require 'stringio'
 
 module ActiveSupport
-  module Gzip
+  module GZip
     class Stream < StringIO
       def close; rewind; end
     end

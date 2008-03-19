@@ -16,7 +16,11 @@ namespace :db do
         #    <<: *defaults
         next unless config['database']
         # Only connect to local databases
-        local_database?(config) { create_database(config) }
+        if %w( 127.0.0.1 localhost ).include?(config['host']) || config['host'].blank?
+          create_database(config)
+        else
+          p "This task only creates local databases. #{config['database']} is on a remote host."
+        end
       end
     end
   end
@@ -37,10 +41,10 @@ namespace :db do
         @collation = ENV['COLLATION'] || 'utf8_general_ci'
         begin
           ActiveRecord::Base.establish_connection(config.merge({'database' => nil}))
-          ActiveRecord::Base.connection.create_database(config['database'], {:charset => (config['database']['charset'] || @charset), :collation => (config['database']['charset'] || @collation)})
+          ActiveRecord::Base.connection.create_database(config['database'], {:charset => @charset, :collation => @collation})
           ActiveRecord::Base.establish_connection(config)
         rescue
-          $stderr.puts "Couldn't create database for #{config.inspect}, charset: #{@charset}, collation: #{@collation} (if you set the charset manually, make sure you have a matching collation)"
+          $stderr.puts "Couldn't create database for #{config.inspect}"
         end
       when 'postgresql'
         `createdb "#{config['database']}" -E utf8`
@@ -61,29 +65,19 @@ namespace :db do
         # Skip entries that don't have a database key
         next unless config['database']
         # Only connect to local databases
-        local_database?(config) { drop_database(config) }
+        if config['host'] == 'localhost' || config['host'].blank?
+          drop_database(config)
+        else
+          p "This task only drops local databases. #{config['database']} is on a remote host."
+        end
       end
     end
   end
 
   desc 'Drops the database for the current RAILS_ENV'
   task :drop => :environment do
-    config = ActiveRecord::Base.configurations[RAILS_ENV || 'development']
-    begin
-      drop_database(config)
-    rescue Exception => e
-      puts "Couldn't drop #{config['database']} : #{e.inspect}"
-    end
+    drop_database(ActiveRecord::Base.configurations[RAILS_ENV || 'development'])
   end
-
-  def local_database?(config, &block)
-    if %w( 127.0.0.1 localhost ).include?(config['host']) || config['host'].blank?
-      yield
-    else
-      puts "This task only modifies local databases. #{config['database']} is on a remote host."
-    end
-  end
-
 
   desc "Migrate the database through scripts in db/migrate. Target specific version with VERSION=x. Turn off output with VERBOSE=false."
   task :migrate => :environment do
@@ -337,7 +331,9 @@ namespace :db do
 
     desc "Clear the sessions table"
     task :clear => :environment do
-      ActiveRecord::Base.connection.execute "DELETE FROM #{session_table_name}"
+      session_table = 'session'
+      session_table = Inflector.pluralize(session_table) if ActiveRecord::Base.pluralize_table_names
+      ActiveRecord::Base.connection.execute "DELETE FROM #{session_table}"
     end
   end
 end
@@ -347,9 +343,8 @@ def drop_database(config)
   when 'mysql'
     ActiveRecord::Base.connection.drop_database config['database']
   when /^sqlite/
-    FileUtils.rm(File.join(RAILS_ROOT, config['database']))
+    FileUtils.rm_f(File.join(RAILS_ROOT, config['database']))
   when 'postgresql'
-    ActiveRecord::Base.clear_active_connections!    
     `dropdb "#{config['database']}"`
   end
 end

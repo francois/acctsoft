@@ -1,10 +1,7 @@
-require 'abstract_unit'
+require File.dirname(__FILE__) + '/abstract_unit'
 require 'open-uri'
 
-if RUBY_VERSION < '1.9'
-
 $KCODE = 'UTF8'
-
 UNIDATA_URL = "http://www.unicode.org/Public/#{ActiveSupport::Multibyte::UNICODE_VERSION}/ucd"
 UNIDATA_FILE = '/NormalizationTest.txt'
 CACHE_DIR = File.dirname(__FILE__) + '/cache'
@@ -141,6 +138,4 @@ class ConformanceTestPure < Test::Unit::TestCase
   def setup
     @handler = ::ActiveSupport::Multibyte::Handlers::UTF8Handler
   end
-end
-
 end

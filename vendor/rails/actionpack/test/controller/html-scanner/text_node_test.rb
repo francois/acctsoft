@@ -1,4 +1,5 @@
-require 'abstract_unit'
+require File.dirname(__FILE__) + '/../../abstract_unit'
+require 'test/unit'
 
 class TextNodeTest < Test::Unit::TestCase
   def setup

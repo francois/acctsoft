@@ -1,4 +1,4 @@
-require 'abstract_unit'
+require File.dirname(__FILE__) + '/../abstract_unit'
 
 class FlashTest < Test::Unit::TestCase
   class TestController < ActionController::Base

@@ -20,7 +20,7 @@ module ActionController #:nodoc:
   #
   # == Caching stores
   #
-  # All the caching stores from ActiveSupport::Cache is available to be used as backends for Action Controller caching.
+  # All the caching stores from ActiveSupport::Caching is available to be used as backends for Action Controller caching.
   #
   # Configuration examples (MemoryStore is the default):
   #
@@ -46,7 +46,7 @@ module ActionController #:nodoc:
         @@perform_caching = true
         cattr_accessor :perform_caching
 
-        def self.cache_configured?
+        def cache_configured?
           perform_caching && cache_store
         end
       end
@@ -54,7 +54,7 @@ module ActionController #:nodoc:
 
     protected
       # Convenience accessor
-      def cache(key, options = {}, &block)
+      def cache(key, options = nil, &block)
         if cache_configured?
           cache_store.fetch(ActiveSupport::Cache.expand_cache_key(key, :controller), options, &block)
         else

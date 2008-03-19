@@ -1,9 +1,9 @@
 module ActiveSupport #:nodoc:
   module CoreExtensions #:nodoc:
     module Range #:nodoc:
-      # Getting ranges in different convenient string representations and other objects
+      # Getting dates in different convenient string representations and other objects
       module Conversions
-        RANGE_FORMATS = {
+        DATE_FORMATS = {
           :db => Proc.new { |start, stop| "BETWEEN '#{start.to_s(:db)}' AND '#{stop.to_s(:db)}'" }
         }
 
@@ -15,7 +15,7 @@ module ActiveSupport #:nodoc:
         end
 
         def to_formatted_s(format = :default)
-          RANGE_FORMATS[format] ? RANGE_FORMATS[format].call(first, last) : to_default_s
+          DATE_FORMATS[format] ? DATE_FORMATS[format].call(first, last) : to_default_s   
         end
       end
     end

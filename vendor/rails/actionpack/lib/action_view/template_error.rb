@@ -6,11 +6,10 @@ module ActionView
 
     attr_reader :original_exception
 
-    def initialize(template, assigns, original_exception)
-      @base_path = template.base_path_for_exception
-      @assigns, @source, @original_exception = assigns.dup, template.source, original_exception
-      @file_path = template.filename
-      @backtrace = compute_backtrace
+    def initialize(base_path, file_path, assigns, source, original_exception)
+      @base_path, @assigns, @source, @original_exception =
+        base_path, assigns.dup, source, original_exception
+      @file_path = file_path
     end
 
     def message
@@ -41,9 +40,8 @@ module ActionView
 
       indent = ' ' * indentation
       line_counter = start_on_line
-      return unless source_code = source_code[start_on_line..end_on_line] 
-      
-      source_code.sum do |line|
+
+      source_code[start_on_line..end_on_line].sum do |line|
         line_counter += 1
         "#{indent}#{line_counter}: #{line}"
       end
@@ -74,20 +72,14 @@ module ActionView
         "#{source_extract}\n    #{clean_backtrace.join("\n    ")}\n\n"
     end
 
-    # don't do anything nontrivial here. Any raised exception from here becomes fatal 
-    # (and can't be rescued).
     def backtrace
-      @backtrace
+      [
+        "#{source_location.capitalize}\n\n#{source_extract(4)}\n    " +
+        clean_backtrace.join("\n    ")
+      ]
     end
 
     private
-      def compute_backtrace
-        [
-          "#{source_location.capitalize}\n\n#{source_extract(4)}\n    " +
-          clean_backtrace.join("\n    ")
-        ]
-      end
-
       def strip_base_path(path)
         stripped_path = File.expand_path(path).gsub(@base_path, "")
         stripped_path.gsub!(/^#{Regexp.escape File.expand_path(RAILS_ROOT)}/, '') if defined?(RAILS_ROOT)

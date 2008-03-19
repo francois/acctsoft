@@ -56,14 +56,6 @@ module ActionView
       #     form << content_tag("b", "Department")
       #     form << collection_select("department", "id", @departments, "id", "name")
       #   end
-      #
-      # The following options are available:
-      #
-      # * <tt>action</tt> - the action used when submitting the form (default: create if a new record, otherwise update)
-      # * <tt>input_block</tt> - specialize the output using a different block, see above
-      # * <tt>method</tt> - the method used when submitting the form (default: post)
-      # * <tt>multipart</tt> - whether to change the enctype of the form to multipart/form-date, used when uploading a file (default: false)
-      # * <tt>submit_value</tt> - the text of the submit button (default: Create if a new record, otherwise Update)
       def form(record_name, options = {})
         record = instance_variable_get("@#{record_name}")
 
@@ -73,12 +65,13 @@ module ActionView
 
         submit_value = options[:submit_value] || options[:action].gsub(/[^\w]/, '').capitalize
 
-        contents = form_tag({:action => action}, :method =>(options[:method] || 'post'), :enctype => options[:multipart] ? 'multipart/form-data': nil)
+        contents = ''
         contents << hidden_field(record_name, :id) unless record.new_record?
         contents << all_input_tags(record, record_name, options)
         yield contents if block_given?
         contents << submit_tag(submit_value)
-        contents << '</form>'
+
+        content_tag('form', contents, :action => action, :method => 'post', :enctype => options[:multipart] ? 'multipart/form-data': nil)
       end
 
       # Returns a string containing the error message attached to the +method+ on the +object+ if one exists.
@@ -156,7 +149,7 @@ module ActionView
           options[:object_name] ||= params.first
           options[:header_message] = "#{pluralize(count, 'error')} prohibited this #{options[:object_name].to_s.gsub('_', ' ')} from being saved" unless options.include?(:header_message)
           options[:message] ||= 'There were problems with the following fields:' unless options.include?(:message)
-          error_messages = objects.sum {|object| object.errors.full_messages.map {|msg| content_tag(:li, msg) } }.join
+          error_messages = objects.map {|object| object.errors.full_messages.map {|msg| content_tag(:li, msg) } }
 
           contents = ''
           contents << content_tag(options[:header_tag] || :h2, options[:header_message]) unless options[:header_message].blank?
@@ -220,29 +213,29 @@ module ActionView
       end
 
       alias_method :to_date_select_tag_without_error_wrapping, :to_date_select_tag
-      def to_date_select_tag(options = {}, html_options = {})
+      def to_date_select_tag(options = {})
         if object.respond_to?("errors") && object.errors.respond_to?("on")
-          error_wrapping(to_date_select_tag_without_error_wrapping(options, html_options), object.errors.on(@method_name))
+          error_wrapping(to_date_select_tag_without_error_wrapping(options), object.errors.on(@method_name))
         else
-          to_date_select_tag_without_error_wrapping(options, html_options)
+          to_date_select_tag_without_error_wrapping(options)
         end
       end
 
       alias_method :to_datetime_select_tag_without_error_wrapping, :to_datetime_select_tag
-      def to_datetime_select_tag(options = {}, html_options = {})
+      def to_datetime_select_tag(options = {})
         if object.respond_to?("errors") && object.errors.respond_to?("on")
-            error_wrapping(to_datetime_select_tag_without_error_wrapping(options, html_options), object.errors.on(@method_name))
+            error_wrapping(to_datetime_select_tag_without_error_wrapping(options), object.errors.on(@method_name))
           else
-            to_datetime_select_tag_without_error_wrapping(options, html_options)
+            to_datetime_select_tag_without_error_wrapping(options)
         end
       end
 
       alias_method :to_time_select_tag_without_error_wrapping, :to_time_select_tag
-      def to_time_select_tag(options = {}, html_options = {})
+      def to_time_select_tag(options = {})
         if object.respond_to?("errors") && object.errors.respond_to?("on")
-          error_wrapping(to_time_select_tag_without_error_wrapping(options, html_options), object.errors.on(@method_name))
+          error_wrapping(to_time_select_tag_without_error_wrapping(options), object.errors.on(@method_name))
         else
-          to_time_select_tag_without_error_wrapping(options, html_options)
+          to_time_select_tag_without_error_wrapping(options)
         end
       end
 

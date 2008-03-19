@@ -1,12 +1,12 @@
 module ActiveRecord
   # Raised by save! and create! when the record is invalid.  Use the
-  # +record+ method to retrieve the record which did not validate.
+  # record method to retrieve the record which did not validate.
   #   begin
   #     complex_operation_that_calls_save!_internally
   #   rescue ActiveRecord::RecordInvalid => invalid
   #     puts invalid.record.errors
   #   end
-  class RecordInvalid < ActiveRecordError
+  class RecordInvalid < ActiveRecordError #:nodoc:
     attr_reader :record
     def initialize(record)
       @record = record
@@ -279,26 +279,6 @@ module ActiveRecord
         alias_method_chain :save!, :validation
         alias_method_chain :update_attribute, :validation_skipping
       end
-
-      base.send :include, ActiveSupport::Callbacks
-
-      VALIDATIONS.each do |validation_method|
-        base.class_eval <<-"end_eval"
-          def self.#{validation_method}(*methods, &block)
-            methods = CallbackChain.build(:#{validation_method}, *methods, &block)
-            self.#{validation_method}_callback_chain.replace(#{validation_method}_callback_chain | methods)
-          end
-
-          def self.#{validation_method}_callback_chain
-            if chain = read_inheritable_attribute(:#{validation_method})
-              return chain
-            else
-              write_inheritable_attribute(:#{validation_method}, CallbackChain.new)
-              return #{validation_method}_callback_chain
-            end
-          end
-        end_eval
-      end
     end
 
     # All of the following validations are defined in the class scope of the model that you're interested in validating.
@@ -344,6 +324,43 @@ module ActiveRecord
       #   end
       #
       # This usage applies to #validate_on_create and #validate_on_update as well.
+      def validate(*methods, &block)
+        methods << block if block_given?
+        write_inheritable_set(:validate, methods)
+      end
+
+      def validate_on_create(*methods, &block)
+        methods << block if block_given?
+        write_inheritable_set(:validate_on_create, methods)
+      end
+
+      def validate_on_update(*methods, &block)
+        methods << block if block_given?
+        write_inheritable_set(:validate_on_update, methods)
+      end
+
+      def condition_block?(condition)
+        condition.respond_to?("call") && (condition.arity == 1 || condition.arity == -1)
+      end
+
+      # Determine from the given condition (whether a block, procedure, method or string)
+      # whether or not to validate the record.  See #validates_each.
+      def evaluate_condition(condition, record)
+        case condition
+          when Symbol; record.send(condition)
+          when String; eval(condition, record.send(:binding))
+          else
+            if condition_block?(condition)
+              condition.call(record)
+            else
+              raise(
+                ActiveRecordError,
+                "Validations need to be either a symbol, string (to be eval'ed), proc/method, or " +
+                "class implementing a static validation method"
+              )
+            end
+          end
+      end
 
       # Validates each attribute against a block.
       #
@@ -362,17 +379,20 @@ module ActiveRecord
       #   method, proc or string should return or evaluate to a true or false value.
       # * <tt>unless</tt> - Specifies a method, proc or string to call to determine if the validation should
       #   not occur (e.g. :unless => :skip_validation, or :unless => Proc.new { |user| user.signup_step <= 2 }).  The
-      #   method, proc or string should return or evaluate to a true or false value.
+      #   method, proc or string should return or evaluate to a true or false value.      
       def validates_each(*attrs)
         options = attrs.extract_options!.symbolize_keys
         attrs   = attrs.flatten
 
         # Declare the validation.
-        send(validation_method(options[:on] || :save), options) do |record|
-          attrs.each do |attr|
-            value = record.send(attr)
-            next if (value.nil? && options[:allow_nil]) || (value.blank? && options[:allow_blank])
-            yield record, attr, value
+        send(validation_method(options[:on] || :save)) do |record|
+          # Don't validate when there is an :if condition and that condition is false or there is an :unless condition and that condition is true
+          unless (options[:if] && !evaluate_condition(options[:if], record)) || (options[:unless] && evaluate_condition(options[:unless], record))
+            attrs.each do |attr|
+              value = record.send(attr)
+              next if (value.nil? && options[:allow_nil]) || (value.blank? && options[:allow_blank])
+              yield record, attr, value
+            end
           end
         end
       end
@@ -390,7 +410,7 @@ module ActiveRecord
       #     <%= password_field "person", "password_confirmation" %>
       #
       # The added +password_confirmation+ attribute is virtual; it exists only as an in-memory attribute for validating the password.
-      # To achieve this, the validation adds accessors to the model for the confirmation attribute. NOTE: This check is performed
+      # To achieve this, the validation adds acccessors to the model for the confirmation attribute. NOTE: This check is performed
       # only if +password_confirmation+ is not nil, and by default only on save. To require confirmation, make sure to add a presence
       # check for the confirmation attribute:
       #
@@ -478,15 +498,28 @@ module ActiveRecord
       #   not occur (e.g. :unless => :skip_validation, or :unless => Proc.new { |user| user.signup_step <= 2 }).  The
       #   method, proc or string should return or evaluate to a true or false value.
       #
+      # === Warning
+      # Validate the presence of the foreign key, not the instance variable itself.
+      # Do this:
+      #  validates_presence_of :invoice_id
+      #
+      # Not this:
+      #  validates_presence_of :invoice
+      #
+      # If you validate the presence of the associated object, you will get
+      # failures on saves when both the parent object and the child object are
+      # new.
       def validates_presence_of(*attr_names)
         configuration = { :message => ActiveRecord::Errors.default_error_messages[:blank], :on => :save }
         configuration.update(attr_names.extract_options!)
 
         # can't use validates_each here, because it cannot cope with nonexistent attributes,
         # while errors.add_on_empty can
-        send(validation_method(configuration[:on]), configuration) do |record|
-          record.errors.add_on_blank(attr_names, configuration[:message])
-        end
+	send(validation_method(configuration[:on])) do |record|
+	  unless (configuration[:if] && !evaluate_condition(configuration[:if], record)) || (configuration[:unless] && evaluate_condition(configuration[:unless], record))
+	    record.errors.add_on_blank(attr_names, configuration[:message])
+	  end
+	end
       end
 
       # Validates that the specified attribute matches the length restrictions supplied. Only one option can be used at a time:
@@ -600,7 +633,7 @@ module ActiveRecord
       #
       # Because this check is performed outside the database there is still a chance that duplicate values
       # will be inserted in two parallel transactions.  To guarantee against this you should create a 
-      # unique index on the field. See +add_index+ for more information.
+      # unique index on the field. See +create_index+ for more information.
       #
       # Configuration options:
       # * <tt>message</tt> - Specifies a custom error message (default is: "has already been taken")
@@ -620,23 +653,23 @@ module ActiveRecord
 
         validates_each(attr_names,configuration) do |record, attr_name, value|
           if value.nil? || (configuration[:case_sensitive] || !columns_hash[attr_name.to_s].text?)
-            condition_sql = "#{record.class.quoted_table_name}.#{attr_name} #{attribute_condition(value)}"
+            condition_sql = "#{record.class.table_name}.#{attr_name} #{attribute_condition(value)}"
             condition_params = [value]
           else
-            condition_sql = "LOWER(#{record.class.quoted_table_name}.#{attr_name}) #{attribute_condition(value)}"
+            condition_sql = "LOWER(#{record.class.table_name}.#{attr_name}) #{attribute_condition(value)}"
             condition_params = [value.downcase]
           end
 
           if scope = configuration[:scope]
             Array(scope).map do |scope_item|
               scope_value = record.send(scope_item)
-              condition_sql << " AND #{record.class.quoted_table_name}.#{scope_item} #{attribute_condition(scope_value)}"
+              condition_sql << " AND #{record.class.table_name}.#{scope_item} #{attribute_condition(scope_value)}"
               condition_params << scope_value
             end
           end
 
           unless record.new_record?
-            condition_sql << " AND #{record.class.quoted_table_name}.#{record.class.primary_key} <> ?"
+            condition_sql << " AND #{record.class.table_name}.#{record.class.primary_key} <> ?"
             condition_params << record.send(:id)
           end
 
@@ -674,8 +707,6 @@ module ActiveRecord
       #
       # Configuration options:
       # * <tt>message</tt> - A custom error message (default is: "is invalid")
-      # * <tt>allow_nil</tt> - If set to true, skips this validation if the attribute is null (default is: false)
-      # * <tt>allow_blank</tt> - If set to true, skips this validation if the attribute is blank (default is: false)
       # * <tt>with</tt> - The regular expression used to validate the format with (note: must be supplied!)
       # * <tt>on</tt> Specifies when this validation is active (default is :save, other options :create, :update)
       # * <tt>if</tt> - Specifies a method, proc or string to call to determine if the validation should
@@ -880,7 +911,13 @@ module ActiveRecord
         end
       end
 
+
       private
+        def write_inheritable_set(key, methods)
+          existing_methods = read_inheritable_attribute(key) || []
+          write_inheritable_attribute(key, existing_methods | methods)
+        end
+
         def validation_method(on)
           case on
             when :save   then :validate
@@ -922,14 +959,14 @@ module ActiveRecord
     def valid?
       errors.clear
 
-      run_callbacks(:validate)
+      run_validations(:validate)
       validate
 
       if new_record?
-        run_callbacks(:validate_on_create)
+        run_validations(:validate_on_create)
         validate_on_create
       else
-        run_callbacks(:validate_on_update)
+        run_validations(:validate_on_update)
         validate_on_update
       end
 
@@ -952,6 +989,37 @@ module ActiveRecord
 
       # Overwrite this method for validation checks used only on updates.
       def validate_on_update # :doc:
+      end
+
+    private
+      def run_validations(validation_method)
+        validations = self.class.read_inheritable_attribute(validation_method.to_sym)
+        if validations.nil? then return end
+        validations.each do |validation|
+          if validation.is_a?(Symbol)
+            self.send(validation)
+          elsif validation.is_a?(String)
+            eval(validation, binding)
+          elsif validation_block?(validation)
+            validation.call(self)
+          elsif validation_class?(validation, validation_method)
+            validation.send(validation_method, self)
+          else
+            raise(
+              ActiveRecordError,
+              "Validations need to be either a symbol, string (to be eval'ed), proc/method, or " +
+              "class implementing a static validation method"
+            )
+          end
+        end
+      end
+
+      def validation_block?(validation)
+        validation.respond_to?("call") && (validation.arity == 1 || validation.arity == -1)
+      end
+
+      def validation_class?(validation, validation_method)
+        validation.respond_to?(validation_method)
       end
   end
 end

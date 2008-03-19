@@ -43,21 +43,18 @@ module Rails
 
           def usage_message
             usage = "\nInstalled Generators\n"
-            Rails::Generator::Base.sources.inject([]) do |mem, source|
-              # Using an association list instead of a hash to preserve order,
-              # for esthetic reasons more than anything else.
+            Rails::Generator::Base.sources.inject({}) do |mem, source|
               label = source.label.to_s.capitalize
-              pair = mem.assoc(label)
-              mem << (pair = [label, []]) if pair.nil?
-              pair[1] |= source.names
+              mem[label] ||= []
+              mem[label] |= source.names
               mem
-            end.each do |label, names|
+            end.each_pair do |label, names|
               usage << "  #{label}: #{names.join(', ')}\n" unless names.empty?
             end
 
             usage << <<end_blurb
 
-More are available at http://wiki.rubyonrails.org/rails/pages/AvailableGenerators
+More are available at http://rubyonrails.org/show/Generators
   1. Download, for example, login_generator.zip
   2. Unzip to directory #{Dir.user_home}/.rails/generators/login
      to use the generator with all your Rails apps

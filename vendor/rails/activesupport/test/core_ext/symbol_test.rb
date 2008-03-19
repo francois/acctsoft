@@ -1,4 +1,4 @@
-require 'abstract_unit'
+require File.dirname(__FILE__) + '/../abstract_unit'
 
 class SymbolTests < Test::Unit::TestCase
   def test_to_proc

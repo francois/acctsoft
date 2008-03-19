@@ -94,7 +94,7 @@ module ActiveRecord
       def extract_default(default)
         if type == :binary || type == :text
           if default.blank?
-            nil
+            default
           else
             raise ArgumentError, "#{type} columns cannot have a default value: #{default.inspect}"
           end
@@ -110,23 +110,6 @@ module ActiveRecord
           return :boolean if MysqlAdapter.emulate_booleans && field_type.downcase.index("tinyint(1)")
           return :string  if field_type =~ /enum/i
           super
-        end
-
-        def extract_limit(sql_type)
-          if sql_type =~ /blob|text/i
-            case sql_type
-            when /tiny/i
-              255
-            when /medium/i
-              16777215
-            when /long/i
-              2147483647 # mysql only allows 2^31-1, not 2^32-1, somewhat inconsistently with the tiny/medium/normal cases
-            else
-              super # we could return 65535 here, but we leave it undecorated by default
-            end
-          else
-            super
-          end
         end
 
         # MySQL misreports NOT NULL column default when none is given.
@@ -172,14 +155,13 @@ module ActiveRecord
         "Server shutdown in progress",
         "Broken pipe",
         "Lost connection to MySQL server during query",
-        "MySQL server has gone away" ]
-
-      QUOTED_TRUE, QUOTED_FALSE = '1', '0'
+        "MySQL server has gone away"
+      ]
 
       def initialize(connection, logger, connection_options, config)
         super(connection, logger)
         @connection_options, @config = connection_options, config
-        @quoted_column_names, @quoted_table_names = {}, {}
+
         connect
       end
 
@@ -223,11 +205,11 @@ module ActiveRecord
       end
 
       def quote_column_name(name) #:nodoc:
-        @quoted_column_names[name] ||= "`#{name}`"
+        "`#{name}`"
       end
 
       def quote_table_name(name) #:nodoc:
-        @quoted_table_names[name] ||= quote_column_name(name).gsub('.', '`.`')
+        quote_column_name(name).gsub('.', '`.`')
       end
 
       def quote_string(string) #:nodoc:
@@ -235,11 +217,11 @@ module ActiveRecord
       end
 
       def quoted_true
-        QUOTED_TRUE
+        "1"
       end
 
       def quoted_false
-        QUOTED_FALSE
+        "0"
       end
 
       # REFERENTIAL INTEGRITY ====================================

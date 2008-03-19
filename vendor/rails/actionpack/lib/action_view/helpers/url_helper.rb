@@ -251,10 +251,10 @@ module ActionView
       #     <li>About Us</li>
       #   </ul>
       #
-      # ...but if in the "index" action, it will render:
+      # ...but if in the "home" action, it will render:
       #
       #   <ul id="navbar">
-      #     <li>Home</li>
+      #     <li><a href="/controller/index">Home</a></li>
       #     <li><a href="/controller/about">About Us</a></li>
       #   </ul>
       #
@@ -389,8 +389,9 @@ module ActionView
         email_address_obfuscated.gsub!(/\./, html_options.delete("replace_dot")) if html_options.has_key?("replace_dot")
 
         if encode == "javascript"
-          "document.write('#{content_tag("a", name || email_address, html_options.merge({ "href" => "mailto:"+email_address+extras }))}');".each_byte do |c|
-            string << sprintf("%%%x", c)
+          tmp = "document.write('#{content_tag("a", name || email_address, html_options.merge({ "href" => "mailto:"+email_address+extras }))}');"
+          for i in 0...tmp.length
+            string << sprintf("%%%x",tmp[i])
           end
           "<script type=\"#{Mime::JS}\">eval(unescape('#{string}'))</script>"
         elsif encode == "hex"
@@ -402,9 +403,12 @@ module ActionView
           protocol = 'mailto:'
           protocol.each_byte { |c| string << sprintf("&#%d;", c) }
 
-          email_address.each_byte do |c|
-            char = c.chr
-            string << (char =~ /\w/ ? sprintf("%%%x", c) : char)
+          for i in 0...email_address.length
+            if email_address[i,1] =~ /\w/
+              string << sprintf("%%%x",email_address[i])
+            else
+              string << email_address[i,1]
+            end
           end
           content_tag "a", name || email_address_encoded, html_options.merge({ "href" => "#{string}#{extras}" })
         else

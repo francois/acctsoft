@@ -1,4 +1,4 @@
-require 'abstract_unit'
+require  File.dirname(__FILE__) + '/abstract_unit'
 
 # Define the essentials
 class ActiveRecordTestConnector
@@ -84,7 +84,8 @@ class ActiveRecordTestConnector
   end
 end
 
-class ActiveRecordTestCase < ActiveSupport::TestCase
+# Test case for inheritance
+class ActiveRecordTestCase < Test::Unit::TestCase
   # Set our fixture path
   if ActiveRecordTestConnector.able_to_connect
     self.fixture_path = "#{File.dirname(__FILE__)}/fixtures/"
@@ -99,7 +100,9 @@ class ActiveRecordTestCase < ActiveSupport::TestCase
     super if ActiveRecordTestConnector.connected
   end
 
-  def default_test; end
+  # Default so Test::Unit::TestCase doesn't complain
+  def test_truth
+  end
 end
 
 ActiveRecordTestConnector.setup

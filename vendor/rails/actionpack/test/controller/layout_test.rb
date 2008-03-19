@@ -1,4 +1,4 @@
-require 'abstract_unit'
+require File.dirname(__FILE__) + '/../abstract_unit'
 
 # The view_paths array must be set on Base and not LayoutTest so that LayoutTest's inherited
 # method has access to the view_paths array when looking for a layout to automatically assign.
@@ -31,16 +31,16 @@ end
 class MultipleExtensions < LayoutTest
 end
 
-class MabView < ActionView::TemplateHandler
+class MabView
   def initialize(view)
   end
   
-  def render(template)
-    template.source
+  def render(text, locals = {})
+    text
   end
 end
 
-ActionView::Template::register_template_handler :mab, MabView
+ActionView::Base::register_template_handler :mab, MabView
 
 class LayoutAutoDiscoveryTest < Test::Unit::TestCase
   def setup
@@ -67,7 +67,6 @@ class LayoutAutoDiscoveryTest < Test::Unit::TestCase
     get :hello
     assert_equal 'layouts/third_party_template_library', @controller.active_layout
     assert_equal 'layouts/third_party_template_library', @response.layout
-    assert_response :success
     assert_equal 'Mab', @response.body
   end
   

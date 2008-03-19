@@ -111,7 +111,6 @@ module ActiveRecord
       #   Person.average(:age) # SELECT AVG(age) FROM people...
       #   Person.minimum(:age, :conditions => ['last_name != ?', 'Drake']) # Selects the minimum age for everyone with a last name other than 'Drake'
       #   Person.minimum(:age, :having => 'min(age) > 17', :group => :last_name) # Selects the minimum age for any family without any minors
-      #   Person.sum("2 * age")
       def calculate(operation, column_name, options = {})
         validate_calculation_options(operation, options)
         column_name     = options[:select] if options[:select]
@@ -156,7 +155,6 @@ module ActiveRecord
           scope           = scope(:find)
           merged_includes = merge_includes(scope ? scope[:include] : [], options[:include])
           aggregate_alias = column_alias_for(operation, column_name)
-          column_name     = "#{connection.quote_table_name(table_name)}.#{column_name}" if column_names.include?(column_name.to_s)
 
           if operation == 'count'
             if merged_includes.any?
@@ -215,7 +213,7 @@ module ActiveRecord
           group_attr      = options[:group].to_s
           association     = reflect_on_association(group_attr.to_sym)
           associated      = association && association.macro == :belongs_to # only count belongs_to associations
-          group_field     = associated ? association.primary_key_name : group_attr
+          group_field     = (associated ? "#{options[:group]}_id" : options[:group]).to_s
           group_alias     = column_alias_for(group_field)
           group_column    = column_for group_field
           sql             = construct_calculation_sql(operation, column_name, options.merge(:group_field => group_field, :group_alias => group_alias))
@@ -232,8 +230,7 @@ module ActiveRecord
             key   = type_cast_calculated_value(row[group_alias], group_column)
             key   = key_records[key] if associated
             value = row[aggregate_alias]
-            all[key] = type_cast_calculated_value(value, column, operation)
-            all
+            all << [key, type_cast_calculated_value(value, column, operation)]
           end
         end
 

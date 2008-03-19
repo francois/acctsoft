@@ -1,4 +1,4 @@
-require 'plugin_test_helper'
+require File.dirname(__FILE__) + '/plugin_test_helper'
 
 uses_mocha "Plugin Loader Tests" do
 

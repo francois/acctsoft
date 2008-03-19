@@ -1,5 +1,3 @@
-require 'pathname'
-
 require File.dirname(__FILE__) + '/spec'
 
 class Object
@@ -106,10 +104,8 @@ module Rails
           if defined? ::RAILS_ROOT
             sources << PathSource.new(:lib, "#{::RAILS_ROOT}/lib/generators")
             sources << PathSource.new(:vendor, "#{::RAILS_ROOT}/vendor/generators")
-            Rails.configuration.plugin_paths.each do |path|
-              relative_path = Pathname.new(File.expand_path(path)).relative_path_from(Pathname.new(::RAILS_ROOT))
-              sources << PathSource.new(:"plugins (#{relative_path})", "#{path}/**/{,rails_}generators")
-            end
+            sources << PathSource.new(:plugins, "#{::RAILS_ROOT}/vendor/plugins/*/**/generators")
+            sources << PathSource.new(:plugins, "#{::RAILS_ROOT}/vendor/plugins/*/**/rails_generators")
           end
           sources << PathSource.new(:user, "#{Dir.user_home}/.rails/generators")
           if Object.const_defined?(:Gem)
@@ -143,7 +139,7 @@ module Rails
         private
           # Lookup and cache every generator from the source list.
           def cache
-            @cache ||= sources.inject([]) { |cache, source| cache + source.to_a }
+            @cache ||= sources.inject([]) { |cache, source| cache + source.map }
           end
 
           # Clear the cache whenever the source list changes.

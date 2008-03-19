@@ -1,5 +1,6 @@
 require 'date'
 require 'cgi'
+require 'base64'
 require 'builder'
 require 'xmlsimple'
 
@@ -24,25 +25,10 @@ class XmlSimple
   end
 end
 
-# This module exists to decorate files deserialized using Hash.from_xml with
-# the <tt>original_filename</tt> and <tt>content_type</tt> methods.
-module FileLike #:nodoc:
-  attr_writer :original_filename, :content_type
-
-  def original_filename
-    @original_filename || 'untitled'
-  end
-
-  def content_type
-    @content_type || 'application/octet-stream'
-  end
-end
-
 module ActiveSupport #:nodoc:
   module CoreExtensions #:nodoc:
     module Hash #:nodoc:
       module Conversions
-
         XML_TYPE_NAMES = {
           "Symbol"     => "symbol",
           "Fixnum"     => "integer",
@@ -60,7 +46,7 @@ module ActiveSupport #:nodoc:
           "symbol"   => Proc.new { |symbol| symbol.to_s },
           "date"     => Proc.new { |date| date.to_s(:db) },
           "datetime" => Proc.new { |time| time.xmlschema },
-          "binary"   => Proc.new { |binary| ActiveSupport::Base64.encode64(binary) },
+          "binary"   => Proc.new { |binary| Base64.encode64(binary) },
           "yaml"     => Proc.new { |yaml| yaml.to_yaml }
         } unless defined?(XML_FORMATTING)
 
@@ -77,12 +63,12 @@ module ActiveSupport #:nodoc:
             "boolean"      => Proc.new  { |boolean| %w(1 true).include?(boolean.strip) },
             "string"       => Proc.new  { |string|  string.to_s },
             "yaml"         => Proc.new  { |yaml|    YAML::load(yaml) rescue yaml },
-            "base64Binary" => Proc.new  { |bin|     ActiveSupport::Base64.decode64(bin) },
+            "base64Binary" => Proc.new  { |bin|     Base64.decode64(bin) },
+            # FIXME: Get rid of eval and institute a proper decorator here
             "file"         => Proc.new do |file, entity|
-              f = StringIO.new(ActiveSupport::Base64.decode64(file))
-              f.extend(FileLike)
-              f.original_filename = entity['name']
-              f.content_type = entity['content_type']
+              f = StringIO.new(Base64.decode64(file))
+              eval "def f.original_filename() '#{entity["name"]}' || 'untitled' end"
+              eval "def f.content_type()      '#{entity["content_type"]}' || 'application/octet-stream' end"
               f
             end
           }
@@ -211,9 +197,8 @@ module ActiveSupport #:nodoc:
                   elsif value.blank? || value['nil'] == 'true'
                     nil
                   # If the type is the only element which makes it then 
-                  # this still makes the value nil, except if type is
-                  # a xml node(where type['value'] is a Hash)
-                  elsif value['type'] && value.size == 1 && !value['type'].is_a?(::Hash)
+                  # this still makes the value nil
+                  elsif value['type'] && value.size == 1
                     nil
                   else
                     xml_value = value.inject({}) do |h,(k,v)|

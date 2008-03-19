@@ -1,5 +1,5 @@
 print "Using Oracle\n"
-require_dependency 'models/course'
+require_dependency 'fixtures/course'
 require 'logger'
 
 ActiveRecord::Base.logger = Logger.new STDOUT
