@@ -23,6 +23,10 @@ class TxnAccount < ActiveRecord::Base
     self.account.name
   end
 
+  def name=(name)
+    self.account = Account.find_by_name(name)
+  end
+
   def reconcile!(reconciliation)
     self.reconciliation = reconciliation
     self.save!
