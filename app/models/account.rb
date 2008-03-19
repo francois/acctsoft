@@ -64,8 +64,16 @@ class Account < ActiveRecord::Base
       FROM txn_accounts INNER JOIN txns ON txns.id = txn_accounts.txn_id
       WHERE txns.posted_on <= '#{cutoff_date.to_date.to_s(:db)}' AND txn_accounts.account_id = #{self.id} ")
 
-    @total_dt_volume = results['total_dt_volume'].to_money unless @force_dt_total
-    @total_ct_volume = results['total_ct_volume'].to_money unless @force_ct_total
+      @total_dt_volume = if results["total_dt_volume"].blank? then
+                           Money.zero
+                         else
+                           results["total_dt_volume"].to_money unless @force_dt_total
+                         end
+      @total_ct_volume = if results["total_ct_volume"].blank? then
+                           Money.zero
+                         else
+                           results["total_ct_volume"].to_money unless @force_ct_total
+                         end
     @total_volume_cutoff_date = cutoff_date
   end
 end
