@@ -34,7 +34,7 @@ class TransactionsController < ApplicationController
     end
 
     @q = params[:q]
-    @transaction_pages, @transactions = paginate(:txn, options)
+    @transactions = Txn.paginate(:all, options.merge(:page => params[:page]))
   end
 
   def new

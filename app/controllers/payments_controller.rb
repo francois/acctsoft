@@ -1,6 +1,6 @@
 class PaymentsController < ApplicationController
   def index
-    @payments = Payment.find(:all, :order => 'received_on DESC')
+    @payments = Payment.paginate(:all, :order => 'received_on DESC', :page => params[:page])
   end
 
   def new

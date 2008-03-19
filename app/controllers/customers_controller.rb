@@ -1,6 +1,6 @@
 class CustomersController < ApplicationController
   def index
-    @customers = Customer.find(:all, :order => 'name')
+    @customers = Customer.paginate(:all, :order => 'name', :page => params[:page])
   end
 
   def new

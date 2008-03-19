@@ -1,6 +1,6 @@
 class InvoicesController < ApplicationController
   def index
-    @invoices = Invoice.find(:all, :order => 'no DESC')
+    @invoices = Invoice.paginate(:all, :order => 'no DESC', :page => params[:page])
   end
 
   def new
