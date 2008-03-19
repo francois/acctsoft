@@ -2,7 +2,7 @@
 # migrations feature of ActiveRecord to incrementally modify your database, and
 # then regenerate this schema definition.
 
-ActiveRecord::Schema.define(:version => 19) do
+ActiveRecord::Schema.define(:version => 20) do
 
   create_table "account_configurations", :force => true do |t|
     t.column "name",       :string,  :default => "", :null => false
@@ -66,14 +66,15 @@ ActiveRecord::Schema.define(:version => 19) do
   end
 
   create_table "invoice_items", :force => true do |t|
-    t.column "invoice_id",       :integer,  :default => 0, :null => false
-    t.column "position",         :integer,  :default => 0, :null => false
-    t.column "item_id",          :integer,  :default => 0, :null => false
-    t.column "description",      :string
-    t.column "quantity",         :integer,  :default => 0, :null => false
-    t.column "unit_price_cents", :integer,  :default => 0, :null => false
-    t.column "created_at",       :datetime,                :null => false
-    t.column "updated_at",       :datetime,                :null => false
+    t.column "invoice_id",          :integer,               :default => 0,     :null => false
+    t.column "position",            :integer,               :default => 0,     :null => false
+    t.column "item_id",             :integer,               :default => 0,     :null => false
+    t.column "description",         :string
+    t.column "quantity",            :integer,               :default => 0,     :null => false
+    t.column "unit_price_cents",    :integer,               :default => 0,     :null => false
+    t.column "created_at",          :datetime,                                 :null => false
+    t.column "updated_at",          :datetime,                                 :null => false
+    t.column "unit_price_currency", :string,   :limit => 4, :default => "CAD"
   end
 
   create_table "invoice_payments", :force => true do |t|
