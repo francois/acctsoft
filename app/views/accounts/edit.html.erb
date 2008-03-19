@@ -1,6 +1,6 @@
 <% @title = 'Modifier un Compte' %>
-<%= start_form_tag({:action => :update, :id => @account.id}, {:id => 'account'}) %>
+<% form_tag({:action => :update, :id => @account.id}, {:id => 'account'}) do %>
   <%= render :partial => 'form' %>
-<%= end_form_tag %>
+<% end %>
 
 <%= render_component(:action => 'txn_list', :params => {:account_no => @account.no, :force => true}) %>
