@@ -1,23 +1,26 @@
 development:
   adapter: mysql
   database: acctsoft_development
-  username: francois
+  username:
   password:
-  host: ubuntu
+  host: localhost
   port: 3306
+  encoding: utf8
   
 test:
   adapter: mysql
   database: acctsoft_test
-  username: francois
+  username:
   password:
-  host: ubuntu
+  host: localhost
   port: 3306
+  encoding: utf8
 
 production:
   adapter: mysql
   database: acctsoft_production
-  username: acctsoft
+  username:
   password: 
   host: localhost
   port: 3306
+  encoding: utf8
