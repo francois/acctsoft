@@ -9,7 +9,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 19) do
+ActiveRecord::Schema.define(:version => 20) do
 
   create_table "account_configurations", :force => true do |t|
     t.string  "name",       :default => "", :null => false
@@ -73,14 +73,15 @@ ActiveRecord::Schema.define(:version => 19) do
   end
 
   create_table "invoice_items", :force => true do |t|
-    t.integer  "invoice_id",       :default => 0, :null => false
-    t.integer  "position",         :default => 0, :null => false
-    t.integer  "item_id",          :default => 0, :null => false
+    t.integer  "invoice_id",                       :default => 0,     :null => false
+    t.integer  "position",                         :default => 0,     :null => false
+    t.integer  "item_id",                          :default => 0,     :null => false
     t.string   "description"
-    t.integer  "quantity",         :default => 0, :null => false
-    t.integer  "unit_price_cents", :default => 0, :null => false
-    t.datetime "created_at",                      :null => false
-    t.datetime "updated_at",                      :null => false
+    t.integer  "quantity",                         :default => 0,     :null => false
+    t.integer  "unit_price_cents",                 :default => 0,     :null => false
+    t.datetime "created_at",                                          :null => false
+    t.datetime "updated_at",                                          :null => false
+    t.string   "unit_price_currency", :limit => 4, :default => "CAD"
   end
 
   create_table "invoice_payments", :force => true do |t|

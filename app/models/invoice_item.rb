@@ -4,7 +4,7 @@ class InvoiceItem < ActiveRecord::Base
   belongs_to :item
   validates_presence_of :invoice_id, :item_id, :quantity, :unit_price
   acts_as_decimal :quantity, :decimals => 3, :rounding => :ceil
-  composed_of :unit_amount, :class_name => 'Money', :mapping => %w(unit_price_cents cents)
+  acts_as_money :unit_price, :allow_nil => true
 
   def item_no
     self.item.no
@@ -29,14 +29,6 @@ class InvoiceItem < ActiveRecord::Base
 
   def description=(desc)
     write_attribute(:description, desc.blank? ? nil : desc)
-  end
-
-  def unit_price
-    self.unit_amount
-  end
-
-  def unit_price=(amount)
-    self.unit_amount = amount.to_money
   end
 
   def extension_price
