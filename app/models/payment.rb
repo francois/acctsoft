@@ -2,19 +2,11 @@ class Payment < ActiveRecord::Base
   belongs_to :customer
   belongs_to :txn
   has_many :invoices, :class_name => 'InvoicePayment', :dependent => :destroy
-  validates_presence_of :customer_id, :amount, :reference, :received_on
-  composed_of :amount_cents, :class_name => 'Money', :mapping => %w(amount_cents cents)
+  validates_presence_of :customer_id, :amount_cents, :reference, :received_on
+  acts_as_money :amount, :allow_nil => false
 
   def after_initialize
     self.received_on = Date.today unless self.received_on
-  end
-
-  def amount
-    self.amount_cents
-  end
-
-  def amount=(amount)
-    self.amount_cents = amount.to_money
   end
 
   def total_paid
