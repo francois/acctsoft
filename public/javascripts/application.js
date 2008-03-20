@@ -42,4 +42,5 @@ function updateLinePrice(object) {
 
 $(document).ready(function() {
   $(".notice").hide().slideDown("slow");
+  $(".account-selector").autocomplete("/recherche/compte.txt", {autoFill: true});
 });

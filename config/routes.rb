@@ -46,7 +46,7 @@ ActionController::Routing::Routes.draw do |map|
 
   map.items '/items/:action/:id', :controller => 'items'
 
-  map.account_lookup '/recherche/compte', :controller => 'lookup', :action => 'auto_complete_for_account'
+  map.account_lookup '/recherche/compte.:format', :controller => 'lookup', :action => 'auto_complete_for_account', :format => "html"
   map.customer_lookup '/recherche/client', :controller => 'lookup', :action => 'auto_complete_for_customer'
   map.invoice_lookup '/recherche/facture', :controller => 'lookup', :action => 'auto_complete_for_invoice'
 

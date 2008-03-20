@@ -54,25 +54,24 @@ form fieldset .row label { float: left; text-align: right; width: 12em; padding-
 form .actions { margin: 1em 0; padding: .25em; text-align: right; }
 form input[readonly] { background: transparent; border: none; }
 
-div.auto_complete {
-  width: 350px;
+.ac_results {
   background: #fff;
 }
-div.auto_complete ul {
+.ac_results ul {
   border:1px solid #888;
   margin:0;
   padding:0;
   width:100%;
   list-style-type:none;
 }
-div.auto_complete ul li {
+.ac_results li {
   margin:0;
   padding:3px;
 }
-div.auto_complete ul li.selected {
+.ac_results .ac_over {
   background-color: #ffb;
 }
-div.auto_complete ul strong.highlight {
+.ac_results strong {
   color: #800;
   margin:0;
   padding:0;

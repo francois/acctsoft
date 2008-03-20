@@ -2,8 +2,11 @@ class LookupController < ApplicationController
   def auto_complete_for_account
     @accounts = Account.find(:all, :order => 'no', :limit => 20,
         :conditions => ['no LIKE :no OR name LIKE :no OR description LIKE :no',
-            {:no => "#{params[:account]}%"}])
-    render :layout => false
+            {:no => "#{params[:q]}%"}])
+    respond_to do |format|
+      format.html { render :layout => false }
+      format.text { render :text => @accounts.map {|a| [a.no, a.name].join(" ")}.join("\n") }
+    end
   end
 
   def auto_complete_for_customer
