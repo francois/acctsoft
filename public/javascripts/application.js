@@ -43,4 +43,9 @@ function updateLinePrice(object) {
 $(document).ready(function() {
   $(".notice").hide().slideDown("slow");
   $(".account-selector").autocomplete("/recherche/compte.txt", {autoFill: true});
+  $("#txn #list-body input").change(function() {
+    updateGroupTotal('list-body', 'debit', 'txn_dt_volume');
+    updateGroupTotal('list-body', 'credit', 'txn_ct_volume');
+  });
+  $("#txn input:first").focus().select();
 });

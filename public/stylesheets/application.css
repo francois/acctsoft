@@ -76,6 +76,7 @@ form input[readonly] { background: transparent; border: none; }
   margin:0;
   padding:0;
 }
+.ac_loading { background: right no-repeat url(/images/ajax-loader.gif); }
 
 span.money .symbol { display: none; }
 
