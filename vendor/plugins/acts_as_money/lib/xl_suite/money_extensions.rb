@@ -3,9 +3,15 @@ module XlSuite
     def self.included(base)
       base.send :include, InstanceMethods
       base.send :extend, ClassMethods
+      base.send :alias_method_chain, :format, :zero
     end
 
     module InstanceMethods
+      def format_with_zero(*rules)
+        return "" if zero?
+        format_without_zero(*rules)
+      end
+
       def zero?
         self.cents.zero?
       end

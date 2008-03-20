@@ -46,4 +46,9 @@ class MoneyExtensionsTest < Test::Unit::TestCase
   def test_round_to_nearest_dollar
     assert_equal Money.new(1500, "CAD"), "14.53 cad".to_money.round_to_nearest_dollar
   end
+
+  def test_formatting
+    assert_equal "", Money.zero.format
+    assert_equal "$1.01", "1.01 CAD".to_money.format
+  end
 end
