@@ -48,4 +48,13 @@ $(document).ready(function() {
     updateGroupTotal('list-body', 'credit', 'txn_ct_volume');
   });
   $("#txn input:first").focus().select();
+  $("#txn .add-account").click(function() {
+    $.ajax({
+      url: this.href,
+      cache: false,
+      data: $("#txn #new-account input, #txn #new-account select, #txn #new-account textarea").serializeArray(), 
+      dataType: "script"
+    });
+    return false;
+  });
 });

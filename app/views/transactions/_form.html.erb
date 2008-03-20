@@ -31,12 +31,12 @@
           <%= hidden_field_tag 'line_count', @line_count %>
         </td>
         <td>&nbsp;</td>
-        <td class="money"><%= text_field :nline, :debit, :size => 8, :class => 'money' %></td>
-        <td class="money"><%= text_field :nline, :credit, :size => 8, :class => 'money' %></td>
+        <td class="money"><%= text_field :nline, :amount_dt, :size => 8, :class => 'money' %></td>
+        <td class="money"><%= text_field :nline, :amount_ct, :size => 8, :class => 'money' %></td>
       </tr>
       <tr>
         <td colspan="4" align="right">
-          <%= link_to_remote 'Ajouter', :url => {:action => :add_line}, :submit => 'new-account' %>
+          <%= link_to 'Ajouter', {:action => :add_line}, :class => 'add-account' %>
         </td>
       </tr>
     </thead>

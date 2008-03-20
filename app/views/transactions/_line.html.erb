@@ -6,14 +6,14 @@
     <%= hidden_field(:line, :no, :size => 10, :index => index) %>
     <%= link_to(@line.no, account_edit_url(:account_no => @line.account)) %>
     <%= render :partial => 'shared/delete_line',
-          :locals => {:line => @line, :index => index, :fields => %w(no debit credit),
+          :locals => {:line => @line, :index => index, :fields => %w(no amount_dt amount_ct),
                       :url => txn && !txn.new_record? ? delete_transaction_line_url(:txn_id => txn, :line => @line) : nil} %>
   </td>
   <td><%= link_to(@line.name, account_edit_url(:account_no => @line.account)) %></td>
   <td class="money">
-    <%= text_field :line, :debit, :size => 8, :class => 'money debit', :index => index, :value => @line.debit.format(:zero => '') %>
+    <%= text_field :line, :amount_dt, :size => 8, :class => 'money debit', :index => index, :value => @line.amount_dt.format(:zero => '') %>
   </td>
   <td class="money">
-    <%= text_field :line, :credit, :size => 8, :class => 'money credit', :index => index, :value => @line.credit.format(:zero => '') %>
+    <%= text_field :line, :amount_ct, :size => 8, :class => 'money credit', :index => index, :value => @line.amount_ct.format(:zero => '') %>
   </td>
 </tr>

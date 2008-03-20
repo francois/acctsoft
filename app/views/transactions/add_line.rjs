@@ -1,7 +1,6 @@
-page << "$('line_count').value = #{@line_count}"
-page.insert_html :bottom, 'list-body', :partial => 'line',
-    :locals => {:line_counter => @line_count}
-page << "$('nline_no').value = ''"
-page << "$('nline_debit').value = ''"
-page << "$('nline_credit').value = ''"
-page << "Field.focus('nline_no')"
+page << %Q(
+$("#line_count").val(#{ @line_count });
+$("#list-body").append(#{ render(:partial => "line", :locals => {:line_counter => @line_count}).to_json });
+$("#nline_no, #nline_amount_dt, #nline_amount_ct").val("");
+$("#nline_no").focus().select();
+)
