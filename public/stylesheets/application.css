@@ -54,24 +54,25 @@ form fieldset .row label { float: left; text-align: right; width: 12em; padding-
 form .actions { margin: 1em 0; padding: .25em; text-align: right; }
 form input[readonly] { background: transparent; border: none; }
 
-.ac_results {
+/* Autocomplete Styling */
+div.ac_results {
   background: #fff;
 }
-.ac_results ul {
+div.ac_results ul {
   border:1px solid #888;
   margin:0;
   padding:0;
   width:100%;
   list-style-type:none;
 }
-.ac_results li {
+div.ac_results li {
   margin:0;
   padding:3px;
 }
-.ac_results .ac_over {
+div.ac_results .ac_over {
   background-color: #ffb;
 }
-.ac_results strong {
+div.ac_results strong {
   color: #800;
   margin:0;
   padding:0;
