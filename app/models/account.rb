@@ -55,6 +55,10 @@ class Account < ActiveRecord::Base
     self.no.to_s
   end
 
+  def to_s
+    self.name
+  end
+
   def self.find_by_like_name(name)
     find(:first, :conditions => ["name LIKE ?", "#{name}%"], :order => "no")
   end
