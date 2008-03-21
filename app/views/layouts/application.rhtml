@@ -50,6 +50,7 @@
         <td><%= text_field_tag "quicktxn[description]", @quicktxn.description, :id => "quicktxn_description" %></td>
       </tr>
     </table>
+    <p style="display:none" id="error"></p>
   <% end %>
   <div id="content">
 <% unless @title.blank? -%>

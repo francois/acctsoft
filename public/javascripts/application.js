@@ -39,3 +39,45 @@ function updateLinePrice(object) {
   var unit_price = toNumber($F(object + '_unit_price'), 4);
   $(object + '_extension').value = toMoney(quantity * unit_price, 2);
 }
+
+function validateQuickTransaction() {
+  clearQuickTransactionErrors();
+  if ($("#quicktxn #quicktxn_posted_on").val().toString() == "") {
+    return reportQuickTransactionError("quicktxn_posted_on", "Vous devez indiquer une date");
+  } else if ($("#quicktxn #quicktxn_debit_account").val().toString() == "") {
+    return reportQuickTransactionError("quicktxn_debit_account", "Vous devez indiquer le compte débiteur");
+  } else if ($("#quicktxn #quicktxn_credit_account").val().toString() == "") {
+    return reportQuickTransactionError("quicktxn_credit_account", "Vous devez indiquer le compte créditeur");
+  } else if ($("#quicktxn #quicktxn_amount").val().toString() == "") {
+    return reportQuickTransactionError("quicktxn_amount", "Vous devez indiquer un montant");
+  } else if ($("#quicktxn #quicktxn_description").val().toString() == "") {
+    return reportQuickTransactionError("quicktxn_description", "Vous devez indiquer une description");
+  }
+
+  return true;
+}
+
+function reportQuickTransactionError(fieldId, message) {
+  $("#quicktxn #error").html(message).show("fast");
+  $("#quicktxn #" + fieldId).addClass("in-error").focus();
+  return false;
+}
+
+function clearQuickTransactionErrors() {
+  $("#quicktxn #error").hide("fast");
+  $("#quicktxn :input").removeClass("in-error");
+}
+
+$(document).ready(function() {
+  $("#quicktxn :submit").click(validateQuickTransaction);
+  $("#txn .add-account").click(function() {
+    var fields = $("#txn #new-account :input");
+    $.ajax({
+      url: this.href,
+      cache: false,
+      data: fields.serializeArray(), 
+      dataType: "script"
+    });
+    return false;
+  });
+});
