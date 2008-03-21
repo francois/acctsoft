@@ -40,7 +40,7 @@ form input[type=submit] { font-weight: bold; }
 .list thead tr th, .list thead tr td { border-bottom-width: 2px; }
 .list caption { font-size: 1.2em; font-weight: bold; color: #393fcf; text-align: left; }
 .list tfoot { background: #c9cfff; }
-.list tbody tr:hover { background: #dce5ff; }
+.list tbody tr:hover, .list tbody tr.hover { background: #dce5ff; }
 
 a { color: blue; }
 a:visited { color: purple; }

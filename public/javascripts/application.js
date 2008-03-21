@@ -69,6 +69,7 @@ function clearQuickTransactionErrors() {
 }
 
 $(document).ready(function() {
+  $("table.list").listify({hoverClass: "hover"}); // Makes table rows clickable, instead of just the link in the table
   $(".notice").hide().slideDown("slow");
   $(".account-selector").autocomplete("/recherche/compte.txt", {autoFill: true});
   $("#txn input:first").focus().select();
