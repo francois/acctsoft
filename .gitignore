@@ -3,3 +3,4 @@
 *.gz
 *.bz2
 *.swp
+*.pid
