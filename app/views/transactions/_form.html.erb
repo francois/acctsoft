@@ -48,7 +48,7 @@
       </tr>
     </tfoot>
     <tbody id="list-body">
-<%= render :partial => 'line', :collection => @transaction.lines, :locals => {:txn => @transaction} %>
+<%= render :partial => 'transactions/line', :collection => @transaction.lines, :locals => {:txn => @transaction} %>
     </tbody>
   </table>
 </fieldset>
