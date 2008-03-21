@@ -119,3 +119,5 @@ span.money .symbol { display: none; }
 #quicktxn_debit_account, #quicktxn_credit_account { width: 12em; }
 #quicktxn_description { width: 20em; }
 #quicktxn_amount { width: 6em; }
+#quicktxn #error { border: 1px solid red; padding: 3px; font-weight: bold; background: #ffc; }
+#quicktxn .in-error { border: 2px solid red; }
