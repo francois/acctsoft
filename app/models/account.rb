@@ -55,6 +55,17 @@ class Account < ActiveRecord::Base
     self.no.to_s
   end
 
+  def self.find_by_like_name(name)
+    find(:first, :conditions => ["name LIKE ?", "#{name}%"], :order => "no")
+  end
+
+  def self.find_by_no_or_name(no_or_name)
+    account = Account.find_by_no($1) if no_or_name =~ /^(\d+)/
+    account = Account.find_by_name(no_or_name) if account.blank?
+    account = Account.find_by_like_name(no_or_name) if account.blank?
+    account
+  end
+
   protected
   def load_total_from_cache(cutoff_date, force=false)
     return if @force_dt_total and @force_ct_total
