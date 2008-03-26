@@ -1,9 +1,8 @@
 function updateGroupTotal(root, className, target) {
   var total = 0.0;
-
-  var fields = document.getElementsByClassName(className, root);
+  var fields = $("#" + root + " ." + className);
   for (var i = 0; i < fields.length; i++) {
-    match = fields[i].value.match(/(-?\d*\.?\d+?)$/)
+    match = fields[i].value.match(/(-?\d*\.?\d+?)$/);
     if (null == match) continue;
 
     amount = match[1];
@@ -15,7 +14,7 @@ function updateGroupTotal(root, className, target) {
   if (-1 == value.indexOf('.')) value += '.';
   value += '00';
   value = value.substr(0, value.indexOf('.') + 3);
-  $(target).innerHTML = '<span class="money"><span class="symbol">$</span>' + value + '</span>';
+  $("#" + target).html('<span class="money"><span class="symbol">$</span>' + value + '</span>');
 }
 
 function toNumber(value, digits) {
@@ -68,17 +67,18 @@ function clearQuickTransactionErrors() {
   $("#quicktxn :input").removeClass("in-error");
 }
 
+function updateGroupTotals() {
+  updateGroupTotal('list-body', 'debit', 'txn_dt_volume');
+  updateGroupTotal('list-body', 'credit', 'txn_ct_volume');
+}
+
 $(document).ready(function() {
   $("table.list").listify({hoverClass: "hover"}); // Makes table rows clickable, instead of just the link in the table
   $(".notice").hide().slideDown("slow");
   $(".account-selector").autocomplete("/recherche/compte.txt", {autoFill: true});
   $("#txn input:first").focus().select();
   $("#quicktxn :submit").click(validateQuickTransaction);
-
-  $("#txn #list-body input").change(function() {
-    updateGroupTotal('list-body', 'debit', 'txn_dt_volume');
-    updateGroupTotal('list-body', 'credit', 'txn_ct_volume');
-  });
+  $("#accounts #list-body input").change(updateGroupTotals);
 
   $("#txn .add-account").click(function() {
     var fields = $("#txn #new-account :input");
@@ -86,7 +86,8 @@ $(document).ready(function() {
       url: this.href,
       cache: false,
       data: fields.serializeArray(), 
-      dataType: "script"
+      dataType: "script",
+      success: updateGroupTotals
     });
     return false;
   });
