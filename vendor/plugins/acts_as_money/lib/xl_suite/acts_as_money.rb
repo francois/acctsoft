@@ -34,7 +34,7 @@ module XlSuite
             when Money
               self.#{method_name}_amount = value
             when String
-              self.#{method_name}_amount = value.blank? ? nil : value.to_money
+              self.#{method_name}_amount = value.blank? ? Money.zero : value.to_money
             else
               raise ArgumentError, "##{method_name}= expects nil, a Money instance, or a String of the form '15.00 CAD'"
             end
