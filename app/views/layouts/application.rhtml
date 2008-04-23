@@ -27,7 +27,7 @@
     </ul>
   </div>
   <% form_tag(quick_txn_path, :id => "quicktxn") do %>
-    <%= hidden_field_tag "rt", request.url %>
+    <%= hidden_field_tag "rt", @request_url %>
     <table class="dead">
       <caption>Ajout rapide de transaction</caption>
       <tr>

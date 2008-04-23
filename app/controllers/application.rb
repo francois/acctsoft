@@ -1,4 +1,5 @@
 class ApplicationController < ActionController::Base
+  before_filter :load_request_url
   before_filter :load_company
   before_filter :pagination_handler, :only => [:index]
   before_filter :transform_parameters
@@ -41,5 +42,9 @@ class ApplicationController < ActionController::Base
     @quicktxn.debit_account = Account.find(:first)
     @quicktxn.credit_account = @quicktxn.debit_account
     @quicktxn.amount = Money.zero
+  end
+
+  def load_request_url
+    @request_url = request.env["HTTP_REQUEST_URI"]
   end
 end
