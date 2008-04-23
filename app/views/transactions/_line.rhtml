@@ -11,9 +11,9 @@
   </td>
   <td><%= link_to(@line.name, account_edit_url(:account_no => @line.account)) %></td>
   <td class="money">
-    <%= text_field :line, :amount_dt, :size => 8, :class => 'money debit', :index => index, :value => @line.debit.format(:zero => '') %>
+    <%= text_field :line, :amount_dt, :size => 8, :class => 'money debit', :index => index, :value => @line.amount_dt.format(:zero => '') %>
   </td>
   <td class="money">
-    <%= text_field :line, :amount_ct, :size => 8, :class => 'money credit', :index => index, :value => @line.credit.format(:zero => '') %>
+    <%= text_field :line, :amount_ct, :size => 8, :class => 'money credit', :index => index, :value => @line.amount_ct.format(:zero => '') %>
   </td>
 </tr>
