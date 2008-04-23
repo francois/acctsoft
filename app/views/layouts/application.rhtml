@@ -36,7 +36,7 @@
         <th scope="column"><label for="quicktxn_credit_account">Créditer</label></th>
         <th scope="column"><label for="quicktxn_amount">Montant</label></th>
         <th scope="column"><label for="quicktxn_description">Description</label></th>
-        <td rowspan="2" valign="middle"><%= submit_tag "Enregister" %></td>
+        <td rowspan="2" valign="bottom"><%= submit_tag "Enregister" %></td>
       </tr>
       <tr>
         <td><%= text_field_tag "quicktxn[posted_on]", @quicktxn.posted_on, :id => "quicktxn_posted_on" %></td>

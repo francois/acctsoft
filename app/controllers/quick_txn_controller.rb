@@ -1,4 +1,4 @@
-class QuickTxnsController < ApplicationController
+class QuickTxnController < ApplicationController
   def create
     @quicktxn = QuickTxn.new(params[:quicktxn])
     if @quicktxn.save then

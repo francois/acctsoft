@@ -42,15 +42,15 @@ function updateLinePrice(object) {
 
 function validateQuickTransaction() {
   clearQuickTransactionErrors();
-  if ($("#quicktxn #quicktxn_posted_on").val().toString() == "") {
+  if ($F("quicktxn_posted_on") == "") {
     return reportQuickTransactionError("quicktxn_posted_on", "Vous devez indiquer une date");
-  } else if ($("#quicktxn #quicktxn_debit_account").val().toString() == "") {
+  } else if ($F("quicktxn_debit_account") == "") {
     return reportQuickTransactionError("quicktxn_debit_account", "Vous devez indiquer le compte débiteur");
-  } else if ($("#quicktxn #quicktxn_credit_account").val().toString() == "") {
+  } else if ($F("quicktxn_credit_account") == "") {
     return reportQuickTransactionError("quicktxn_credit_account", "Vous devez indiquer le compte créditeur");
-  } else if ($("#quicktxn #quicktxn_amount").val().toString() == "") {
+  } else if ($F("quicktxn_amount") == "") {
     return reportQuickTransactionError("quicktxn_amount", "Vous devez indiquer un montant");
-  } else if ($("#quicktxn #quicktxn_description").val().toString() == "") {
+  } else if ($F("quicktxn_description") == "") {
     return reportQuickTransactionError("quicktxn_description", "Vous devez indiquer une description");
   }
 
@@ -58,26 +58,26 @@ function validateQuickTransaction() {
 }
 
 function reportQuickTransactionError(fieldId, message) {
-  $("#quicktxn #error").html(message).show("fast");
-  $("#quicktxn #" + fieldId).addClass("in-error").focus();
+  $("error").innerHTML = message;
+  new Effect.Appear("error");
+
+  $(fieldId).addClassName("in-error");
+  $(fieldId).focus();
+
   return false;
 }
 
 function clearQuickTransactionErrors() {
-  $("#quicktxn #error").hide("fast");
-  $("#quicktxn :input").removeClass("in-error");
+  new Effect.Fade("error");
+  $$("#quicktxn input").each(function(field) {
+    field.removeClassName("in-error");
+  });
 }
 
-$(document).ready(function() {
-  $("#quicktxn :submit").click(validateQuickTransaction);
-  $("#txn .add-account").click(function() {
-    var fields = $("#txn #new-account :input");
-    $.ajax({
-      url: this.href,
-      cache: false,
-      data: fields.serializeArray(), 
-      dataType: "script"
+Event.observe(window, "load", function() {
+$$("#quicktxn input[type=submit]").each(function(button) {
+    button.observe("click", function(ev) {
+      if (!validateQuickTransaction()) Event.stop(ev);
     });
-    return false;
   });
 });
