@@ -1,6 +1,6 @@
 require File.dirname(__FILE__) + '/../test_helper'
 
-class QuickTxnsControllerTest < ActionController::TestCase
+class QuickTxnsControllerTest < Test::Unit::TestCase
   # Replace this with your real tests.
   def test_truth
     assert true
