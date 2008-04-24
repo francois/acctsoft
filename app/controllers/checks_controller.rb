@@ -17,7 +17,7 @@ class ChecksController < ApplicationController
 
     Check.transaction do
       @check.update_attributes!(params[:check])
-      params[:distribution].each do |id, data|
+      (params[:distribution] || {}).each do |id, data|
         @distribution = @check.distributions.find_by_id(id) || @check.distributions.build
         @distribution.attributes = data
         @distribution.save!
