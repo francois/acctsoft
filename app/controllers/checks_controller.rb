@@ -30,7 +30,6 @@ class ChecksController < ApplicationController
 
     rescue UnbalancedCheckException
       flash_failure :now, "Ce chèque n'est pas balancé.  Il ne peut pas être transféré."
-      flash_failure :now, "Ce chèque n'est pas balancé.  Il ne peut pas être transféré."
 
     rescue ActiveRecord::RecordInvalid
       # NOP - we let the view handle it
