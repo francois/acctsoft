@@ -51,8 +51,8 @@
                 {:url => account_lookup_url, :with => %q('account=' + $F(element)), :skip_style => true, :select => 'no'}) %>
             <%= hidden_field_tag 'line_count', @line_count %>
           </td>
-          <td class="money"><%= text_field :nline, :debit, :size => 8, :class => 'money' %></td>
-          <td class="money"><%= text_field :nline, :credit, :size => 8, :class => 'money' %></td>
+          <td class="money"><%= text_field :nline, :amount_dt, :size => 8, :class => 'money' %></td>
+          <td class="money"><%= text_field :nline, :amount_ct, :size => 8, :class => 'money' %></td>
         </tr>
         <tr>
           <td colspan="4" align="right">
@@ -82,8 +82,8 @@
   </div>
 
 <%= javascript_tag %q(new Form.Observer('check', 0.25, function() {
-    updateGroupTotal('list-body', 'debit', 'check_dt_volume');
-    updateGroupTotal('list-body', 'credit', 'check_ct_volume');
+    updateGroupTotal('list-body', 'amount_dt', 'check_dt_volume');
+    updateGroupTotal('list-body', 'amount_ct', 'check_ct_volume');
   })) %>
 <%= javascript_tag "Form.focusFirstElement('check');" %>
 <% end %>
