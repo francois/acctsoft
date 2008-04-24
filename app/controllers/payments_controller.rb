@@ -51,10 +51,14 @@ class PaymentsController < ApplicationController
   end
 
   def transfer
+    @cash_account = AccountConfiguration.get("Encaisse")
     @payment = Payment.find(params[:payment_id])
     return unless request.post?
 
-    @payment.post!
+    @account = Account.find_by_no(params[:account_no])
+    raise ActiveRecord::RecordNotFound unless @account
+
+    @payment.post!(@account)
     redirect_to :action => :index
 
     rescue

@@ -6,5 +6,11 @@
     <li><span class="amount"><%= format_money(@invoice.amount) %></span> pour la facture <%= link_to @invoice.no, invoice_edit_url(:invoice_no => @invoice) %></li>
 <% end -%>
   </ol>
+
+  <p>Transférer dans le compte:  <%= text_field_tag :account_no, @cash_account.no, :id => :account_no, :size => 12 %>
+  <div class="auto_complete" id="account_no_auto_complete" style="display:none"></div>
+  <%= auto_complete_field :account_no, :url => account_lookup_url, :with => %q('account='+$F(element)), :skip_style => true, :select => 'no' %>
+  </p>
+
   <%= submit_tag 'Transférer' %>
 <%= end_form_tag %>
