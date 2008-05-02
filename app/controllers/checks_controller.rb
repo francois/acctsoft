@@ -16,11 +16,16 @@ class ChecksController < ApplicationController
     return unless request.post?
 
     Check.transaction do
-      @check.update_attributes!(params[:check])
-      (params[:distribution] || {}).each do |id, data|
-        @distribution = @check.distributions.find_by_id(id) || @check.distributions.build
-        @distribution.attributes = data
-        @distribution.save!
+      case
+      when params[:destroy]
+        @check.destroy
+      else
+        @check.update_attributes!(params[:check])
+        (params[:distribution] || {}).each do |id, data|
+          @distribution = @check.distributions.find_by_id(id) || @check.distributions.build
+          @distribution.attributes = data
+          @distribution.save!
+        end
       end
 
       @check.transfer! if params[:transfer]
