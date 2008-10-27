@@ -18,8 +18,8 @@ class String
     currency = matches[0] ? matches[0][0] : Money.default_currency
     
     # Get the cents amount
-    matches = scan /(\-?\d+(\.(\d+))?)/
-    cents = matches[0] ? (matches[0][0].to_f * 100) : 0
+    matches = scan /(\-?\d+([,.](\d+))?)/
+    cents = matches[0] ? (matches[0][0].sub(",", ".").to_f * 100) : 0
     
     Money.new(cents, currency)
   end

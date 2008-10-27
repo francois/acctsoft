@@ -37,4 +37,12 @@ class MoneyTest < Test::Unit::TestCase
     assert_equal -12.to_money, 1.to_money + -13.to_money
     assert_equal -1200.to_money, Money.zero + ('-12'.to_money)
   end
+
+  def test_convert_string_to_money
+    assert_equal Money.new(1211, "CAD"), "12.11".to_money
+  end
+
+  def test_convert_string_to_money_with_comma
+    assert_equal Money.new(1211, "CAD"), "12,11".to_money
+  end
 end
