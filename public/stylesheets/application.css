@@ -46,7 +46,7 @@ a { color: blue; }
 a:visited { color: purple; }
 a:hover { color: blue; background: white; }
 
-form { width: 40em; }
+form { width: 48em; }
 form fieldset { border: none; margin: 1em 0; padding: 0; }
 form fieldset .row { display: block; clear: left; margin: .25em 0; }
 form fieldset label.row { margin-left: 13em; }
