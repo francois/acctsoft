@@ -1,0 +1,2 @@
+* Conciliations need a target debit & credit amount fields so we can know when the conciliation is done;
+* Transactions that have been reconciled should not be modifiable, unless a checkbox says OK;
