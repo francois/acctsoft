@@ -32,4 +32,8 @@ class ReconciliationDestructionTest < Test::Unit::TestCase
       Reconciliation.find(@reconciliation.id)
     end
   end
+
+  def test_done_when_totals_match_target_amounts
+    Reconciliation.
+  end
 end

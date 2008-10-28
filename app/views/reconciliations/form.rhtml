@@ -15,6 +15,14 @@
     <%= label :reconciliation, :description %>
     <%= text_field :reconciliation, :description, :size => 50 %>
   </div>
+  <div class="row">
+    <%= label :reconciliation, :target_amount_dt, "Total des débits" %>
+    <%= text_field :reconciliation, :target_amount_dt, :size => 8 %>
+  </div>
+  <div class="row">
+    <%= label :reconciliation, :target_amount_ct, "Total des crédits" %>
+    <%= text_field :reconciliation, :target_amount_ct, :size => 8 %>
+  </div>
 </fieldset>
 <div class="actions">
   <%= submit_tag 'Enregistrer' %>
@@ -37,9 +45,21 @@
       </tr>
     </thead>
     <tfoot>
-      <th scope="row" colspan="2">Totaux:</th>
-      <td class="money"><%= format_money(@reconciliation.txn_accounts.map(&:amount_ct).compact.inject {|memo, value| memo + value}) %></td>
-      <td class="money"><%= format_money(@reconciliation.txn_accounts.map(&:amount_dt).compact.inject {|memo, value| memo + value}) %></td>
+      <tr>
+        <th scope="row" colspan="2">Totaux:</th>
+        <td class="money"><%= format_money(@reconciliation.txn_accounts.map(&:amount_ct).compact.inject {|memo, value| memo + value}) %></td>
+        <td class="money"><%= format_money(@reconciliation.txn_accounts.map(&:amount_dt).compact.inject {|memo, value| memo + value}) %></td>
+      </tr>
+      <tr>
+        <th scope="row" colspan="2">But:</th>
+        <td class="money"><%= format_money(@reconciliation.target_amount_ct) %></td>
+        <td class="money"><%= format_money(@reconciliation.target_amount_dt) %></td>
+      </tr>
+      <tr id="targets">
+        <th scope="row" colspan="2">But atteint:</th>
+        <td class="money <%= reconciliation_target_amount_ct_class(@reconciliation) %>"><%= reconciliation_label_ct(@reconciliation) %></td>
+        <td class="money <%= reconciliation_target_amount_dt_class(@reconciliation) %>"><%= reconciliation_label_dt(@reconciliation) %></td>
+      </tr>
     </tfoot>
     <tbody id="reconciled_txn_accounts_list">
 <%= render :partial => 'txn_account',

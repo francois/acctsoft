@@ -121,3 +121,6 @@ span.money .symbol { display: none; }
 #quicktxn_amount { width: 6em; }
 #quicktxn #error { border: 1px solid red; padding: 3px; font-weight: bold; background: #ffc; }
 #quicktxn .in-error { border: 2px solid red; }
+
+#reconciled_txn_accounts #targets td { font-weight: bold; background: red; color: white; }
+#reconciled_txn_accounts #targets td.ok { background: #c9cfff; color: #393; text-align: center; }

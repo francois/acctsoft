@@ -5,6 +5,8 @@ class Reconciliation < ActiveRecord::Base
   validates_presence_of :account_id, :reconciled_at, :statement_on
   validates_uniqueness_of :statement_on, :scope => :account_id
 
+  acts_as_money :target_amount_dt, :target_amount_ct, :allow_nil => false
+
   def account_no
     self.account ? self.account.no : nil
   end
@@ -24,5 +26,13 @@ class Reconciliation < ActiveRecord::Base
 
   def amount_ct
     self.txn_accounts.sum(:amount_ct_cents).to_money
+  end
+
+  def debits_match?
+    amount_dt == target_amount_dt
+  end
+
+  def credits_match?
+    amount_ct == target_amount_ct
   end
 end

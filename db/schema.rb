@@ -2,7 +2,7 @@
 # migrations feature of ActiveRecord to incrementally modify your database, and
 # then regenerate this schema definition.
 
-ActiveRecord::Schema.define(:version => 21) do
+ActiveRecord::Schema.define(:version => 22) do
 
   create_table "account_configurations", :force => true do |t|
     t.column "name",       :string,  :default => "", :null => false
@@ -19,7 +19,7 @@ ActiveRecord::Schema.define(:version => 21) do
     t.column "no",           :integer
     t.column "name",         :string
     t.column "description",  :string
-    t.column "account_type", :string,  :limit => 30, :default => "", :null => false
+    t.column "account_type", :string,  :limit => 30, :null => false
   end
 
   create_table "check_distributions", :force => true do |t|
@@ -118,12 +118,16 @@ ActiveRecord::Schema.define(:version => 21) do
   end
 
   create_table "reconciliations", :force => true do |t|
-    t.column "description",   :string
-    t.column "account_id",    :integer,  :default => 0, :null => false
-    t.column "statement_on",  :date,                    :null => false
-    t.column "reconciled_at", :datetime,                :null => false
-    t.column "created_at",    :datetime,                :null => false
-    t.column "updated_at",    :datetime,                :null => false
+    t.column "description",               :string
+    t.column "account_id",                :integer,               :default => 0, :null => false
+    t.column "statement_on",              :date,                                 :null => false
+    t.column "reconciled_at",             :datetime,                             :null => false
+    t.column "created_at",                :datetime,                             :null => false
+    t.column "updated_at",                :datetime,                             :null => false
+    t.column "target_amount_dt_cents",    :integer
+    t.column "target_amount_dt_currency", :string,   :limit => 6
+    t.column "target_amount_ct_cents",    :integer
+    t.column "target_amount_ct_currency", :string,   :limit => 6
   end
 
   create_table "sessions", :force => true do |t|
