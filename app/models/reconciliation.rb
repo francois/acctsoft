@@ -1,6 +1,6 @@
 class Reconciliation < ActiveRecord::Base
   belongs_to :account
-  has_many :txn_accounts, :dependent => :nullify
+  has_many :txn_accounts, :dependent => :nullify, :include => :txn, :order => "txns.posted_on, txns.id"
 
   validates_presence_of :account_id, :reconciled_at, :statement_on
   validates_uniqueness_of :statement_on, :scope => :account_id
