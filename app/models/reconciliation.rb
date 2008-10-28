@@ -35,4 +35,12 @@ class Reconciliation < ActiveRecord::Base
   def credits_match?
     amount_ct == target_amount_ct
   end
+
+  def number_of_debits
+    txn_accounts.map(&:amount_dt).reject(&:zero?).length
+  end
+
+  def number_of_credits
+    txn_accounts.map(&:amount_ct).reject(&:zero?).length
+  end
 end

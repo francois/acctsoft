@@ -3,5 +3,5 @@
   <td><%= link_to_account(reconciliation.account) %></td>
   <td class="money"><%= format_money(reconciliation.amount_ct) %></td>
   <td class="money"><%= format_money(reconciliation.amount_dt) %></td>
-  <td><%= h(reconciliation.description) %></td>
+  <td><%= reconciliation_list_label(reconciliation) %></td>
 </tr>

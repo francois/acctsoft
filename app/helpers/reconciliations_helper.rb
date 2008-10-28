@@ -22,4 +22,18 @@ module ReconciliationsHelper
   def reconciliation_target_amount_ct_class(reconciliation)
     reconciliation.credits_match? ? "ok" : nil
   end
+
+  def reconciliation_list_label(reconciliation)
+    if reconciliation.debits_match? && reconciliation.credits_match? then
+      "OK"
+    elsif !reconciliation.debits_match? && !reconciliation.credits_match? then
+      "À faire"
+    elsif !reconciliation.debits_match? then
+      "Débits à faire"
+    elsif !reconciliation.credits_match? then
+      "Crédits à faire"
+    else
+      "Oops!"
+    end
+  end
 end

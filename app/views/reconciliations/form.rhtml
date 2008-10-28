@@ -60,6 +60,11 @@
         <td class="money <%= reconciliation_target_amount_ct_class(@reconciliation) %>"><%= reconciliation_label_ct(@reconciliation) %></td>
         <td class="money <%= reconciliation_target_amount_dt_class(@reconciliation) %>"><%= reconciliation_label_dt(@reconciliation) %></td>
       </tr>
+      <tr>
+        <th scope="row" colspan="2">Nombre de transactions:</th>
+        <td class="number"><%= number_with_delimiter(@reconciliation.number_of_credits) %></td>
+        <td class="number"><%= number_with_delimiter(@reconciliation.number_of_debits) %></td>
+        </tr>
     </tfoot>
     <tbody id="reconciled_txn_accounts_list">
 <%= render :partial => 'txn_account',
