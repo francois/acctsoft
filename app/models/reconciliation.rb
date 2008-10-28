@@ -19,10 +19,10 @@ class Reconciliation < ActiveRecord::Base
   end
 
   def amount_dt
-    self.txn_accounts.sum(:amount_dt_cents).to_money / 100.0
+    self.txn_accounts.sum(:amount_dt_cents).to_money
   end
 
   def amount_ct
-    self.txn_accounts.sum(:amount_ct_cents).to_money / 100.0
+    self.txn_accounts.sum(:amount_ct_cents).to_money
   end
 end
