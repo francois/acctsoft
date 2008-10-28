@@ -5,6 +5,9 @@ class ReconciliationsController < ApplicationController
 
   def edit
     @reconciliation = params[:id] ? Reconciliation.find(params[:id]) : Reconciliation.new
+
+    @reconciled_txns = @reconciliation.txn_accounts
+    @unconciled_txns = @reconciliation.find_potential_transactions
     return render(:action => :form) unless request.post?
 
     unless params[:destroy].blank? then

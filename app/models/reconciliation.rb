@@ -17,7 +17,7 @@ class Reconciliation < ActiveRecord::Base
 
   def find_potential_transactions
     return [] if self.new_record?
-    self.account.txn_parts.find(:all, :conditions => ['reconciliation_id IS NULL'])
+    self.account.txn_parts.find(:all, :conditions => ['reconciliation_id IS NULL AND txns.posted_on < ?', statement_on.to_time + 7.days])
   end
 
   def amount_dt
@@ -42,5 +42,13 @@ class Reconciliation < ActiveRecord::Base
 
   def number_of_credits
     txn_accounts.map(&:amount_ct).reject(&:zero?).length
+  end
+
+  def reconciled_txns_amount_dt
+    txn_accounts.map(&:amount_dt).compact.sum(Money.zero)
+  end
+
+  def reconciled_txns_amount_ct
+    txn_accounts.map(&:amount_ct).compact.sum(Money.zero)
   end
 end

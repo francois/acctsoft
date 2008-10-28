@@ -47,8 +47,8 @@
     <tfoot>
       <tr>
         <th scope="row" colspan="2">Totaux:</th>
-        <td class="money"><%= format_money(@reconciliation.txn_accounts.map(&:amount_ct).compact.inject {|memo, value| memo + value}) %></td>
-        <td class="money"><%= format_money(@reconciliation.txn_accounts.map(&:amount_dt).compact.inject {|memo, value| memo + value}) %></td>
+        <td class="money"><%= format_money(@reconciliation.reconciled_txns_amount_ct) %></td>
+        <td class="money"><%= format_money(@reconciliation.reconciled_txns_amount_dt) %></td>
       </tr>
       <tr>
         <th scope="row" colspan="2">But:</th>
@@ -68,7 +68,7 @@
     </tfoot>
     <tbody id="reconciled_txn_accounts_list">
 <%= render :partial => 'txn_account',
-      :collection => @reconciliation.txn_accounts,
+      :collection => @reconciled_txns,
       :locals => {:state => :unconcile} %>
     </tbody>
   </table>
@@ -88,7 +88,7 @@
     </thead>
     <tbody id="non_reconciled_txn_accounts_list">
 <%= render :partial => 'txn_account',
-      :collection => @reconciliation.find_potential_transactions,
+      :collection => @unconciled_txns,
       :locals => {:state => :reconcile} %>
     </tbody>
   </table>
