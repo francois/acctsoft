@@ -1,4 +1,4 @@
-<%= start_form_tag(@reconciliation.new_record? ? reconciliation_new_url : reconciliation_edit_url(@reconciliation)) %>
+<% form_tag(@reconciliation.new_record? ? reconciliation_new_url : reconciliation_edit_url(@reconciliation)) do %>
 <fieldset id="reconciliation-form">
   <%= error_messages_for 'reconciliation' %>
   <div class="row">
@@ -93,4 +93,4 @@
     </tbody>
   </table>
 </fieldset>
-<%= end_form_tag %>
+<% end %>

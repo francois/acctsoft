@@ -1,4 +1,4 @@
 <% @title = 'Nouvel item' -%>
-<%= start_form_tag({:action => 'create'}, {:id => 'item'}) %>
+<% form_tag({:action => :create}, :id => :item) do %>
   <%= render :partial => 'form' %>
-<%= end_form_tag %>
+<% end %>

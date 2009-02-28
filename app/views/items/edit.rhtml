@@ -1,4 +1,4 @@
 <% @title = 'Modification d\'item' -%>
-<%= start_form_tag({:action => 'update', :id => @item}, {:id => 'item'}) %>
+<% form_tag(url_for(:action => :update, :id => @item), :id => :item) do %>
   <%= render :partial => 'form' %>
-<%= end_form_tag %>
+<% end %>

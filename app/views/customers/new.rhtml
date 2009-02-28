@@ -1,4 +1,4 @@
 <% @title = 'Nouveau client' -%>
-<%= start_form_tag({:action => 'create'}, {:id => 'customer'})  %>
+<% form_tag({:action => :create}, :id => :customer) do %>
   <%= render :partial => 'form' %>
-<%= end_form_tag %>
+<% end %>

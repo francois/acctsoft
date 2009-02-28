@@ -1,4 +1,4 @@
 <% @title = 'Modification de configuration de compte' -%>
-<%= start_form_tag({:action => :update, :id => @account_configuration.id}, {:id => 'account-configuration'}) %>
+<% form_tag(url_for(:action => :update, :id => @account_configuration.id), :id => "account-configuration") do %>
   <%= render :partial => 'form' %>
-<%= end_form_tag %>
+<% end %>
