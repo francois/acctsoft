@@ -1,5 +1,9 @@
 require File.dirname(__FILE__) + '/../test_helper'
 
+class AccountTest < Test::Unit::TestCase
+  should_have_valid_fixtures
+end
+
 class AccountBalanceTest < Test::Unit::TestCase
   def setup
     @account = Account.new
