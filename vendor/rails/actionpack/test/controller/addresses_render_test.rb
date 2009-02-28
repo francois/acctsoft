@@ -1,7 +1,6 @@
-require File.dirname(__FILE__) + '/../abstract_unit'
+require 'abstract_unit'
 
 class Address
-
   def Address.count(conditions = nil, join = nil)
     nil
   end
@@ -16,13 +15,9 @@ class Address
 end
 
 class AddressesTestController < ActionController::Base
-  scaffold :address
-
   def self.controller_name; "addresses"; end
   def self.controller_path; "addresses"; end
 end
-
-AddressesTestController.template_root = File.dirname(__FILE__) + "/../fixtures/"
 
 class AddressesTest < Test::Unit::TestCase
   def setup
@@ -39,10 +34,7 @@ class AddressesTest < Test::Unit::TestCase
   end
 
   def test_list
-    # because pagination is deprecated
-    ActiveSupport::Deprecation.silence do
-      get :list
-    end
+    get :list
     assert_equal "We only need to get this far!", @response.body.chomp
   end
 end

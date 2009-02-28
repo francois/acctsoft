@@ -1,25 +1,17 @@
 module ActiveSupport
   class OptionMerger #:nodoc:
-    instance_methods.each do |method| 
-      undef_method(method) if method !~ /^(__|instance_eval|class)/
+    instance_methods.each do |method|
+      undef_method(method) if method !~ /^(__|instance_eval|class|object_id)/
     end
-    
+
     def initialize(context, options)
       @context, @options = context, options
     end
-    
+
     private
       def method_missing(method, *arguments, &block)
-        merge_argument_options! arguments
-        @context.send(method, *arguments, &block)
-      end
-      
-      def merge_argument_options!(arguments)
-        arguments << if arguments.last.respond_to? :to_hash
-          @options.merge(arguments.pop)
-        else
-          @options.dup
-        end  
+        arguments << (arguments.last.respond_to?(:to_hash) ? @options.deep_merge(arguments.pop) : @options.dup)
+        @context.__send__(method, *arguments, &block)
       end
   end
 end

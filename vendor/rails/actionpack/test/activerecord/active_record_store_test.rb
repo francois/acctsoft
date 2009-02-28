@@ -1,8 +1,7 @@
 # These tests exercise CGI::Session::ActiveRecordStore, so you're going to
 # need AR in a sibling directory to AP and have SQLite installed.
-require File.dirname(__FILE__) + '/../active_record_unit'
+require 'active_record_unit'
 require 'action_controller/session/active_record_store'
-
 
 module CommonActiveRecordStoreTests
   def test_basics
@@ -53,7 +52,7 @@ class ActiveRecordStoreTest < ActiveRecordTestCase
     @new_session['foo'] = 'bar'
   end
 
-# this test only applies for eager sesssion saving
+# this test only applies for eager session saving
 #  def test_another_instance
 #    @another = CGI::Session.new(@cgi, 'session_id' => @new_session.session_id, 'database_manager' => CGI::Session::ActiveRecordStore)
 #    assert_equal @new_session.session_id, @another.session_id
@@ -66,7 +65,7 @@ class ActiveRecordStoreTest < ActiveRecordTestCase
 
   def test_save_unloaded_session
     c = session_class.connection
-    bogus_class = c.quote(Base64.encode64("\004\010o:\vBlammo\000"))
+    bogus_class = c.quote(ActiveSupport::Base64.encode64("\004\010o:\vBlammo\000"))
     c.insert("INSERT INTO #{session_class.table_name} ('#{session_id_column}', 'data') VALUES ('abcdefghijklmnop', #{bogus_class})")
 
     sess = session_class.find_by_session_id('abcdefghijklmnop')
@@ -128,7 +127,7 @@ end
 
 class SqlBypassActiveRecordStoreTest < ActiveRecordStoreTest
   def session_class
-    unless @session_class
+    unless defined? @session_class
       @session_class = CGI::Session::ActiveRecordStore::SqlBypass
       @session_class.connection = CGI::Session::ActiveRecordStore::Session.connection
     end

@@ -10,14 +10,17 @@ class Module
   end
 end
 
-def helper
-  @helper_proxy ||= Object.new 
+def helper(*helper_names)
+  returning @helper_proxy ||= Object.new do |helper|
+    helper_names.each { |h| helper.extend "#{h}_helper".classify.constantize }
+  end
 end
 
-require 'application'
+require_dependency 'application'
 
 class << helper 
   include_all_modules_from ActionView
 end
 
 @controller = ApplicationController.new
+helper :application rescue nil

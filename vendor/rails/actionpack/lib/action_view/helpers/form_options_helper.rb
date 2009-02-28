@@ -1,6 +1,6 @@
 require 'cgi'
 require 'erb'
-require File.dirname(__FILE__) + '/form_helper'
+require 'action_view/helpers/form_helper'
 
 module ActionView
   module Helpers
@@ -10,7 +10,9 @@ module ActionView
     # and <tt>time_zone_select</tt> methods take an <tt>options</tt> parameter,
     # a hash.
     #
-    # * <tt>:include_blank</tt> - set to true if the first option element of the select element is a blank. Useful if there is not a default value required for the select element. For example,
+    # * <tt>:include_blank</tt> - set to true or a prompt string if the first option element of the select element is a blank. Useful if there is not a default value required for the select element.
+    #
+    # For example,
     #
     #   select("post", "category", Post::CATEGORIES, {:include_blank => true})
     #
@@ -22,18 +24,49 @@ module ActionView
     #     <option>poem</option>
     #   </select>
     #
-    # * <tt>:prompt</tt> - set to true or a prompt string. When the select element doesn't have a value yet, this prepends an option with a generic prompt -- "Please select" -- or the given prompt string.
+    # Another common case is a select tag for an <tt>belongs_to</tt>-associated object.
     #
-    # Another common case is a select tag for an <tt>belongs_to</tt>-associated object. For example,
+    # Example with @post.person_id => 2:
     #
-    #   select("post", "person_id", Person.find(:all).collect {|p| [ p.name, p.id ] })
+    #   select("post", "person_id", Person.find(:all).collect {|p| [ p.name, p.id ] }, {:include_blank => 'None'})
     #
     # could become:
     #
     #   <select name="post[person_id]">
+    #     <option value="">None</option>
+    #     <option value="1">David</option>
+    #     <option value="2" selected="selected">Sam</option>
+    #     <option value="3">Tobias</option>
+    #   </select>
+    #
+    # * <tt>:prompt</tt> - set to true or a prompt string. When the select element doesn't have a value yet, this prepends an option with a generic prompt -- "Please select" -- or the given prompt string.
+    #
+    # Example:
+    #
+    #   select("post", "person_id", Person.find(:all).collect {|p| [ p.name, p.id ] }, {:prompt => 'Select Person'})
+    #
+    # could become:
+    #
+    #   <select name="post[person_id]">
+    #     <option value="">Select Person</option>
     #     <option value="1">David</option>
     #     <option value="2">Sam</option>
     #     <option value="3">Tobias</option>
+    #   </select>
+    # 
+    # Like the other form helpers, +select+ can accept an <tt>:index</tt> option to manually set the ID used in the resulting output. Unlike other helpers, +select+ expects this 
+    # option to be in the +html_options+ parameter.
+    # 
+    # Example: 
+    # 
+    #   select("album[]", "genre", %w[rap rock country], {}, { :index => nil })
+    # 
+    # becomes:
+    # 
+    #   <select name="album[][genre]" id="album__genre">
+    #     <option value="rap">rap</option>
+    #     <option value="rock">rock</option>
+    #     <option value="country">country</option>
     #   </select>
     module FormOptionsHelper
       include ERB::Util
@@ -48,7 +81,7 @@ module ActionView
       # could become:
       #
       #   <select name="post[person_id]">
-      #     <option></option>
+      #     <option value=""></option>
       #     <option value="1" selected="selected">David</option>
       #     <option value="2">Sam</option>
       #     <option value="3">Tobias</option>
@@ -60,20 +93,44 @@ module ActionView
       # This allows the user to submit a form page more than once with the expected results of creating multiple records.
       # In addition, this allows a single partial to be used to generate form inputs for both edit and create forms.
       #
-      # By default, post.person_id is the selected option.  Specify :selected => value to use a different selection
-      # or :selected => nil to leave all options unselected.
+      # By default, <tt>post.person_id</tt> is the selected option.  Specify <tt>:selected => value</tt> to use a different selection
+      # or <tt>:selected => nil</tt> to leave all options unselected.
       def select(object, method, choices, options = {}, html_options = {})
-        InstanceTag.new(object, method, self, nil, options.delete(:object)).to_select_tag(choices, options, html_options)
+        InstanceTag.new(object, method, self, options.delete(:object)).to_select_tag(choices, options, html_options)
       end
 
-      # Return select and option tags for the given object and method using options_from_collection_for_select to generate the list of option tags.
+      # Returns <tt><select></tt> and <tt><option></tt> tags for the collection of existing return values of
+      # +method+ for +object+'s class. The value returned from calling +method+ on the instance +object+ will
+      # be selected. If calling +method+ returns +nil+, no selection is made without including <tt>:prompt</tt>
+      # or <tt>:include_blank</tt> in the +options+ hash.
+      #
+      # The <tt>:value_method</tt> and <tt>:text_method</tt> parameters are methods to be called on each member
+      # of +collection+. The return values are used as the +value+ attribute and contents of each
+      # <tt><option></tt> tag, respectively.
+      # 
+      # Example object structure for use with this method:
+      #   class Post < ActiveRecord::Base
+      #     belongs_to :author
+      #   end
+      #   class Author < ActiveRecord::Base
+      #     has_many :posts
+      #     def name_with_initial
+      #       "#{first_name.first}. #{last_name}"
+      #     end
+      #   end
+      #
+      # Sample usage (selecting the associated Author for an instance of Post, <tt>@post</tt>):
+      #   collection_select(:post, :author_id, Author.find(:all), :id, :name_with_initial, {:prompt => true})
+      #
+      # If <tt>@post.author_id</tt> is already <tt>1</tt>, this would return:
+      #   <select name="post[author_id]">
+      #     <option value="">Please select</option>
+      #     <option value="1" selected="selected">D. Heinemeier Hansson</option>
+      #     <option value="2">D. Thomas</option>
+      #     <option value="3">M. Clark</option>
+      #   </select>
       def collection_select(object, method, collection, value_method, text_method, options = {}, html_options = {})
-        InstanceTag.new(object, method, self, nil, options.delete(:object)).to_collection_select_tag(collection, value_method, text_method, options, html_options)
-      end
-
-      # Return select and option tags for the given object and method, using country_options_for_select to generate the list of option tags.
-      def country_select(object, method, priority_countries = nil, options = {}, html_options = {})
-        InstanceTag.new(object, method, self, nil, options.delete(:object)).to_country_select_tag(priority_countries, options, html_options)
+        InstanceTag.new(object, method, self, options.delete(:object)).to_collection_select_tag(collection, value_method, text_method, options, html_options)
       end
 
       # Return select and option tags for the given object and method, using
@@ -82,16 +139,38 @@ module ActionView
       # In addition to the <tt>:include_blank</tt> option documented above,
       # this method also supports a <tt>:model</tt> option, which defaults
       # to TimeZone. This may be used by users to specify a different time
-      # zone model object. (See #time_zone_options_for_select for more
+      # zone model object. (See +time_zone_options_for_select+ for more
       # information.)
+      #
+      # You can also supply an array of TimeZone objects
+      # as +priority_zones+, so that they will be listed above the rest of the
+      # (long) list. (You can use TimeZone.us_zones as a convenience for
+      # obtaining a list of the US time zones, or a Regexp to select the zones
+      # of your choice)
+      #
+      # Finally, this method supports a <tt>:default</tt> option, which selects
+      # a default TimeZone if the object's time zone is +nil+.
+      #
+      # Examples:
+      #   time_zone_select( "user", "time_zone", nil, :include_blank => true)
+      #
+      #   time_zone_select( "user", "time_zone", nil, :default => "Pacific Time (US & Canada)" )
+      #
+      #   time_zone_select( "user", 'time_zone', TimeZone.us_zones, :default => "Pacific Time (US & Canada)")
+      #
+      #   time_zone_select( "user", 'time_zone', [ TimeZone['Alaska'], TimeZone['Hawaii'] ])
+      #
+      #   time_zone_select( "user", 'time_zone', /Australia/)
+      #
+      #   time_zone_select( "user", "time_zone", TZInfo::Timezone.all.sort, :model => TZInfo::Timezone)
       def time_zone_select(object, method, priority_zones = nil, options = {}, html_options = {})
-        InstanceTag.new(object, method, self, nil, options.delete(:object)).to_time_zone_select_tag(priority_zones, options, html_options)
+        InstanceTag.new(object, method, self,  options.delete(:object)).to_time_zone_select_tag(priority_zones, options, html_options)
       end
 
       # Accepts a container (hash, array, enumerable, your type) and returns a string of option tags. Given a container
       # where the elements respond to first and last (such as a two-element array), the "lasts" serve as option values and
       # the "firsts" as option text. Hashes are turned into this form automatically, so the keys become "firsts" and values
-      # become lasts. If +selected+ is specified, the matching "last" or element will get the selected option-tag.  +Selected+
+      # become lasts. If +selected+ is specified, the matching "last" or element will get the selected option-tag.  +selected+
       # may also be an array of values to be selected when using a multiple select.
       #
       # Examples (call, result):
@@ -112,17 +191,9 @@ module ActionView
         container = container.to_a if Hash === container
 
         options_for_select = container.inject([]) do |options, element|
-          if !element.is_a?(String) and element.respond_to?(:first) and element.respond_to?(:last)
-            is_selected = ( (selected.respond_to?(:include?) && !selected.is_a?(String) ? selected.include?(element.last) : element.last == selected) )
-            if is_selected
-              options << "<option value=\"#{html_escape(element.last.to_s)}\" selected=\"selected\">#{html_escape(element.first.to_s)}</option>"
-            else
-              options << "<option value=\"#{html_escape(element.last.to_s)}\">#{html_escape(element.first.to_s)}</option>"
-            end
-          else
-            is_selected = ( (selected.respond_to?(:include?) && !selected.is_a?(String) ? selected.include?(element) : element == selected) )
-            options << ((is_selected) ? "<option value=\"#{html_escape(element.to_s)}\" selected=\"selected\">#{html_escape(element.to_s)}</option>" : "<option value=\"#{html_escape(element.to_s)}\">#{html_escape(element.to_s)}</option>")
-          end
+          text, value = option_text_and_value(element)
+          selected_attribute = ' selected="selected"' if option_value_selected?(value, selected)
+          options << %(<option value="#{html_escape(value.to_s)}"#{selected_attribute}>#{html_escape(text.to_s)}</option>)
         end
 
         options_for_select.join("\n")
@@ -130,55 +201,66 @@ module ActionView
 
       # Returns a string of option tags that have been compiled by iterating over the +collection+ and assigning the
       # the result of a call to the +value_method+ as the option value and the +text_method+ as the option text.
-      # If +selected_value+ is specified, the element returning a match on +value_method+ will get the selected option tag.
+      # If +selected+ is specified, the element returning a match on +value_method+ will get the selected option tag.
       #
       # Example (call, result). Imagine a loop iterating over each +person+ in <tt>@project.people</tt> to generate an input tag:
       #   options_from_collection_for_select(@project.people, "id", "name")
       #     <option value="#{person.id}">#{person.name}</option>
       #
       # NOTE: Only the option tags are returned, you have to wrap this call in a regular HTML select tag.
-      def options_from_collection_for_select(collection, value_method, text_method, selected_value = nil)
-        options_for_select(
-          collection.inject([]) { |options, object| options << [ object.send(text_method), object.send(value_method) ] },
-          selected_value
-        )
+      def options_from_collection_for_select(collection, value_method, text_method, selected = nil)
+        options = collection.map do |element|
+          [element.send(text_method), element.send(value_method)]
+        end
+        options_for_select(options, selected)
       end
 
-      # Returns a string of option tags, like options_from_collection_for_select, but surrounds them with <optgroup> tags.
+      # Returns a string of <tt><option></tt> tags, like <tt>options_from_collection_for_select</tt>, but
+      # groups them by <tt><optgroup></tt> tags based on the object relationships of the arguments.
       #
-      # An array of group objects are passed. Each group should return an array of options when calling group_method
-      # Each group should return its name when calling group_label_method.
+      # Parameters:
+      # * +collection+ - An array of objects representing the <tt><optgroup></tt> tags.
+      # * +group_method+ - The name of a method which, when called on a member of +collection+, returns an
+      #   array of child objects representing the <tt><option></tt> tags.
+      # * group_label_method+ - The name of a method which, when called on a member of +collection+, returns a
+      #   string to be used as the +label+ attribute for its <tt><optgroup></tt> tag.
+      # * +option_key_method+ - The name of a method which, when called on a child object of a member of
+      #   +collection+, returns a value to be used as the +value+ attribute for its <tt><option></tt> tag.
+      # * +option_value_method+ - The name of a method which, when called on a child object of a member of
+      #   +collection+, returns a value to be used as the contents of its <tt><option></tt> tag.
+      # * +selected_key+ - A value equal to the +value+ attribute for one of the <tt><option></tt> tags,
+      #   which will have the +selected+ attribute set. Corresponds to the return value of one of the calls
+      #   to +option_key_method+. If +nil+, no selection is made.
       #
-      # html_option_groups_from_collection(@continents, "countries", "continent_name", "country_id", "country_name", @selected_country.id)
+      # Example object structure for use with this method:
+      #   class Continent < ActiveRecord::Base
+      #     has_many :countries
+      #     # attribs: id, name
+      #   end
+      #   class Country < ActiveRecord::Base
+      #     belongs_to :continent
+      #     # attribs: id, name, continent_id
+      #   end
       #
-      # Could become:
-      #  <optgroup label="Africa">
-      #   <select>Egypt</select>
-      #   <select>Rwanda</select>
-      #   ...
-      #  </optgroup>
-      #  <optgroup label="Asia">
-      #   <select>China</select>
-      #   <select>India</select>
-      #   <select>Japan</select>
-      #   ...
-      #  </optgroup>
+      # Sample usage:
+      #   option_groups_from_collection_for_select(@continents, :countries, :name, :id, :name, 3)
       #
-      # with objects of the following classes:
-      # class Continent
-      #   def initialize(p_name, p_countries) @continent_name = p_name; @countries = p_countries; end
-      #   def continent_name() @continent_name; end
-      #   def countries() @countries; end
-      # end
-      # class Country
-      #   def initialize(id, name) @id = id; @name = name end
-      #   def country_id() @id; end
-      #   def country_name() @name; end
-      # end
+      # Possible output:
+      #   <optgroup label="Africa">
+      #     <option value="1">Egypt</option>
+      #     <option value="4">Rwanda</option>
+      #     ...
+      #   </optgroup>
+      #   <optgroup label="Asia">
+      #     <option value="3" selected="selected">China</option>
+      #     <option value="12">India</option>
+      #     <option value="5">Japan</option>
+      #     ...
+      #   </optgroup>
       #
-      # NOTE: Only the option tags are returned, you have to wrap this call in a regular HTML select tag.
-      def option_groups_from_collection_for_select(collection, group_method, group_label_method,
-            option_key_method, option_value_method, selected_key = nil)
+      # <b>Note:</b> Only the <tt><optgroup></tt> and <tt><option></tt> tags are returned, so you still have to
+      # wrap the output in an appropriate <tt><select></tt> tag.
+      def option_groups_from_collection_for_select(collection, group_method, group_label_method, option_key_method, option_value_method, selected_key = nil)
         collection.inject("") do |options_for_select, group|
           group_label_string = eval("group.#{group_label_method}")
           options_for_select += "<optgroup label=\"#{html_escape(group_label_string)}\">"
@@ -187,54 +269,36 @@ module ActionView
         end
       end
 
-      # Returns a string of option tags for pretty much any country in the world. Supply a country name as +selected+ to
-      # have it marked as the selected option tag. You can also supply an array of countries as +priority_countries+, so
-      # that they will be listed above the rest of the (long) list.
-      #
-      # NOTE: Only the option tags are returned, you have to wrap this call in a regular HTML select tag.
-      def country_options_for_select(selected = nil, priority_countries = nil)
-        country_options = ""
-
-        if priority_countries
-          country_options += options_for_select(priority_countries, selected)
-          country_options += "<option value=\"\">-------------</option>\n"
-        end
-
-        if priority_countries && priority_countries.include?(selected)
-          country_options += options_for_select(COUNTRIES - priority_countries, selected)
-        else
-          country_options += options_for_select(COUNTRIES, selected)
-        end
-
-        return country_options
-      end
-
       # Returns a string of option tags for pretty much any time zone in the
       # world. Supply a TimeZone name as +selected+ to have it marked as the
       # selected option tag. You can also supply an array of TimeZone objects
       # as +priority_zones+, so that they will be listed above the rest of the
       # (long) list. (You can use TimeZone.us_zones as a convenience for
-      # obtaining a list of the US time zones.)
+      # obtaining a list of the US time zones, or a Regexp to select the zones
+      # of your choice)
       #
       # The +selected+ parameter must be either +nil+, or a string that names
       # a TimeZone.
       #
       # By default, +model+ is the TimeZone constant (which can be obtained
-      # in ActiveRecord as a value object). The only requirement is that the
-      # +model+ parameter be an object that responds to #all, and returns
+      # in Active Record as a value object). The only requirement is that the
+      # +model+ parameter be an object that responds to +all+, and returns
       # an array of objects that represent time zones.
       #
       # NOTE: Only the option tags are returned, you have to wrap this call in
       # a regular HTML select tag.
-      def time_zone_options_for_select(selected = nil, priority_zones = nil, model = TimeZone)
+      def time_zone_options_for_select(selected = nil, priority_zones = nil, model = ::ActiveSupport::TimeZone)
         zone_options = ""
 
         zones = model.all
         convert_zones = lambda { |list| list.map { |z| [ z.to_s, z.name ] } }
 
         if priority_zones
+	        if priority_zones.is_a?(Regexp)
+            priority_zones = model.all.find_all {|z| z =~ priority_zones}
+	        end
           zone_options += options_for_select(convert_zones[priority_zones], selected)
-          zone_options += "<option value=\"\">-------------</option>\n"
+          zone_options += "<option value=\"\" disabled=\"disabled\">-------------</option>\n"
 
           zones = zones.reject { |z| priority_zones.include?( z ) }
         end
@@ -244,51 +308,22 @@ module ActionView
       end
 
       private
-        # All the countries included in the country_options output.
-        COUNTRIES = [ "Afghanistan", "Albania", "Algeria", "American Samoa", "Andorra", "Angola", "Anguilla", 
-            "Antarctica", "Antigua And Barbuda", "Argentina", "Armenia", "Aruba", "Australia", 
-            "Austria", "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", 
-            "Belgium", "Belize", "Benin", "Bermuda", "Bhutan", "Bolivia", "Bosnia and Herzegowina", 
-            "Botswana", "Bouvet Island", "Brazil", "British Indian Ocean Territory", 
-            "Brunei Darussalam", "Bulgaria", "Burkina Faso", "Burma", "Burundi", "Cambodia", 
-            "Cameroon", "Canada", "Cape Verde", "Cayman Islands", "Central African Republic", 
-            "Chad", "Chile", "China", "Christmas Island", "Cocos (Keeling) Islands", "Colombia", 
-            "Comoros", "Congo", "Congo, the Democratic Republic of the", "Cook Islands", 
-            "Costa Rica", "Cote d'Ivoire", "Croatia", "Cuba", "Cyprus", "Czech Republic", "Denmark", 
-            "Djibouti", "Dominica", "Dominican Republic", "East Timor", "Ecuador", "Egypt", 
-            "El Salvador", "England", "Equatorial Guinea", "Eritrea", "Espana", "Estonia", 
-            "Ethiopia", "Falkland Islands", "Faroe Islands", "Fiji", "Finland", "France", 
-            "French Guiana", "French Polynesia", "French Southern Territories", "Gabon", "Gambia", 
-            "Georgia", "Germany", "Ghana", "Gibraltar", "Great Britain", "Greece", "Greenland", 
-            "Grenada", "Guadeloupe", "Guam", "Guatemala", "Guinea", "Guinea-Bissau", "Guyana", 
-            "Haiti", "Heard and Mc Donald Islands", "Honduras", "Hong Kong", "Hungary", "Iceland", 
-            "India", "Indonesia", "Ireland", "Israel", "Italy", "Iran", "Iraq", "Jamaica", "Japan", "Jordan", 
-            "Kazakhstan", "Kenya", "Kiribati", "Korea, Republic of", "Korea (South)", "Kuwait", 
-            "Kyrgyzstan", "Lao People's Democratic Republic", "Latvia", "Lebanon", "Lesotho", 
-            "Liberia", "Liechtenstein", "Lithuania", "Luxembourg", "Macau", "Macedonia", 
-            "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", "Malta", "Marshall Islands", 
-            "Martinique", "Mauritania", "Mauritius", "Mayotte", "Mexico", 
-            "Micronesia, Federated States of", "Moldova, Republic of", "Monaco", "Mongolia", 
-            "Montserrat", "Morocco", "Mozambique", "Myanmar", "Namibia", "Nauru", "Nepal", 
-            "Netherlands", "Netherlands Antilles", "New Caledonia", "New Zealand", "Nicaragua", 
-            "Niger", "Nigeria", "Niue", "Norfolk Island", "Northern Ireland", 
-            "Northern Mariana Islands", "Norway", "Oman", "Pakistan", "Palau", "Panama", 
-            "Papua New Guinea", "Paraguay", "Peru", "Philippines", "Pitcairn", "Poland", 
-            "Portugal", "Puerto Rico", "Qatar", "Reunion", "Romania", "Russia", "Rwanda", 
-            "Saint Kitts and Nevis", "Saint Lucia", "Saint Vincent and the Grenadines", 
-            "Samoa (Independent)", "San Marino", "Sao Tome and Principe", "Saudi Arabia", 
-            "Scotland", "Senegal", "Serbia and Montenegro", "Seychelles", "Sierra Leone", "Singapore", 
-            "Slovakia", "Slovenia", "Solomon Islands", "Somalia", "South Africa", 
-            "South Georgia and the South Sandwich Islands", "South Korea", "Spain", "Sri Lanka", 
-            "St. Helena", "St. Pierre and Miquelon", "Suriname", "Svalbard and Jan Mayen Islands", 
-            "Swaziland", "Sweden", "Switzerland", "Taiwan", "Tajikistan", "Tanzania", "Thailand", 
-            "Togo", "Tokelau", "Tonga", "Trinidad", "Trinidad and Tobago", "Tunisia", "Turkey", 
-            "Turkmenistan", "Turks and Caicos Islands", "Tuvalu", "Uganda", "Ukraine", 
-            "United Arab Emirates", "United Kingdom", "United States", 
-            "United States Minor Outlying Islands", "Uruguay", "Uzbekistan", "Vanuatu", 
-            "Vatican City State (Holy See)", "Venezuela", "Viet Nam", "Virgin Islands (British)", 
-            "Virgin Islands (U.S.)", "Wales", "Wallis and Futuna Islands", "Western Sahara", 
-            "Yemen", "Zambia", "Zimbabwe" ] unless const_defined?("COUNTRIES")
+        def option_text_and_value(option)
+          # Options are [text, value] pairs or strings used for both.
+          if !option.is_a?(String) and option.respond_to?(:first) and option.respond_to?(:last)
+            [option.first, option.last]
+          else
+            [option, option]
+          end
+        end
+
+        def option_value_selected?(value, selected)
+          if selected.respond_to?(:include?) && !selected.is_a?(String)
+            selected.include? value
+          else
+            value == selected
+          end
+        end
     end
 
     class InstanceTag #:nodoc:
@@ -311,20 +346,13 @@ module ActionView
         )
       end
 
-      def to_country_select_tag(priority_countries, options, html_options)
-        html_options = html_options.stringify_keys
-        add_default_name_and_id(html_options)
-        value = value(object)
-        content_tag("select", add_options(country_options_for_select(value, priority_countries), options, value), html_options)
-      end
-
       def to_time_zone_select_tag(priority_zones, options, html_options)
         html_options = html_options.stringify_keys
         add_default_name_and_id(html_options)
         value = value(object)
         content_tag("select",
           add_options(
-            time_zone_options_for_select(value, priority_zones, options[:model] || TimeZone),
+            time_zone_options_for_select(value || options[:default], priority_zones, options[:model] || ActiveSupport::TimeZone),
             options, value
           ), html_options
         )
@@ -332,8 +360,9 @@ module ActionView
 
       private
         def add_options(option_tags, options, value = nil)
-          option_tags = "<option value=\"\"></option>\n" + option_tags if options[:include_blank]
-
+          if options[:include_blank]
+            option_tags = "<option value=\"\">#{options[:include_blank] if options[:include_blank].kind_of?(String)}</option>\n" + option_tags
+          end
           if value.blank? && options[:prompt]
             ("<option value=\"\">#{options[:prompt].kind_of?(String) ? options[:prompt] : 'Please select'}</option>\n") + option_tags
           else
@@ -344,19 +373,15 @@ module ActionView
 
     class FormBuilder
       def select(method, choices, options = {}, html_options = {})
-        @template.select(@object_name, method, choices, options.merge(:object => @object), html_options)
+        @template.select(@object_name, method, choices, objectify_options(options), @default_options.merge(html_options))
       end
 
       def collection_select(method, collection, value_method, text_method, options = {}, html_options = {})
-        @template.collection_select(@object_name, method, collection, value_method, text_method, options.merge(:object => @object), html_options)
-      end
-
-      def country_select(method, priority_countries = nil, options = {}, html_options = {})
-        @template.country_select(@object_name, method, priority_countries, options.merge(:object => @object), html_options)
+        @template.collection_select(@object_name, method, collection, value_method, text_method, objectify_options(options), @default_options.merge(html_options))
       end
 
       def time_zone_select(method, priority_zones = nil, options = {}, html_options = {})
-        @template.time_zone_select(@object_name, method, priority_zones, options.merge(:object => @object), html_options)
+        @template.time_zone_select(@object_name, method, priority_zones, objectify_options(options), @default_options.merge(html_options))
       end
     end
   end

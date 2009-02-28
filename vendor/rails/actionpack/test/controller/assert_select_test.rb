@@ -3,8 +3,8 @@
 # Under MIT and/or CC By license.
 #++
 
-require File.dirname(__FILE__) + '/../abstract_unit'
-require File.dirname(__FILE__) + '/fake_controllers'
+require 'abstract_unit'
+require 'controller/fake_controllers'
 
 
 unless defined?(ActionMailer)
@@ -16,6 +16,8 @@ unless defined?(ActionMailer)
     gem 'actionmailer'
   end
 end
+
+ActionMailer::Base.template_root = FIXTURE_LOAD_PATH
 
 class AssertSelectTest < Test::Unit::TestCase
   class AssertSelectController < ActionController::Base
@@ -69,11 +71,15 @@ class AssertSelectTest < Test::Unit::TestCase
     ActionMailer::Base.deliveries = []
   end
 
-
   def teardown
     ActionMailer::Base.deliveries.clear
   end
 
+  def assert_failure(message, &block)
+    e = assert_raises(AssertionFailedError, &block)
+    assert_match(message, e.message) if Regexp === message
+    assert_equal(message, e.message) if String === message
+  end
 
   #
   # Test assert select.
@@ -82,10 +88,9 @@ class AssertSelectTest < Test::Unit::TestCase
   def test_assert_select
     render_html %Q{<div id="1"></div><div id="2"></div>}
     assert_select "div", 2
-    assert_raises(AssertionFailedError) { assert_select "div", 3 }
-    assert_raises(AssertionFailedError){ assert_select "p" }
+    assert_failure(/Expected at least 3 elements matching \"div\", found 2/) { assert_select "div", 3 }
+    assert_failure(/Expected at least 1 element matching \"p\", found 0/) { assert_select "p" }
   end
-
 
   def test_equality_true_false
     render_html %Q{<div id="1"></div><div id="2"></div>}
@@ -96,7 +101,6 @@ class AssertSelectTest < Test::Unit::TestCase
     assert_raises(AssertionFailedError) { assert_select "div", false }
     assert_nothing_raised               { assert_select "p", false }
   end
-
 
   def test_equality_string_and_regexp
     render_html %Q{<div id="1">foo</div><div id="2">foo</div>}
@@ -110,7 +114,6 @@ class AssertSelectTest < Test::Unit::TestCase
     assert_raises(AssertionFailedError) { assert_select "div", :text=>/foobar/ }
     assert_raises(AssertionFailedError) { assert_select "p", :text=>/foobar/ }
   end
-
 
   def test_equality_of_html
     render_html %Q{<p>\n<em>"This is <strong>not</strong> a big problem,"</em> he said.\n</p>}
@@ -130,25 +133,35 @@ class AssertSelectTest < Test::Unit::TestCase
     assert_raises(AssertionFailedError) { assert_select "pre", :html=>text }
   end
 
-
-  def test_equality_of_instances
+  def test_counts
     render_html %Q{<div id="1">foo</div><div id="2">foo</div>}
     assert_nothing_raised               { assert_select "div", 2 }
-    assert_raises(AssertionFailedError) { assert_select "div", 3 }
+    assert_failure(/Expected at least 3 elements matching \"div\", found 2/) do
+      assert_select "div", 3
+    end
     assert_nothing_raised               { assert_select "div", 1..2 }
-    assert_raises(AssertionFailedError) { assert_select "div", 3..4 }
+    assert_failure(/Expected between 3 and 4 elements matching \"div\", found 2/) do
+      assert_select "div", 3..4
+    end
     assert_nothing_raised               { assert_select "div", :count=>2 }
-    assert_raises(AssertionFailedError) { assert_select "div", :count=>3 }
+    assert_failure(/Expected at least 3 elements matching \"div\", found 2/) do
+      assert_select "div", :count=>3
+    end
     assert_nothing_raised               { assert_select "div", :minimum=>1 }
     assert_nothing_raised               { assert_select "div", :minimum=>2 }
-    assert_raises(AssertionFailedError) { assert_select "div", :minimum=>3 }
+    assert_failure(/Expected at least 3 elements matching \"div\", found 2/) do
+      assert_select "div", :minimum=>3
+    end
     assert_nothing_raised               { assert_select "div", :maximum=>2 }
     assert_nothing_raised               { assert_select "div", :maximum=>3 }
-    assert_raises(AssertionFailedError) { assert_select "div", :maximum=>1 }
+    assert_failure(/Expected at most 1 element matching \"div\", found 2/) do
+      assert_select "div", :maximum=>1
+    end
     assert_nothing_raised               { assert_select "div", :minimum=>1, :maximum=>2 }
-    assert_raises(AssertionFailedError) { assert_select "div", :minimum=>3, :maximum=>4 }
+    assert_failure(/Expected between 3 and 4 elements matching \"div\", found 2/) do
+      assert_select "div", :minimum=>3, :maximum=>4
+    end
   end
-
 
   def test_substitution_values
     render_html %Q{<div id="1">foo</div><div id="2">foo</div>}
@@ -164,7 +177,6 @@ class AssertSelectTest < Test::Unit::TestCase
     end
   end
 
-  
   def test_nested_assert_select
     render_html %Q{<div id="1">foo</div><div id="2">foo</div>}
     assert_select "div" do |elements|
@@ -183,8 +195,13 @@ class AssertSelectTest < Test::Unit::TestCase
         assert_select "#3", false
       end
     end
-  end
 
+    assert_failure(/Expected at least 1 element matching \"#4\", found 0\./) do
+      assert_select "div" do
+        assert_select "#4"
+      end
+    end
+  end
 
   def test_assert_select_text_match
     render_html %Q{<div id="1"><span>foo</span></div><div id="2"><span>bar</span></div>}
@@ -201,7 +218,6 @@ class AssertSelectTest < Test::Unit::TestCase
       assert_raises(AssertionFailedError) { assert_select "div", :html=>"<span>foo</span>", :count=>2 }
     end
   end
-
 
   # With single result.
   def test_assert_select_from_rjs_with_single_result
@@ -232,18 +248,15 @@ class AssertSelectTest < Test::Unit::TestCase
     end
   end
 
-
   #
   # Test css_select.
   #
-
 
   def test_css_select
     render_html %Q{<div id="1"></div><div id="2"></div>}
     assert 2, css_select("div").size
     assert 0, css_select("p").size
   end
-
 
   def test_nested_css_select
     render_html %Q{<div id="1">foo</div><div id="2">foo</div>}
@@ -262,7 +275,6 @@ class AssertSelectTest < Test::Unit::TestCase
       end
     end
   end
-
 
   # With one result.
   def test_css_select_from_rjs_with_single_result
@@ -286,11 +298,9 @@ class AssertSelectTest < Test::Unit::TestCase
     assert_equal 1, css_select("#2").size
   end
 
-
   #
   # Test assert_select_rjs.
   #
-
 
   # Test that we can pick up all statements in the result.
   def test_assert_select_rjs_picks_up_all_statements
@@ -322,10 +332,17 @@ class AssertSelectTest < Test::Unit::TestCase
       page.replace "test", "<div id=\"1\">\343\203\201\343\202\261\343\203\203\343\203\210</div>"
     end
     assert_select_rjs do
-      assert_select "#1", :text => "\343\203\201\343\202\261\343\203\203\343\203\210"
-      assert_select "#1", "\343\203\201\343\202\261\343\203\203\343\203\210"
-      assert_select "#1", Regexp.new("\343\203\201..\343\203\210",0,'U')
-      assert_raises(AssertionFailedError) { assert_select "#1", Regexp.new("\343\203\201.\343\203\210",0,'U') }
+      str = "#1"
+      assert_select str, :text => "\343\203\201\343\202\261\343\203\203\343\203\210"
+      assert_select str, "\343\203\201\343\202\261\343\203\203\343\203\210"
+      if str.respond_to?(:force_encoding)
+        str.force_encoding(Encoding::UTF_8)
+        assert_select str, /\343\203\201..\343\203\210/u
+        assert_raises(AssertionFailedError) { assert_select str, /\343\203\201.\343\203\210/u }
+      else
+        assert_select str, Regexp.new("\343\203\201..\343\203\210",0,'U')
+        assert_raises(AssertionFailedError) { assert_select str, Regexp.new("\343\203\201.\343\203\210",0,'U') }
+      end
     end
   end
 
@@ -350,7 +367,6 @@ class AssertSelectTest < Test::Unit::TestCase
     end
     assert_raises(AssertionFailedError) { assert_select_rjs "test4" }
   end
-
 
   def test_assert_select_rjs_for_replace
     render_rjs do |page|
@@ -408,6 +424,134 @@ class AssertSelectTest < Test::Unit::TestCase
     assert_raises(AssertionFailedError) { assert_select_rjs :replace_html, "test1" }
   end
 
+  # Simple remove
+  def test_assert_select_rjs_for_remove
+    render_rjs do |page|
+      page.remove "test1"
+    end
+
+    assert_select_rjs :remove, "test1"
+  end
+
+  def test_assert_select_rjs_for_remove_offers_useful_error_when_assertion_fails
+    render_rjs do |page|
+      page.remove "test_with_typo"
+    end
+
+    assert_select_rjs :remove, "test1"
+
+    rescue Test::Unit::AssertionFailedError
+      assert_equal "No RJS statement that removes 'test1' was rendered.", $!.message
+  end
+
+  def test_assert_select_rjs_for_remove_ignores_block
+    render_rjs do |page|
+      page.remove "test1"
+    end
+
+    assert_nothing_raised do
+      assert_select_rjs :remove, "test1" do
+        assert_select "p"
+      end
+    end
+  end
+
+  # Simple show
+  def test_assert_select_rjs_for_show
+    render_rjs do |page|
+      page.show "test1"
+    end
+
+    assert_select_rjs :show, "test1"
+  end
+
+  def test_assert_select_rjs_for_show_offers_useful_error_when_assertion_fails
+    render_rjs do |page|
+      page.show "test_with_typo"
+    end
+
+    assert_select_rjs :show, "test1"
+
+    rescue Test::Unit::AssertionFailedError
+      assert_equal "No RJS statement that shows 'test1' was rendered.", $!.message
+  end
+
+  def test_assert_select_rjs_for_show_ignores_block
+    render_rjs do |page|
+      page.show "test1"
+    end
+
+    assert_nothing_raised do
+      assert_select_rjs :show, "test1" do
+        assert_select "p"
+      end
+    end
+  end
+
+  # Simple hide
+  def test_assert_select_rjs_for_hide
+    render_rjs do |page|
+      page.hide "test1"
+    end
+
+    assert_select_rjs :hide, "test1"
+  end
+
+  def test_assert_select_rjs_for_hide_offers_useful_error_when_assertion_fails
+    render_rjs do |page|
+      page.hide "test_with_typo"
+    end
+
+    assert_select_rjs :hide, "test1"
+
+    rescue Test::Unit::AssertionFailedError
+      assert_equal "No RJS statement that hides 'test1' was rendered.", $!.message
+  end
+
+  def test_assert_select_rjs_for_hide_ignores_block
+    render_rjs do |page|
+      page.hide "test1"
+    end
+
+    assert_nothing_raised do
+      assert_select_rjs :hide, "test1" do
+        assert_select "p"
+      end
+    end
+  end
+
+  # Simple toggle
+  def test_assert_select_rjs_for_toggle
+    render_rjs do |page|
+      page.toggle "test1"
+    end
+
+    assert_select_rjs :toggle, "test1"
+  end
+
+  def test_assert_select_rjs_for_toggle_offers_useful_error_when_assertion_fails
+    render_rjs do |page|
+      page.toggle "test_with_typo"
+    end
+
+    assert_select_rjs :toggle, "test1"
+
+    rescue Test::Unit::AssertionFailedError
+      assert_equal "No RJS statement that toggles 'test1' was rendered.", $!.message
+  end
+
+  def test_assert_select_rjs_for_toggle_ignores_block
+    render_rjs do |page|
+      page.toggle "test1"
+    end
+
+    assert_nothing_raised do
+      assert_select_rjs :toggle, "test1" do
+        assert_select "p"
+      end
+    end
+  end
+
   # Non-positioned insert.
   def test_assert_select_rjs_for_nonpositioned_insert
     render_rjs do |page|
@@ -455,6 +599,10 @@ class AssertSelectTest < Test::Unit::TestCase
     end
   end
 
+  def test_assert_select_rjs_raise_errors
+    assert_raises(ArgumentError) { assert_select_rjs(:destroy) }
+    assert_raises(ArgumentError) { assert_select_rjs(:insert, :left) }
+  end
 
   # Simple selection from a single result.
   def test_nested_assert_select_rjs_with_single_result
@@ -486,7 +634,6 @@ class AssertSelectTest < Test::Unit::TestCase
       assert_select "#2"
     end
   end
-
 
   def test_feed_item_encoded
     render_xml <<-EOF
@@ -541,7 +688,6 @@ EOF
     end
   end
 
-
   #
   # Test assert_select_email
   #
@@ -556,7 +702,6 @@ EOF
       end
     end
   end
-
 
   protected
     def render_html(html)

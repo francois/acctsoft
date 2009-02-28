@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/abstract_unit'
+require 'abstract_unit'
 
 class OptionMergerTest < Test::Unit::TestCase
   def setup
@@ -35,6 +35,33 @@ class OptionMergerTest < Test::Unit::TestCase
     with_options(local_options) do |o|
       assert_equal local_options.merge(@options),
         o.method_with_options(@options)
+    end
+  end
+
+  def test_nested_method_with_options_containing_hashes_merge
+    with_options :conditions => { :method => :get } do |outer|
+      outer.with_options :conditions => { :domain => "www" } do |inner|
+        expected = { :conditions => { :method => :get, :domain => "www" } }
+        assert_equal expected, inner.method_with_options
+      end
+    end
+  end
+
+  def test_nested_method_with_options_containing_hashes_overwrite
+    with_options :conditions => { :method => :get, :domain => "www" } do |outer|
+      outer.with_options :conditions => { :method => :post } do |inner|
+        expected = { :conditions => { :method => :post, :domain => "www" } }
+        assert_equal expected, inner.method_with_options
+      end
+    end
+  end
+
+  def test_nested_method_with_options_containing_hashes_going_deep
+    with_options :html => { :class => "foo", :style => { :margin => 0, :display => "block" } } do |outer|
+      outer.with_options :html => { :title => "bar", :style => { :margin => "1em", :color => "#fff" } } do |inner|
+        expected = { :html => { :class => "foo", :title => "bar", :style => { :margin => "1em", :display => "block", :color => "#fff" } } }
+        assert_equal expected, inner.method_with_options
+      end
     end
   end
 
