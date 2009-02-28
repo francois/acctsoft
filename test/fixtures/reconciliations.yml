@@ -1,0 +1,11 @@
+chash_october:
+  id: 13
+  account_id: 1
+  statement_on: 2008-10-09
+  reconciled_at:
+  created_at: <%= 5.days.ago.utc %>
+  updated_at: <%= Time.now.utc %>
+  target_amount_dt_cents:    20841
+  target_amount_dt_currency: CAD
+  target_amount_ct_cents:    19432
+  target_amount_ct_currency: CAD
