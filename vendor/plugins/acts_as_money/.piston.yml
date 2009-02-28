@@ -1,7 +1,8 @@
 --- 
 format: 1
 handler: 
-  piston:remote-revision: 10519
-  piston:root: https://svn.xlsuite.org/internal/weputuplights.com/trunk/vendor/plugins/acts_as_money
+  piston:remote-revision: 15551
   piston:uuid: bacab573-a924-0410-b505-ece3e248c36b
+repository_url: https://svn.xlsuite.org/internal/weputuplights.com/trunk/vendor/plugins/acts_as_money
 lock: false
+repository_class: Piston::Svn::Repository

@@ -8,7 +8,7 @@ module XlSuite
 
     module InstanceMethods
       def format_with_zero(*rules)
-        return "" if zero?
+        return "" if zero? unless rules.include?(:no_blank)
         format_without_zero(*rules)
       end
 
@@ -18,6 +18,10 @@ module XlSuite
 
       def nonzero?
         !self.zero?
+      end
+      
+      def blank?
+        self.cents.blank?
       end
 
       def round_to_nearest_dollar
