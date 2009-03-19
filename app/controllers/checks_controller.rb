@@ -31,6 +31,7 @@ class ChecksController < ApplicationController
       @check.transfer! if params[:transfer]
     end
 
+    return redirect_to(check_new_path) if params[:new]
     redirect_to(:action => :index)
 
     rescue UnbalancedCheckException

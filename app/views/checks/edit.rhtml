@@ -74,11 +74,11 @@
   </fieldset>
 
   <div class="actions">
-    <%= submit_tag('Enregistrer & Nouveau') if @check.new_record? %>
-    <%= submit_tag('Transfer', :name => 'transfer') %>
-    <%= submit_tag('Enregistrer') %>
-    <%= submit_tag('Détruire', :name => 'destroy') unless @check.new_record? %>
-    <%= link_to('Abandonner', :action => :index) %>
+    <%= submit_tag("Enregistrer & Nouveau", :name => "new") if @check.new_record? %>
+    <%= submit_tag("Transfer", :name => "transfer") %>
+    <%= submit_tag("Enregistrer") %>
+    <%= submit_tag("Détruire", :name => "destroy") unless @check.new_record? %>
+    <%= link_to("Abandonner", :action => :index) %>
   </div>
 
 <%= javascript_tag %q(new Form.Observer('check', 0.25, function() {
