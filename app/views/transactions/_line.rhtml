@@ -18,6 +18,6 @@
   </td>
   <td>
     <%= "&nbsp;" unless @line.reconciled? %>
-    <%= link_to("Conciliation", reconciliation_edit_path(:id => @line.reconciliation)) if @line.reconciled? %>
+    <%= link_to("Conciliation", reconciliation_edit_path(:id => @line.reconciliation, :anchor => dom_id(@line))) if @line.reconciled? %>
   </td>
 </tr>

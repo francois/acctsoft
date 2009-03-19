@@ -124,3 +124,4 @@ span.money .symbol { display: none; }
 
 #reconciled_txn_accounts #targets td { font-weight: bold; background: red; color: white; }
 #reconciled_txn_accounts #targets td.ok { background: #c9cfff; color: #393; text-align: center; }
+.highlight { font-weight: bold; }

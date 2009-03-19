@@ -94,3 +94,11 @@
   </table>
 </fieldset>
 <% end %>
+<%= javascript_tag(%Q(
+  var anchor = window.location.toString().split("#").last();
+  if (anchor) {
+    var e = $(anchor);
+    e.addClassName("highlight");
+    new Effect.Highlight(e);
+  }
+)) %>
