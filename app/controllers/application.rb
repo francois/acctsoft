@@ -1,7 +1,6 @@
 class ApplicationController < ActionController::Base
   before_filter :load_request_url
   before_filter :load_company
-  before_filter :pagination_handler, :only => [:index]
   before_filter :transform_parameters
   before_filter :quicktxn
   after_filter :set_content_type
@@ -25,11 +24,6 @@ class ApplicationController < ActionController::Base
     y, m, d = $4, $5, $6 if y.blank?
     logger.debug {"Date.new(#{y.inspect}, #{m.inspect}, #{d.inspect})"}
     Date.new(y.to_i, m.to_i, d.to_i)
-  end
-
-  def pagination_handler
-    params[:page] = session[params[:controller]] unless params[:page]
-    session[params[:controller]] = params[:page]
   end
 
   def set_content_type
