@@ -3,9 +3,7 @@
   <%= link_to 'Nouvelle conciliation', reconciliation_new_url %>
 </div>
 <div class="pager">
-  <%= link_to('&lt;&lt;', :page => @reconciliation_pages.current.previous) if @reconciliation_pages.current.previous %>
-  <%= pagination_links @reconciliation_pages, :always_show_anchors => true, :window_size => 4 %>
-  <%= link_to('&gt;&gt;', :page => @reconciliation_pages.current.next) if @reconciliation_pages.current.next %>
+  <%= page_entries_info(@reconciliations) %>
 </div>
 <table class="list" cellspacing="0" cellpadding="0">
   <caption>Liste des conciliations</caption>
@@ -23,7 +21,5 @@
   </tbody>
 </table>
 <div class="pager">
-  <%= link_to('&lt;&lt;', :page => @reconciliation_pages.current.previous) if @reconciliation_pages.current.previous %>
-  <%= pagination_links @reconciliation_pages, :always_show_anchors => true, :window_size => 4 %>
-  <%= link_to('&gt;&gt;', :page => @reconciliation_pages.current.next) if @reconciliation_pages.current.next %>
+  <%= will_paginate(@reconciliations) %>
 </div>
