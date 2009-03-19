@@ -16,4 +16,8 @@
   <td class="money">
     <%= text_field :line, :amount_ct, :size => 8, :class => 'money credit', :index => index, :value => @line.amount_ct.format(:zero => '') %>
   </td>
+  <td>
+    <%= "&nbsp;" unless @line.reconciled? %>
+    <%= link_to("Conciliation", reconciliation_edit_path(:id => @line.reconciliation)) if @line.reconciled? %>
+  </td>
 </tr>

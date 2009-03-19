@@ -27,6 +27,10 @@ class TxnAccount < ActiveRecord::Base
     self.account = Account.find_by_name(name)
   end
 
+  def reconciled?
+    !self.reconciliation.nil?
+  end
+
   def reconcile!(reconciliation)
     self.reconciliation = reconciliation
     self.save!
