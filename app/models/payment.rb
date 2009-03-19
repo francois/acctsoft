@@ -18,7 +18,7 @@ class Payment < ActiveRecord::Base
   end
 
   def can_upload?
-    self.balanced? && !self.txn
+    !self.txn
   end
 
   def post!(target_account, now=Time.now)
