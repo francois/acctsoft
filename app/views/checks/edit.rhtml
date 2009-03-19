@@ -75,7 +75,7 @@
 
   <div class="actions">
     <%= submit_tag("Enregistrer & Nouveau", :name => "new") if @check.new_record? %>
-    <%= submit_tag("Transfer", :name => "transfer") %>
+    <%= submit_tag("Transfer", :name => "transfer") unless @check.txn %>
     <%= submit_tag("Enregistrer") %>
     <%= submit_tag("Détruire", :name => "destroy") unless @check.new_record? %>
     <%= link_to("Abandonner", :action => :index) %>
