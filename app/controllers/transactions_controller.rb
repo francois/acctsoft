@@ -1,7 +1,7 @@
 class TransactionsController < ApplicationController
   def index
     @q = (params[:q] || "").dup
-    options = {:per_page => 30, :order => "posted_on DESC, id DESC"}
+    options = {:order => "posted_on DESC, id DESC"}
     unless @q.blank? then
       conditions = []
       values = {}
@@ -34,7 +34,7 @@ class TransactionsController < ApplicationController
     end
 
     @q = params[:q]
-    @transaction_pages, @transactions = paginate(:txn, options)
+    @transactions = Txn.paginate(options.merge(:page => params[:page]))
   end
 
   def new
