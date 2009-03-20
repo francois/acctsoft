@@ -11,7 +11,11 @@ cgst     = subtotal * 0.05
 cpst     = (subtotal + cgst) * 0.075
 ctotal   = subtotal + cgst + cpst
 
-puts "Subtotal:\t#{subtotal}"
-puts "GST:\t\t#{gst}\t#{cgst}\t#{cgst * 0.5}"
-puts "PST:\t\t#{pst}\t#{cpst}\t#{cpst * 0.5}"
-puts "Total:\t\t#{total}\t#{ctotal}\t#{subtotal + (cgst * 0.5) + (cpst * 0.5)}"
+fgst    = total * 0.05
+fpst    = (total + fgst) *0.075
+ftotal  = total + fgst + fpst
+
+puts "Subtotal:\t#{subtotal}\t\t\t#{total}"
+puts "GST:\t\t#{gst}\t#{cgst}\t#{cgst * 0.5}\t#{fgst}"
+puts "PST:\t\t#{pst}\t#{cpst}\t#{cpst * 0.5}\t#{fpst}"
+puts "Total:\t\t#{total}\t#{ctotal}\t#{subtotal + (cgst * 0.5) + (cpst * 0.5)}\t#{ftotal}"
