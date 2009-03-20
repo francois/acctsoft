@@ -1,0 +1,41 @@
+<h1>Rapport TPS/TVQ</h1>
+
+<% form_tag(tax_url, :method => :get) do %>
+  <p>
+    <label>Trimestre: <%= select_tag(:q, options_for_select(@quarters, @quarter)) %></label>
+    <%= submit_tag "Calculer", :name => nil %>
+  </p>
+<% end %>
+
+<p>Fournitures pour la période: <strong><%= format_money @income_amount %></strong></p>
+<table class="grid" cellspacing="0" cellpadding="0">
+  <caption>Rapport de TPS/TVQ <%= @quarters[@quarter].first %></caption>
+  <thead>
+    <tr>
+      <th>&nbsp;</th>
+      <th>À payer</th>
+      <th>À recevoir</th>
+      <th>Différence</th>
+    </tr>
+  </thead>
+  <tfoot>
+    <tr>
+      <th scope="row" colspan="3">Montant du chèque</th>
+      <td class="money"> <%= format_money @whole_amount %> </td>
+    </tr>
+  </tfoot>
+  <tbody>
+    <tr>
+      <th scope="row">TPS</th>
+      <td class="money"> <%= format_money @payable_gst_amount %> </td>
+      <td class="money"> <%= format_money @receivable_gst_amount %> </td>
+      <td class="money"> <%= format_money @gst_amount %> </td>
+    </tr>
+    <tr>
+      <th scope="row">TVQ</th>
+      <td class="money"> <%= format_money @payable_pst_amount %> </td>
+      <td class="money"> <%= format_money @receivable_pst_amount %> </td>
+      <td class="money"> <%= format_money @pst_amount %> </td>
+    </tr>
+  </tbody>
+</table>

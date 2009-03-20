@@ -57,6 +57,7 @@ ActionController::Routing::Routes.draw do |map|
   map.config '/compagnie', :controller => 'company', :action => 'edit'
 
   map.resource :quick_txn
+  map.resource :tax
 
   map.connect ':controller/:action/:id'
 end
