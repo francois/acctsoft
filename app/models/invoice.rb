@@ -10,8 +10,22 @@ class Invoice < ActiveRecord::Base
     self.invoiced_on = Date.today if self.invoiced_on.blank?
   end
 
+  def subtotal
+    self.lines.all(:include => :item).select {|line| line.item.charge_account.account_type == AccountType::INCOME}.map(&:extension_price).sum(Money.zero)
+  end
+
+  def gst
+    gst_account = AccountConfiguration.get("TPS à payer")
+    self.lines.all(:include => :item).select {|line| line.item.charge_account == gst_account}.map(&:extension_price).sum(Money.zero)
+  end
+
+  def pst
+    pst_account = AccountConfiguration.get("TVQ à payer")
+    self.lines.all(:include => :item).select {|line| line.item.charge_account == pst_account}.map(&:extension_price).sum(Money.zero)
+  end
+
   def total
-    self.lines.inject(0.to_money) {|sum, line| sum + line.extension_price}
+    self.lines.map(&:extension_price).sum(Money.zero)
   end
 
   def paid

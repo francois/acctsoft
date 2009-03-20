@@ -42,6 +42,18 @@ class AccountType
     end
   end
 
+  def ==(other)
+    if other.respond_to?(:designation)
+      designation == other.designation
+    else
+      designation == other
+    end
+  end
+
+  def hash
+    designation.hash
+  end
+
   class << self
     AccountType::ALL_TYPES.each do |type_name|
       define_method(type_name) do

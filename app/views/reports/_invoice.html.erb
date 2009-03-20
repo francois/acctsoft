@@ -1,0 +1,9 @@
+<tr>
+  <td><%= invoice.no %></td>
+  <td><%= invoice.invoiced_on %></td>
+  <td><%= link_to(h(invoice.customer), customer_edit_url(:id => invoice.customer)) %></td>
+  <td class="money"><%= format_money invoice.subtotal %></td>
+  <td class="money"><%= format_money invoice.gst %></td>
+  <td class="money"><%= format_money invoice.pst %></td>
+  <td class="money"><%= format_money invoice.total %></td>
+</tr>

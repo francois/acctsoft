@@ -1,0 +1,37 @@
+<%= render :partial => 'menu' unless params[:component] %>
+<div class="report">
+  <h2>Facturation</h2>
+  <%= render :partial => 'cutoff_date' %>
+  <table class="list" cellspacing="0" cellpadding="0">
+    <caption>Liste des factures</caption>
+    <col width="*1"/>
+    <col width="*1"/>
+    <col width="*4"/>
+    <col width="*2"/>
+    <col width="*2"/>
+    <col width="*2"/>
+    <col width="*2"/>
+    <thead>
+      <tr>
+        <th>No</th>
+        <th>Date</th>
+        <th>Client</th>
+        <th>Sous-total</th>
+        <th>TPS</th>
+        <th>TVQ</th>
+        <th>Total</th>
+      </tr>
+    </thead>
+    <tfoot>
+      <tr>
+        <th colspan="3">Total:</th>
+        <td><%= format_money @subtotal %></td>
+        <td><%= format_money @gst %></td>
+        <td><%= format_money @pst %></td>
+        <td><%= format_money @total %></td>
+    </tfoot>
+    <tbody>
+      <%= render :partial => "invoice", :collection => @invoices %>
+    </tbody>
+  </table>
+</div>

@@ -5,6 +5,7 @@
   <li><%= link_to 'État des résultats', :action => 'etat_resultats' %></li>
   <li><%= link_to 'État de l\'avoir du propriétaire', :action => 'avoir_proprietaire' %></li>
   <li><%= link_to 'Bilan', :action => 'bilan' %></li>
+  <li><%= link_to 'Facturation', :action => 'invoicing' %></li>
 </ul>
 <% form_tag({}, :class => "filters", :method => :get) do %>
   <p>Afficher les transactions comprises entre le <%= text_field_tag 'filter_date', format_date(@filter_date), :size => 8 %> et le <%= text_field_tag 'cutoff_date', format_date(@cutoff_date), :size => 8 %> <%= submit_tag 'Filtrer', :name => nil %></p>

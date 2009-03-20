@@ -20,6 +20,10 @@ class Customer < ActiveRecord::Base
     customer
   end
 
+  def to_s
+    name
+  end
+
   protected
   def normalize_abbreviation
     self.abbreviation = self.abbreviation.upcase unless self.abbreviation.blank?

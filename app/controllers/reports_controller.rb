@@ -68,6 +68,17 @@ class ReportsController < ApplicationController
     render :layout => !params[:component], :action => 'bilan'
   end
 
+  def invoicing
+    @invoices = Invoice.all(:conditions => {:invoiced_on => (@filter_date .. @cutoff_date)})
+
+    @subtotal = @invoices.map(&:subtotal).sum(Money.zero)
+    @gst      = @invoices.map(&:gst).sum(Money.zero)
+    @pst      = @invoices.map(&:pst).sum(Money.zero)
+    @total    = @invoices.map(&:total).sum(Money.zero)
+
+    render :layout => !params[:component]
+  end
+
   protected
   def process_cutoff_date
     session[:cutoff_date] = @cutoff_date =
