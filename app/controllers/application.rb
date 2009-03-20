@@ -1,13 +1,14 @@
 class ApplicationController < ActionController::Base
+  helper_method :company
+
   before_filter :load_request_url
-  before_filter :load_company
   before_filter :transform_parameters
   before_filter :quicktxn
   after_filter :set_content_type
 
   protected
-  def load_company
-    @company = Company.find(:first)
+  def company
+    @company ||= Company.find(:first)
   end
 
   def transform_parameters(root=params)
