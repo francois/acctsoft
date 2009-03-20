@@ -1,6 +1,10 @@
 class ReconciliationsController < ApplicationController
   def index
-    @reconciliations = Reconciliation.paginate(:all, :order => "statement_on DESC", :page => params[:page])
+    @bank_accounts   = Account.all(:conditions => {:account_type => AccountType::ASSET}, :order => "no ASC")
+    @account         = Account.find_by_no(params[:q]) unless params[:q].blank?
+
+    root = @account ? @account.reconciliations : Reconciliation
+    @reconciliations = root.paginate(:order => "statement_on DESC", :page => params[:page])
   end
 
   def edit

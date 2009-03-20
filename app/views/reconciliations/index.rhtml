@@ -1,6 +1,13 @@
 <% @title = 'Conciliations' -%>
 <div class="filters">
-  <%= link_to 'Nouvelle conciliation', reconciliation_new_url %>
+  <p><%= link_to 'Nouvelle conciliation', reconciliation_new_url %></p>
+  <% form_tag(reconciliations_url, :method => :get) do %>
+    <p>
+      <label>Limiter au compte: <%= select_tag(:q, options_from_collection_for_select(@bank_accounts, :no, :to_s, @account ? @account.no : nil)) %></label>
+      <%= submit_tag "Filtrer", :name => nil %>
+      <%= link_to("Toute la liste", reconciliations_url) if @account %>
+    </p>
+  <% end %>
 </div>
 <div class="pager">
   <%= page_entries_info(@reconciliations) %>

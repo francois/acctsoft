@@ -1,5 +1,6 @@
 class Account < ActiveRecord::Base
   has_many :txn_parts, :class_name => 'TxnAccount', :include => :txn, :order => 'txns.posted_on, txns.id'
+  has_many :reconciliations, :order => "statement_on DESC"
 
   validates_presence_of :no, :name
   validates_inclusion_of :no, :in => (1 .. 999999)
