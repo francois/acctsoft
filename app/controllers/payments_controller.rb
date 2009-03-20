@@ -78,9 +78,11 @@ class PaymentsController < ApplicationController
       end
     end
 
-    if @payment.update_attributes(params[:payment]) then
-      flash_notice 'Le total payé ne correspond pas aux montants enregistrés' \
-          unless @payment.balanced?
+    if params[:commit] =~ /d.+truire/i
+      @payment.destroy
+      redirect_to payments_url
+    elsif @payment.update_attributes(params[:payment]) then
+      flash_notice 'Le total payé ne correspond pas aux montants enregistrés' unless @payment.balanced?
       if params[:commit] =~ /nouveau/i then
         redirect_to payment_new_url
       else
