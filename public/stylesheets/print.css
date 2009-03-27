@@ -6,6 +6,7 @@ form .actions { display: none; }
 @page { margin: .5in; }
 
 #cutoff-date { display: block; }
+#quicktxn { display: none; }
 
 .list { page-break-before: avoid; }
 .list, .list table { font-size: 1em; page-break-inside: avoid; }
