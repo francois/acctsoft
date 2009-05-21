@@ -5,6 +5,7 @@ class Invoice < ActiveRecord::Base
   has_many :lines, :class_name => 'InvoiceItem', :dependent => :destroy
   validates_presence_of :no, :customer_id, :invoiced_on
   validates_numericality_of :no
+  validates_uniqueness_of :no
 
   def after_initialize
     self.invoiced_on = Date.today if self.invoiced_on.blank?
