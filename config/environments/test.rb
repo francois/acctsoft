@@ -18,4 +18,4 @@ config.action_controller.perform_caching             = false
 # ActionMailer::Base.deliveries array.
 config.action_mailer.delivery_method = :test
 
-config.gem "francois-shoulda", :lib => "shoulda/rails", :source => "http://gems.github.com/"
+config.gem "shoulda", :lib => "shoulda"
